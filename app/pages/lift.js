@@ -1,7 +1,7 @@
 // One lift's story: its estimated max plotted by hand, page by page, and
 // every session it appears on.
 
-import { h, put, count } from '../ui.js';
+import { h, put, count, noteField } from '../ui.js';
 import * as log from '../log.js';
 
 // The chart is drawn as if by hand on graph paper: a wobbly blue pen line,
@@ -144,6 +144,20 @@ export function render(el, ctx) {
       sessions.length > 0 && h('p', { class: 'hand' }, `${count(sessions.length, words.library.pages)} ${w.inNotebook}`),
       h('p', { class: 'quiet' }, [lift.gear, lift.works, lift.helps].filter(Boolean).join(' · ')),
       h('a', { class: 'btn btn-line btn-small', href: '#library', style: 'align-self:flex-start;margin-top:6px' }, `← ${w.back}`),
+    ),
+    h('div', { class: 'panel lift-notes' },
+      h('p', { class: 'label' }, w.notesLabel),
+      noteField({
+        get: () => store.get().liftNotes[lift.id],
+        set: text => store.updateSoon(d => {
+          if (text.trim()) d.liftNotes[lift.id] = text;
+          else delete d.liftNotes[lift.id];
+        }),
+        placeholder: words.today.notePlaceholder,
+        addLabel: words.today.addNote,
+        doneLabel: words.today.noteDone,
+        label: `${lift.name}: ${words.today.noteLabel}`,
+      }),
     ),
     bestEver > 0 && h('div', { class: 'totals' },
       total(`${bestEver}`, w.estMax),

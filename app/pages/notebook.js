@@ -2,6 +2,7 @@
 
 import { h, put, count, art, pageHead } from '../ui.js';
 import { niceDate, findCardio } from '../log.js';
+import { weekStrip } from '../week.js';
 
 export function render(el, ctx) {
   const { words, store } = ctx;
@@ -10,6 +11,7 @@ export function render(el, ctx) {
   put(el,
     art('sketch-dumbbell.png', 'sketch sketch-dumbbell', 440, 240),
     pageHead(words.tabs.notebook, w.title, w.note),
+    weekStrip(store.get(), w.week, page => { ctx.state.openPage = page.id; ctx.state.fixing = false; ctx.go('page'); }),
     h('a', { class: 'btn btn-line', href: '#library', style: 'align-self:flex-start' }, w.libraryButton),
     h('div', null,
       h('p', { class: 'label', style: 'line-height:32px' }, w.filedLabel),

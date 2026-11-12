@@ -1,7 +1,9 @@
 /* Movement: the page flip, the pencil check, the stamp.
-   --flip sets how long a page takes to turn. Bigger is slower. */
+   --flip sets how long the cover takes to turn, --flip-quick how long the
+   inner pages take. Bigger is slower. */
 
-:root { --flip: 290ms; }
+:root { --flip: 290ms; --flip-quick: 150ms; }
+.sheet.is-quick, .shade.is-quick { --flip: var(--flip-quick); }
 
 /* ---------- the bending page (built in app/flip.js) ---------- */
 .sheet {

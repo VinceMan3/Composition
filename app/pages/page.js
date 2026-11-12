@@ -4,6 +4,7 @@
 
 import { h, put, icon, twoTap } from '../ui.js';
 import * as log from '../log.js';
+import { poseSketch } from '../poses.js';
 
 export function render(el, ctx) {
   return ctx.state.fixing ? fixing(el, ctx) : reading(el, ctx);
@@ -30,6 +31,7 @@ function reading(el, ctx) {
   );
 
   put(el,
+    poseSketch(data, page),
     h('span', { class: 'stamp' }, words.filed.stamp),
     h('div', { class: 'head-block', style: 'padding-right:0;min-height:0' },
       h('p', { class: 'kicker' }, `${w.kicker} · ${log.niceDate(page.date)}`),

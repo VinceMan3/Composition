@@ -31,6 +31,47 @@ export function count(n, pair) {
   return `${n} ${n === 1 ? pair[0] : pair[1]}`;
 }
 
+// A note written on the page in pen. Shows the note, or a small "+ note"
+// when there is none; a tap opens a box to write in, and it saves as you type.
+//   noteField({ get, set, placeholder, addLabel, doneLabel, label })
+export function noteField({ get, set, placeholder, addLabel, doneLabel, label, open = false }) {
+  const shown = h('button', { class: 'note-shown', type: 'button', 'aria-label': label });
+  const box = h('textarea', { class: 'note-box', rows: '2', maxlength: '400', placeholder, 'aria-label': label });
+  const done = h('button', { class: 'note-done', type: 'button' }, doneLabel);
+  const editor = h('div', { class: 'note-editor', hidden: true }, box, done);
+  const wrap = h('div', { class: 'note' }, shown, editor);
+
+  function showText() {
+    const text = (get() || '').trim();
+    shown.textContent = text || addLabel;
+    shown.classList.toggle('is-empty', !text);
+  }
+  function grow() {
+    box.style.height = 'auto';
+    box.style.height = `${box.scrollHeight}px`;
+  }
+  function openEditor() {
+    shown.hidden = true;
+    editor.hidden = false;
+    box.value = get() || '';
+    grow();
+    box.focus();
+  }
+  function close() {
+    set(box.value.trim());
+    editor.hidden = true;
+    shown.hidden = false;
+    showText();
+  }
+  shown.addEventListener('click', openEditor);
+  box.addEventListener('input', () => { set(box.value); grow(); });
+  box.addEventListener('blur', e => { if (e.relatedTarget !== done) close(); });
+  done.addEventListener('click', close);
+  showText();
+  if (open) queueMicrotask(openEditor);
+  return wrap;
+}
+
 // A small line drawing: icon('M5 13l4 4L19 7')
 export function icon(path, viewBox = '0 0 24 24') {
   const NS = 'http://www.w3.org/2000/svg';

@@ -67,6 +67,10 @@ export const WORDS = {
     bar: 'bar',
     addLift: '+ Add a lift',
     addCardio: '+ Add cardio',
+    addNote: '+ note',
+    noteDone: 'Done',
+    noteLabel: 'note',
+    notePlaceholder: 'Cues, seat height, grip, anything to remember',
     roundsButton: 'Rounds',
     needCardio: 'Write a number first.',
     file: 'File this page',
@@ -156,6 +160,7 @@ export const WORDS = {
     estMax: 'Estimated max',
     chartLabel: 'Estimated max, page by page',
     chartTopLabel: 'Heaviest weight, page by page',
+    notesLabel: 'Notes on this lift',
     viewEst: 'Estimated max',
     viewTop: 'Heaviest weight',
     heaviest: 'Heaviest lifted',
@@ -198,6 +203,16 @@ export const WORDS = {
     open: 'Open',
     empty: 'No pages filed yet.',
     filedLabel: 'Filed pages',
+    week: {
+      label: 'This week',
+      day: 'day in',
+      days: 'days in',
+      lifted: 'lifted',
+      boxed: 'boxing',
+      cardio: 'cardio',
+      rest: 'rest',
+      ahead: 'still ahead',
+    },
   },
 
   stats: {
@@ -250,7 +265,7 @@ export const WORDS = {
     restoreConfirm: 'Tap again to replace everything',
     restorePlaceholder: 'Paste a backup here',
     notSaving: 'This browser is blocking saved data, so changes last only until you close the page.',
-    version: 'Step 3 · looking back',
+    version: 'Step 3 · looking back, notes, this week',
   },
 
   // Short messages that pop up at the bottom

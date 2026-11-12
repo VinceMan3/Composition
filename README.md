@@ -61,9 +61,18 @@ Then visit http://localhost:8000 in a browser.
 1. Foundation: the notebook frame, five tabs, page flips, sounds, saving, backup. (done)
 2. Logging: today's page, add a lift, cardio, rest timer, filing a page, the daily verse,
    movable stickers and the first earned stickers. (done)
-3. Looking back: the notebook, lift library, one lift's history.
-4. Cover: this week at a glance, more stickers and sketches.
+3. Looking back: open and fix filed pages, the lift library, one lift's history,
+   lift notes, this week, the boxing round timer. (done)
+4. Art: a pen sketch pose for every muscle group, for the corners of the pages.
 5. Stats: the Big Three, records, charts, calendar, Wilks and DOTS.
 6. Polish: settings, lb and kg, the dim garage look, desktop layout, install, offline.
 7. New sections: programs, food log, muscle map, lessons, meet day.
 8. Launch: accounts and sync, privacy page, app stores.
+
+## Ideas for later
+
+- A learn section: anatomy and physiology trivia and quizzes.
+- Games for rest breaks, like a retro boxing game.
+- Trainer mode: one notebook per client, with plans for each.
+- A news page: app updates and new features, plus news, events and
+  discoveries from bodybuilding and powerlifting.

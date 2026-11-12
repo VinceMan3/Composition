@@ -5,6 +5,7 @@
 //   pages        every filed workout page, oldest first
 //   draft        the page being written today, or null
 //   customLifts  lifts the person added themselves
+//   liftNotes    a standing note for each lift: id -> text
 
 const KEY = 'composition.app.v1';
 const FORMAT = 1;
@@ -16,6 +17,7 @@ function blank() {
     pages: [],
     draft: null,     // the page being written today
     customLifts: [], // lifts the person added themselves
+    liftNotes: {},   // a standing note for each lift
     earned: {},      // stickers earned: id -> the day it was earned
     stickers: {},    // where each sticker sits on the cover: id -> { x, y, z, off }
   };
@@ -39,6 +41,7 @@ function tidy(raw) {
     pages: Array.isArray(raw.pages) ? raw.pages.filter(p => p && Array.isArray(p.lifts)) : [],
     draft: raw.draft && Array.isArray(raw.draft.lifts) ? raw.draft : null,
     customLifts: Array.isArray(raw.customLifts) ? raw.customLifts.filter(l => l && l.id && l.name) : [],
+    liftNotes: raw.liftNotes && typeof raw.liftNotes === 'object' ? raw.liftNotes : {},
     earned: raw.earned && typeof raw.earned === 'object' ? raw.earned : {},
     stickers: raw.stickers && typeof raw.stickers === 'object' ? raw.stickers : {},
   };

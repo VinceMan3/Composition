@@ -73,7 +73,7 @@ const router = startRouter({
       else tab.removeAttribute('aria-current');
     }
   },
-  onFlip() { sound.play('flip'); },
+  onFlip(forward, quick) { sound.play(quick ? 'flick' : 'flip'); },
 });
 
 // Phones only allow sound after a touch.

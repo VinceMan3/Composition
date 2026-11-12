@@ -62,6 +62,9 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
 
     const prev = currentEl;
     const forward = current ? ROUTES[name].at > ROUTES[current].at : true;
+    // Opening or closing the cover gets the full, slower turn. Between the
+    // inner pages the turn is quick, so moving back and forth stays light.
+    const quick = current && current !== 'cover' && name !== 'cover';
     const next = build(name);
     current = name;
     currentEl = next;
@@ -85,13 +88,14 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
     // Backward: a copy of the new page falls onto the old one.
     stack.append(next);
     if (next.onAttached) next.onAttached();
-    const shade = h('div', { class: `shade ${forward ? 'is-clearing' : 'is-falling'}` });
+    const shade = h('div', { class: `shade ${forward ? 'is-clearing' : 'is-falling'}${quick ? ' is-quick' : ''}` });
     const sheet = makeSheet(forward ? prev : next, forward ? 'up' : 'down');
+    if (quick) sheet.el.classList.add('is-quick');
     stack.append(shade, sheet.el);
     sheet.settle();
     if (forward) discard(prev);
     else next.classList.add('is-waiting');
-    onFlip(forward);
+    onFlip(forward, quick);
 
     let done = false;
     const finish = () => {

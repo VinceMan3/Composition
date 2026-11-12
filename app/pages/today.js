@@ -1,9 +1,10 @@
 // Today's page. Before a page is started it offers to repeat a past page or
 // start a fresh one; after that it is the page you write your sets on.
 
-import { h, put, count, icon, art, shortDate, pageHead, twoTap } from '../ui.js';
+import { h, put, count, icon, art, shortDate, pageHead, twoTap, noteField } from '../ui.js';
 import * as log from '../log.js';
 import { clock } from '../rest.js';
+import { poseSketch } from '../poses.js';
 import { collect } from '../awards.js';
 import { CARDIO, CARDIO_UNITS } from '../../content/cardio.js';
 
@@ -284,6 +285,22 @@ function writing(el, ctx) {
 
   // ----- one lift -----
 
+  // The standing note for a lift: cues, seat settings, anything worth
+  // remembering. It belongs to the lift, so it shows on every page.
+  function liftNote(lift) {
+    return noteField({
+      get: () => store.get().liftNotes[lift.id],
+      set: text => store.updateSoon(d => {
+        if (text.trim()) d.liftNotes[lift.id] = text;
+        else delete d.liftNotes[lift.id];
+      }),
+      placeholder: w.notePlaceholder,
+      addLabel: w.addNote,
+      doneLabel: w.noteDone,
+      label: `${lift.name}: ${w.noteLabel}`,
+    });
+  }
+
   function liftBlock(entry, li) {
     const lift = liftOf(li);
     const prev = prevOf(li);
@@ -299,6 +316,7 @@ function writing(el, ctx) {
         h('div', null,
           h('h2', { class: 'lift-name' }, lift.name),
           h('p', { class: 'lift-last' }, prev ? `${w.lastTime}: ${log.setsText(prev.sets, lift)}` : w.firstTime),
+          liftNote(lift),
         ),
         remove,
       ),
@@ -492,7 +510,8 @@ function writing(el, ctx) {
   });
 
   put(el,
-    h('div', { class: 'head-block', style: 'padding-right:0;min-height:0' },
+    poseSketch(data, page),
+    h('div', { class: 'head-block with-pose' },
       h('p', { class: 'kicker' }, shortDate()),
       title,
     ),

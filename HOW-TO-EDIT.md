@@ -80,13 +80,23 @@ The pictures are in `art/`. To replace one, upload a new picture with exactly
 the same file name (for example `sticker-gloves.png`). Files with a
 see-through background look best.
 
+## Choose which pose goes with which muscle
+
+Open `content/poses.js`. Each line pairs a body part with a drawing in `art/`:
+
+    Chest: 'sketch-front.webp',     // to draw: most muscular
+
+A page shows the pose for the body part it works most. When a new drawing
+arrives, put it in `art/` and change the file name on its line.
+
 ## Change how fast pages turn
 
 Open `styles/motion.css` and change the number on this line near the top:
 
-    :root { --flip: 340ms; }
+    :root { --flip: 290ms; --flip-quick: 150ms; }
 
-Bigger is slower. 1000ms is one second.
+`--flip` is the cover; `--flip-quick` is every other page. Bigger is slower.
+1000ms is one second.
 
 ## If something breaks
 

@@ -4,6 +4,7 @@
 import { h, put, art } from '../ui.js';
 import { niceDate } from '../log.js';
 import { findSticker } from '../awards.js';
+import { poseSketch } from '../poses.js';
 
 export function render(el, ctx) {
   const { words, store, sound } = ctx;
@@ -38,7 +39,7 @@ export function render(el, ctx) {
   };
 
   put(el,
-    art('sketch-arm.webp', 'sketch sketch-arm', 540, 605),
+    poseSketch(data, page),
     stamp,
     h('div', { class: 'head-block', style: 'padding-right:0;min-height:0' },
       h('p', { class: 'kicker' }, `${w.kicker} · ${niceDate(page.date)}`),
