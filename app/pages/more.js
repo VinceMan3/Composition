@@ -3,7 +3,8 @@
 
 import { h, put, pageHead } from '../ui.js';
 import { clock } from '../rest.js';
-import { STICKERS, hasSticker } from '../awards.js';
+import { STICKERS, hasSticker, findSticker, collect } from '../awards.js';
+import { num } from '../log.js';
 
 export function render(el, ctx) {
   const { words, store, sound, toast } = ctx;
@@ -29,6 +30,58 @@ export function render(el, ctx) {
     store.update(d => { d.settings.restSeconds = Math.min(600, Math.max(15, d.settings.restSeconds + change)); });
     restValue.textContent = clock(store.get().settings.restSeconds);
   }
+
+  // ---- boxing round lengths ----
+  function lengthStepper(key, min, max) {
+    const value = h('span', { class: 'stepper-value' }, clock(store.get().settings[key]));
+    const step = change => {
+      store.update(d => { d.settings[key] = Math.min(max, Math.max(min, d.settings[key] + change)); });
+      value.textContent = clock(store.get().settings[key]);
+    };
+    return h('div', { class: 'stepper' },
+      h('button', { type: 'button', 'aria-label': 'Fifteen seconds shorter', onClick: () => step(-15) }, '−15'),
+      value,
+      h('button', { type: 'button', 'aria-label': 'Fifteen seconds longer', onClick: () => step(15) }, '+15'),
+    );
+  }
+
+  function countStepper() {
+    const value = h('span', { class: 'stepper-value' }, `${store.get().settings.roundCount}×`);
+    const step = change => {
+      store.update(d => { d.settings.roundCount = Math.min(15, Math.max(1, d.settings.roundCount + change)); });
+      value.textContent = `${store.get().settings.roundCount}×`;
+    };
+    return h('div', { class: 'stepper' },
+      h('button', { type: 'button', 'aria-label': 'One round fewer', onClick: () => step(-1) }, '−1'),
+      value,
+      h('button', { type: 'button', 'aria-label': 'One round more', onClick: () => step(1) }, '+1'),
+    );
+  }
+
+  // ---- bodyweight ----
+  const bwBox = h('input', {
+    class: 'write-in bw-in',
+    type: 'text',
+    inputmode: 'decimal',
+    autocomplete: 'off',
+    placeholder: 'lb',
+    'aria-label': w.bodyweightLabel,
+    value: store.get().settings.bodyweight || '',
+    onInput() {
+      const clean = bwBox.value.replace(',', '.').replace(/[^0-9.]/g, '');
+      if (clean !== bwBox.value) bwBox.value = clean;
+      store.updateSoon(d => { d.settings.bodyweight = num(clean) > 0 ? num(clean) : null; });
+    },
+    onBlur() {
+      // A new bodyweight can earn a sticker on the spot.
+      let fresh = [];
+      store.update(d => { fresh = collect(d); });
+      if (!fresh.length) return;
+      ctx.state.newStickers = [...(ctx.state.newStickers || []), ...fresh];
+      sound.play('stamp');
+      toast(`${w.newSticker} ${fresh.map(id => findSticker(id).name).join(', ')}`);
+    },
+  });
 
   // ---- try the sounds ----
   const stamp = h('span', { class: 'stamp', hidden: true }, w.stampWord);
@@ -133,6 +186,26 @@ export function render(el, ctx) {
           restValue,
           h('button', { type: 'button', 'aria-label': 'Fifteen seconds longer', onClick: () => setRest(15) }, '+15'),
         ),
+      ),
+    ),
+
+    h('div', { class: 'panel' },
+      h('div', null,
+        h('p', { class: 'label' }, w.roundLabel),
+        h('p', { class: 'quiet' }, w.roundNote),
+      ),
+      h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.roundCount), countStepper()),
+      h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.roundLength), lengthStepper('roundSeconds', 30, 600)),
+      h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.breakLength), lengthStepper('breakSeconds', 15, 300)),
+    ),
+
+    h('div', { class: 'panel' },
+      h('div', { class: 'row' },
+        h('div', null,
+          h('p', { class: 'label' }, w.bodyweightLabel),
+          h('p', { class: 'quiet' }, w.bodyweightNote),
+        ),
+        bwBox,
       ),
     ),
 

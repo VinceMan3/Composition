@@ -6,7 +6,7 @@
 //   turn  how many degrees it is tilted
 //   how   what the sticker book says before you have it
 
-import { estMax, doneSets, doneCardio, findCardio, num, dateKey } from './log.js';
+import { doneSets, doneCardio, findCardio, num, dateKey } from './log.js';
 
 const IN_POUNDS = { lb: 1, kg: 2.20462 };
 
@@ -22,16 +22,26 @@ function heaviest(data, liftId) {
   return best;
 }
 
-// The best estimated one-rep max (in pounds) for a lift.
-function bestMax(data, liftId) {
-  let best = 0;
+// The pound clubs count the heaviest weight actually lifted for each of the
+// three, the way a meet total does, not estimated maxes.
+function bigThree(data) {
+  return heaviest(data, 'squat') + heaviest(data, 'bench-press') + heaviest(data, 'deadlift');
+}
+
+// Every pound ever moved: weight times reps, across every filed page.
+function totalMoved(data) {
+  let sum = 0;
   for (const page of data.pages) {
     for (const entry of page.lifts) {
-      if (entry.liftId !== liftId) continue;
-      for (const s of doneSets(entry)) best = Math.max(best, estMax(s.w, s.r) * IN_POUNDS[page.unit || 'lb']);
+      for (const s of doneSets(entry)) sum += num(s.w) * num(s.r) * IN_POUNDS[page.unit || 'lb'];
     }
   }
-  return best;
+  return sum;
+}
+
+// Bodyweight in pounds, as set under More. Zero until it is set.
+function bodyweight(data) {
+  return num(data.settings.bodyweight);
 }
 
 function cardioEntries(data) {
@@ -75,8 +85,26 @@ export const STICKERS = [
     how: 'Deadlift 405 lb.',
     earned: data => heaviest(data, 'deadlift') >= 405 },
   { id: 'club-1000', name: '1000 Pound Club', art: 'badge-club-1000.webp', size: 0.3, turn: -5,
-    how: 'Squat, bench and deadlift maxes that add up to 1,000 lb.',
-    earned: data => bestMax(data, 'squat') + bestMax(data, 'bench-press') + bestMax(data, 'deadlift') >= 1000 },
+    how: 'Your heaviest squat, bench and deadlift add up to 1,000 lb. Real lifts, not estimates.',
+    earned: data => bigThree(data) >= 1000 },
+  { id: 'club-1250', name: '1250 Pound Club', art: 'badge-club-1250.webp', size: 0.3, turn: 4,
+    how: 'Your heaviest squat, bench and deadlift add up to 1,250 lb.',
+    earned: data => bigThree(data) >= 1250 },
+  { id: 'club-1500', name: '1500 Pound Club', art: 'badge-club-1500.webp', size: 0.3, turn: -6,
+    how: 'Your heaviest squat, bench and deadlift add up to 1,500 lb.',
+    earned: data => bigThree(data) >= 1500 },
+  { id: 'bw-bench', name: 'Bodyweight Bench', art: 'badge-bw-bench.webp', size: 0.26, turn: 5,
+    how: 'Bench press 1.5 times your bodyweight. Set your bodyweight under More.',
+    earned: data => bodyweight(data) >= 50 && heaviest(data, 'bench-press') >= 1.5 * bodyweight(data) },
+  { id: 'bw-squat', name: 'Bodyweight Squat', art: 'badge-bw-squat.webp', size: 0.26, turn: -4,
+    how: 'Squat 2 times your bodyweight. Set your bodyweight under More.',
+    earned: data => bodyweight(data) >= 50 && heaviest(data, 'squat') >= 2 * bodyweight(data) },
+  { id: 'bw-dead', name: 'Bodyweight Deadlift', art: 'badge-bw-dead.webp', size: 0.27, turn: 3,
+    how: 'Deadlift 2.5 times your bodyweight. Set your bodyweight under More.',
+    earned: data => bodyweight(data) >= 50 && heaviest(data, 'deadlift') >= 2.5 * bodyweight(data) },
+  { id: 'million', name: 'Million Pound Mover', art: 'badge-million.webp', size: 0.31, turn: -3,
+    how: 'Move 1,000,000 lb in total: every weight times every rep, added up for good.',
+    earned: data => totalMoved(data) >= 1000000 },
   { id: 'bag-5', name: 'Bag Work', art: 'badge-bag-5.webp', size: 0.28, turn: 8,
     how: 'Log five boxing sessions.',
     earned: data => cardioEntries(data).filter(c => findCardio(c.kindId).boxing).length >= 5 },

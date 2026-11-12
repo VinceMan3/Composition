@@ -17,8 +17,11 @@ import * as notebook from './pages/notebook.js';
 import * as stats from './pages/stats.js';
 import * as more from './pages/more.js';
 import * as stickers from './pages/stickers.js';
+import * as page from './pages/page.js';
+import * as library from './pages/library.js';
+import * as lift from './pages/lift.js';
 
-const PAGES = { cover, today, add, filed, notebook, stats, more, stickers };
+const PAGES = { cover, today, add, filed, notebook, stats, more, stickers, page, library, lift };
 
 const app = document.getElementById('app');
 const stack = document.getElementById('stack');
@@ -58,6 +61,8 @@ const router = startRouter({
     const data = store.get();
     if (name === 'add' && !data.draft) return 'today';
     if (name === 'filed' && !data.pages.length) return 'today';
+    if (name === 'page' && !data.pages.some(p => p.id === ctx.state.openPage)) return 'notebook';
+    if (name === 'lift' && !ctx.state.openLift) return 'library';
     return name;
   },
   onShow(name, tabName) {

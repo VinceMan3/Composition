@@ -67,6 +67,7 @@ export const WORDS = {
     bar: 'bar',
     addLift: '+ Add a lift',
     addCardio: '+ Add cardio',
+    roundsButton: 'Rounds',
     needCardio: 'Write a number first.',
     file: 'File this page',
     fileConfirm: 'Tap again to file it',
@@ -120,6 +121,52 @@ export const WORDS = {
     toNotebook: 'Open the notebook',
   },
 
+  // One filed page, opened from the notebook
+  page: {
+    kicker: 'Filed page',
+    fixKicker: 'Fixing this page',
+    repeatButton: 'Repeat this page',
+    fixButton: 'Fix this page',
+    saveButton: 'Save the fixes',
+    cancel: 'Back without saving',
+    tear: 'Tear out this page',
+    tearConfirm: 'Tap again to throw it away',
+    torn: 'Page torn out.',
+    fixed: 'Page fixed.',
+    draftBusy: 'Finish today\'s page first.',
+    needSomething: 'A page needs at least one set with reps.',
+    back: 'Back to the notebook',
+    records: 'Records set that day',
+    history: 'History',
+    cardioLabel: 'Cardio',
+  },
+
+  library: {
+    kicker: 'The lift library',
+    title: 'Every lift',
+    note: 'tap one to see its story',
+    searchPlaceholder: 'Search the lifts',
+    back: 'Back to the notebook',
+    never: 'not logged yet',
+    pages: ['page', 'pages'],
+  },
+
+  lift: {
+    kicker: 'One lift',
+    estMax: 'Estimated max',
+    chartLabel: 'Estimated max, page by page',
+    chartTopLabel: 'Heaviest weight, page by page',
+    viewEst: 'Estimated max',
+    viewTop: 'Heaviest weight',
+    heaviest: 'Heaviest lifted',
+    inNotebook: 'in the notebook',
+    oneMore: 'One more page with this lift and the chart starts.',
+    sessionsLabel: 'In the notebook',
+    best: 'best',
+    never: 'Not in the notebook yet. Add it to a page and its story starts here.',
+    back: 'Back to the library',
+  },
+
   stickers: {
     title: 'Sticker book',
     note: 'earned in the gym, stuck on the cover',
@@ -132,6 +179,12 @@ export const WORDS = {
 
   rest: {
     label: 'Rest',
+    round: 'Round',
+    of: 'of',
+    breakWord: 'Break',
+    next: 'next',
+    roundDone: 'round done. Good work.',
+    roundsDone: 'rounds done. Good work.',
     less: '−15',
     more: '+15',
     stop: 'Done',
@@ -141,13 +194,10 @@ export const WORDS = {
   notebook: {
     title: 'The notebook',
     note: 'every filed page lands here',
+    libraryButton: 'The lift library',
+    open: 'Open',
     empty: 'No pages filed yet.',
     filedLabel: 'Filed pages',
-    comingLabel: 'Coming in step 3',
-    coming: [
-      'Open and fix an old page',
-      'The lift library, and each lift\'s history',
-    ],
   },
 
   stats: {
@@ -182,6 +232,14 @@ export const WORDS = {
     stampWord: 'Filed',
     restLabel: 'Rest timer',
     restNote: 'How long the timer runs when you start it',
+    roundLabel: 'Boxing rounds',
+    roundNote: 'For the round timer on a boxing entry. A knock sounds ten seconds before each round ends.',
+    roundCount: 'Rounds',
+    roundLength: 'Each round',
+    breakLength: 'Break',
+    bodyweightLabel: 'Bodyweight',
+    bodyweightNote: 'In pounds. Used for the bodyweight stickers, and for Wilks later on.',
+    newSticker: 'New sticker:',
     backupLabel: 'Backup',
     backupNote: 'Everything is saved on this device. A backup is a copy you can keep somewhere else.',
     backupButton: 'Make a backup',
@@ -192,7 +250,7 @@ export const WORDS = {
     restoreConfirm: 'Tap again to replace everything',
     restorePlaceholder: 'Paste a backup here',
     notSaving: 'This browser is blocking saved data, so changes last only until you close the page.',
-    version: 'Step 2 · logging, stickers, cardio',
+    version: 'Step 3 · looking back',
   },
 
   // Short messages that pop up at the bottom

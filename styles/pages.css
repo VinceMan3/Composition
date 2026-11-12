@@ -459,3 +459,33 @@ button.book-card:active { transform: translateY(2px); }
 .book-name { font-family: var(--f-head); font-weight: 400; font-size: 15px; line-height: 1.15; }
 .book-how, .book-date { font-size: 13px; line-height: 1.25; color: var(--ink-soft); }
 .book-state { font-family: var(--f-hand); font-weight: 400; font-size: 15px; line-height: 1.25; color: var(--pen); }
+
+/* ---------- the notebook's filed rows ---------- */
+button.filed-row { width: 100%; border: 0; background: none; text-align: left; font: inherit; padding: 6px 0 5px; }
+button.filed-row:active { background: rgba(233, 180, 44, .25); }
+.filed-open { grid-row: 2; grid-column: 2; justify-self: end; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--maroon); }
+
+/* ---------- one filed page, and fixing it ---------- */
+.page-page .page-inner { background: none; }
+.read-lifts .lift-head { padding-top: 8px; padding-bottom: 8px; }
+.read-lifts .lift-last { font-size: 18px; }
+.page-page .stamp { align-self: flex-start; }
+
+/* ---------- one lift's story ---------- */
+.page-lift .page-inner, .page-library .page-inner { background: none; }
+.chart { gap: 6px; padding-bottom: 12px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .chips { justify-content: center; }
+.session-row { border: 0; background: none; text-align: left; font: inherit; width: 100%; }
+.session-row:active { background: rgba(233, 180, 44, .25); }
+.session-row .kicker { line-height: 22px; }
+
+/* ---------- more: bodyweight and round lengths ---------- */
+.setting-name { font-family: var(--f-hand); font-weight: 400; font-size: 19px; color: var(--pen); }
+.total-unit { font-size: .55em; text-shadow: none; }
+.bw-in { width: 92px; flex: none; text-align: center; font-size: 26px; height: 44px; }
+
+/* A lift name on a filed page that opens its history. */
+.lift-link { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; align-items: center; }
+.lift-link:active { background: rgba(233, 180, 44, .25); }
+.lift-link .filed-open { flex: none; }

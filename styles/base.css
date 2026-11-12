@@ -421,3 +421,11 @@ button { cursor: pointer; }
   text-align: center;
   box-shadow: 3px 3px 0 var(--navy), 5px 10px 18px rgba(20, 30, 40, .35);
 }
+
+/* Boxing rounds: purple while you work, the usual mustard on the break. */
+.rest.is-rounds { background: linear-gradient(180deg, rgba(255, 255, 255, .14), transparent 50%, rgba(0, 0, 0, .18)), var(--purple); color: var(--paper); }
+.rest.is-rounds.is-break { background: linear-gradient(180deg, rgba(255, 255, 255, .28), transparent 50%, rgba(90, 50, 0, .14)), var(--mustard); color: var(--ink); }
+.rest.is-rounds .rest-controls button { color: var(--ink); }
+.rest.is-rounds .rest-controls .rest-stop { color: var(--paper); }
+.rest.is-rounds .rest-fill { background: var(--mustard); }
+.rest.is-rounds.is-break .rest-fill { background: var(--maroon); }

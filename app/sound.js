@@ -6,6 +6,8 @@
 //   play('pencil')  a check mark being scratched in
 //   play('stamp')   the rubber stamp on a filed page
 //   play('bell')    the boxing bell when rest is over
+//   play('bells')   three bells: the last round is done
+//   play('knock')   two knocks on wood: ten seconds left in the round
 
 let ctx = null;
 let out = null;
@@ -126,6 +128,20 @@ const SOUNDS = {
     }
     hissBurst(t, 0.03, { type: 'highpass', from: 3200 }, [[0.002, 0.3]]);
     buzz([40, 60, 40]);
+  },
+
+  bells(t) {
+    for (const at of [0, 0.42, 0.84]) SOUNDS.bell(t + at);
+  },
+
+  knock(t) {
+    // Two raps of a stick on the ring post.
+    for (const at of [0, 0.16]) {
+      tone(t + at, 0.09, 920, 610, 0.34, 'triangle');
+      tone(t + at, 0.05, 1900, 1500, 0.08);
+      hissBurst(t + at, 0.03, { type: 'bandpass', from: 2400, q: 1.4 }, [[0.002, 0.32]]);
+    }
+    buzz([12, 120, 12]);
   },
 };
 

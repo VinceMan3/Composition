@@ -387,6 +387,28 @@ function writing(el, ctx) {
     const block = h('section', { class: `lift cardio${kind.boxing ? ' is-boxing' : ''}${entry.done ? ' is-done' : ''}` },
       h('div', { class: 'lift-head' }, h('div', null, h('h2', { class: 'lift-name' }, kind.name)), remove),
       h('div', { class: 'cardio-row' }, boxes, check),
+      kind.boxing && h('div', { class: 'lift-foot' },
+        h('button', {
+          class: 'btn btn-small',
+          type: 'button',
+          onClick() {
+            const s = store.get().settings;
+            ctx.rest.startRounds({
+              rounds: s.roundCount,
+              work: s.roundSeconds,
+              rest: s.breakSeconds,
+              // Each finished round is written into this entry, even if the
+              // page has been flipped away from.
+              onRound(done, seconds) {
+                entry.values.rounds = String(done);
+                entry.values.minutes = log.tidy(Math.round(seconds / 6) / 10);
+                store.update(() => {});
+                window.dispatchEvent(new CustomEvent('composition:rounds'));
+              },
+            });
+          },
+        }, `${w.roundsButton} ${data.settings.roundCount} × ${clock(data.settings.roundSeconds)}`),
+      ),
     );
     return block;
   }
@@ -491,7 +513,13 @@ function writing(el, ctx) {
   // Coming back from "add a lift": bring the new lift into view.
   const focusLift = ctx.state.focusLift;
   ctx.state.focusLift = null;
+
+  // The round timer writes rounds into a boxing entry; show them as they land.
+  const onRounds = () => drawCardio();
+  window.addEventListener('composition:rounds', onRounds);
+
   return {
+    cleanUp() { window.removeEventListener('composition:rounds', onRounds); },
     onAttached() {
       if (focusLift == null || !blocks[focusLift]) return;
       const scroller = el.parentElement;

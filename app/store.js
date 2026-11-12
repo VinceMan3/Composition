@@ -12,7 +12,7 @@ const FORMAT = 1;
 function blank() {
   return {
     version: FORMAT,
-    settings: { sound: true, units: 'lb', restSeconds: 120 },
+    settings: { sound: true, units: 'lb', restSeconds: 120, roundCount: 6, roundSeconds: 180, breakSeconds: 60, bodyweight: null },
     pages: [],
     draft: null,     // the page being written today
     customLifts: [], // lifts the person added themselves
@@ -27,6 +27,10 @@ function tidy(raw) {
   if (!raw || typeof raw !== 'object') return base;
   const settings = { ...base.settings, ...(raw.settings && typeof raw.settings === 'object' ? raw.settings : {}) };
   settings.restSeconds = Math.min(600, Math.max(15, Math.round(+settings.restSeconds) || 120));
+  settings.roundCount = Math.min(15, Math.max(1, Math.round(+settings.roundCount) || 6));
+  settings.roundSeconds = Math.min(600, Math.max(30, Math.round(+settings.roundSeconds) || 180));
+  settings.breakSeconds = Math.min(300, Math.max(15, Math.round(+settings.breakSeconds) || 60));
+  settings.bodyweight = +settings.bodyweight > 0 ? +settings.bodyweight : null;
   return {
     ...base,
     ...raw,
