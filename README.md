@@ -27,6 +27,8 @@ no build step. Put the folder on any web host and it runs.
 - `app/log.js` is the arithmetic behind a workout page: last time's numbers,
   estimated maxes, plates, records, filing. It never touches the screen.
 - `app/awards.js` lists every sticker and the test that earns it.
+- `app/strength.js` is the Stats arithmetic: weigh-ins, best lifts, Wilks,
+  DOTS and strength levels. `app/chart.js` draws the hand-plotted charts.
 - `app/rest.js` is the rest timer above the tabs.
 - `app/store.js` saves to the device and makes backups.
 - `app/sound.js` builds every sound from scratch; there are no sound files.
@@ -45,6 +47,15 @@ One object, kept in the browser on the device (see `app/store.js`):
 - `customLifts`: lifts the person added themselves
 - `earned`: which stickers have been earned, and when
 - `stickers`: where each sticker sits on the cover
+- `weighins`: bodyweight in pounds by day
+- `liftNotes`: a standing note for each lift
+
+## The live app
+
+GitHub hosts the app for free from the `main` branch. Once hosting is on
+(repository Settings, then Pages, then "Deploy from a branch", `main`, `/`),
+it lives at https://vinceman3.github.io/Composition/ and updates a minute or
+two after each merge. On a phone, open it and choose "Add to Home Screen".
 
 ## Running it on your own computer
 
@@ -64,7 +75,8 @@ Then visit http://localhost:8000 in a browser.
 3. Looking back: open and fix filed pages, the lift library, one lift's history,
    lift notes, this week, the boxing round timer. (done)
 4. Art: a pen sketch pose for every muscle group, for the corners of the pages.
-5. Stats: the Big Three, records, charts, calendar, Wilks and DOTS.
+5. Stats: the Big Three with strength levels, total, Wilks and DOTS, a score
+   calculator, charts, weigh-ins, the training calendar, records. (done)
 6. Polish: settings, lb and kg, the dim garage look, desktop layout, install, offline.
 7. New sections: programs, food log, muscle map, lessons, meet day.
 8. Launch: accounts and sync, privacy page, app stores.

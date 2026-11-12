@@ -350,6 +350,15 @@ function writing(el, ctx) {
           },
         }, w.removeSet),
       ),
+      // A note about this lift today only ("left shoulder felt off").
+      h('div', { class: 'day-note' }, noteField({
+        get: () => entry.note,
+        set: text => { if (text.trim()) entry.note = text; else delete entry.note; store.updateSoon(() => {}); },
+        placeholder: w.dayNotePlaceholder,
+        addLabel: w.addDayNote,
+        doneLabel: w.noteDone,
+        label: `${lift.name}: ${w.dayNoteLabel}`,
+      })),
     );
     return block;
   }

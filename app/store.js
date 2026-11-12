@@ -6,6 +6,7 @@
 //   draft        the page being written today, or null
 //   customLifts  lifts the person added themselves
 //   liftNotes    a standing note for each lift: id -> text
+//   weighins     bodyweight in pounds by day: [{ date, w }]
 
 const KEY = 'composition.app.v1';
 const FORMAT = 1;
@@ -13,11 +14,12 @@ const FORMAT = 1;
 function blank() {
   return {
     version: FORMAT,
-    settings: { sound: true, units: 'lb', restSeconds: 120, roundCount: 6, roundSeconds: 180, breakSeconds: 60, bodyweight: null },
+    settings: { sound: true, units: 'lb', restSeconds: 120, roundCount: 6, roundSeconds: 180, breakSeconds: 60, sex: null },
     pages: [],
     draft: null,     // the page being written today
     customLifts: [], // lifts the person added themselves
     liftNotes: {},   // a standing note for each lift
+    weighins: [],    // bodyweight in pounds by day
     earned: {},      // stickers earned: id -> the day it was earned
     stickers: {},    // where each sticker sits on the cover: id -> { x, y, z, off }
   };
@@ -32,7 +34,11 @@ function tidy(raw) {
   settings.roundCount = Math.min(15, Math.max(1, Math.round(+settings.roundCount) || 6));
   settings.roundSeconds = Math.min(600, Math.max(30, Math.round(+settings.roundSeconds) || 180));
   settings.breakSeconds = Math.min(300, Math.max(15, Math.round(+settings.breakSeconds) || 60));
-  settings.bodyweight = +settings.bodyweight > 0 ? +settings.bodyweight : null;
+  settings.sex = settings.sex === 'men' || settings.sex === 'women' ? settings.sex : null;
+  // Bodyweight used to be a single setting; it is now the latest weigh-in.
+  let weighins = Array.isArray(raw.weighins) ? raw.weighins.filter(x => x && x.date && +x.w > 0) : [];
+  if (!weighins.length && +settings.bodyweight > 0) weighins = [{ date: new Date().toISOString().slice(0, 10), w: +settings.bodyweight }];
+  delete settings.bodyweight;
   return {
     ...base,
     ...raw,
@@ -42,6 +48,7 @@ function tidy(raw) {
     draft: raw.draft && Array.isArray(raw.draft.lifts) ? raw.draft : null,
     customLifts: Array.isArray(raw.customLifts) ? raw.customLifts.filter(l => l && l.id && l.name) : [],
     liftNotes: raw.liftNotes && typeof raw.liftNotes === 'object' ? raw.liftNotes : {},
+    weighins,
     earned: raw.earned && typeof raw.earned === 'object' ? raw.earned : {},
     stickers: raw.stickers && typeof raw.stickers === 'object' ? raw.stickers : {},
   };

@@ -3,8 +3,7 @@
 
 import { h, put, pageHead } from '../ui.js';
 import { clock } from '../rest.js';
-import { STICKERS, hasSticker, findSticker, collect } from '../awards.js';
-import { num } from '../log.js';
+import { STICKERS, hasSticker } from '../awards.js';
 
 export function render(el, ctx) {
   const { words, store, sound, toast } = ctx;
@@ -57,31 +56,6 @@ export function render(el, ctx) {
       h('button', { type: 'button', 'aria-label': 'One round more', onClick: () => step(1) }, '+1'),
     );
   }
-
-  // ---- bodyweight ----
-  const bwBox = h('input', {
-    class: 'write-in bw-in',
-    type: 'text',
-    inputmode: 'decimal',
-    autocomplete: 'off',
-    placeholder: 'lb',
-    'aria-label': w.bodyweightLabel,
-    value: store.get().settings.bodyweight || '',
-    onInput() {
-      const clean = bwBox.value.replace(',', '.').replace(/[^0-9.]/g, '');
-      if (clean !== bwBox.value) bwBox.value = clean;
-      store.updateSoon(d => { d.settings.bodyweight = num(clean) > 0 ? num(clean) : null; });
-    },
-    onBlur() {
-      // A new bodyweight can earn a sticker on the spot.
-      let fresh = [];
-      store.update(d => { fresh = collect(d); });
-      if (!fresh.length) return;
-      ctx.state.newStickers = [...(ctx.state.newStickers || []), ...fresh];
-      sound.play('stamp');
-      toast(`${w.newSticker} ${fresh.map(id => findSticker(id).name).join(', ')}`);
-    },
-  });
 
   // ---- try the sounds ----
   const stamp = h('span', { class: 'stamp', hidden: true }, w.stampWord);
@@ -197,16 +171,6 @@ export function render(el, ctx) {
       h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.roundCount), countStepper()),
       h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.roundLength), lengthStepper('roundSeconds', 30, 600)),
       h('div', { class: 'row' }, h('span', { class: 'setting-name' }, w.breakLength), lengthStepper('breakSeconds', 15, 300)),
-    ),
-
-    h('div', { class: 'panel' },
-      h('div', { class: 'row' },
-        h('div', null,
-          h('p', { class: 'label' }, w.bodyweightLabel),
-          h('p', { class: 'quiet' }, w.bodyweightNote),
-        ),
-        bwBox,
-      ),
     ),
 
     h('div', { class: 'panel' },

@@ -65,6 +65,7 @@ function reading(el, ctx) {
             h('div', null,
               h('h2', { class: 'lift-name' }, lift.name),
               h('p', { class: 'lift-last', style: 'color:var(--ink)' }, log.setsText(entry.sets, lift)),
+              entry.note && h('p', { class: 'day-note-text' }, entry.note),
             ),
             h('span', { class: 'filed-open' }, w.history),
           ),

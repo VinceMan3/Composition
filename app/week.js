@@ -9,7 +9,7 @@ import { dateKey, findCardio, doneSets } from './log.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
-function mark(kind) {
+export function mark(kind) {
   const paths = {
     lift: 'M5 13l4.5 4.5L19 6.5',
     box: 'M6 6l12 12M18 6L6 18',

@@ -80,6 +80,14 @@ The pictures are in `art/`. To replace one, upload a new picture with exactly
 the same file name (for example `sticker-gloves.png`). Files with a
 see-through background look best.
 
+## Change the strength levels
+
+Open `content/standards.js`. Each lift has five numbers: where Novice,
+Intermediate, Advanced, Elite and World class begin, as a multiple of
+bodyweight for a lifter at the reference bodyweight (176 lb for men, 132 lb
+for women). The app scales them for every other bodyweight. Raise a number
+to make that level harder to reach.
+
 ## Choose which pose goes with which muscle
 
 Open `content/poses.js`. Each line pairs a body part with a drawing in `art/`:

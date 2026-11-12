@@ -39,9 +39,10 @@ function totalMoved(data) {
   return sum;
 }
 
-// Bodyweight in pounds, as set under More. Zero until it is set.
+// Bodyweight in pounds, from the latest weigh-in. Zero until there is one.
 function bodyweight(data) {
-  return num(data.settings.bodyweight);
+  const list = data.weighins || [];
+  return list.length ? num([...list].sort((a, b) => (a.date < b.date ? -1 : 1))[list.length - 1].w) : 0;
 }
 
 function cardioEntries(data) {
@@ -94,13 +95,13 @@ export const STICKERS = [
     how: 'Your heaviest squat, bench and deadlift add up to 1,500 lb.',
     earned: data => bigThree(data) >= 1500 },
   { id: 'bw-bench', name: 'Bodyweight Bench', art: 'badge-bw-bench.webp', size: 0.26, turn: 5,
-    how: 'Bench press 1.5 times your bodyweight. Set your bodyweight under More.',
+    how: 'Bench press 1.5 times your bodyweight. Weigh in on the Stats page.',
     earned: data => bodyweight(data) >= 50 && heaviest(data, 'bench-press') >= 1.5 * bodyweight(data) },
   { id: 'bw-squat', name: 'Bodyweight Squat', art: 'badge-bw-squat.webp', size: 0.26, turn: -4,
-    how: 'Squat 2 times your bodyweight. Set your bodyweight under More.',
+    how: 'Squat 2 times your bodyweight. Weigh in on the Stats page.',
     earned: data => bodyweight(data) >= 50 && heaviest(data, 'squat') >= 2 * bodyweight(data) },
   { id: 'bw-dead', name: 'Bodyweight Deadlift', art: 'badge-bw-dead.webp', size: 0.27, turn: 3,
-    how: 'Deadlift 2.5 times your bodyweight. Set your bodyweight under More.',
+    how: 'Deadlift 2.5 times your bodyweight. Weigh in on the Stats page.',
     earned: data => bodyweight(data) >= 50 && heaviest(data, 'deadlift') >= 2.5 * bodyweight(data) },
   { id: 'million', name: 'Million Pound Mover', art: 'badge-million.webp', size: 0.31, turn: -3,
     how: 'Move 1,000,000 lb in total: every weight times every rep, added up for good.',

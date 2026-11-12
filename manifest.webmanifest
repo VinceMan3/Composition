@@ -1,0 +1,16 @@
+{
+  "name": "Composition",
+  "short_name": "Composition",
+  "description": "A training log that looks and feels like an old spiral notebook.",
+  "start_url": "./#cover",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#A9CBE0",
+  "theme_color": "#A9CBE0",
+  "icons": [
+    { "src": "art/icon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "art/icon/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "art/icon/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -17,6 +17,7 @@ export const ROUTES = {
   library: { tab: 'notebook', at: 22 },
   lift: { tab: 'notebook', at: 23 },
   stats: { tab: 'stats', at: 30 },
+  calc: { tab: 'stats', at: 31 },
   more: { tab: 'more', at: 40 },
   stickers: { tab: 'more', at: 41 },
 };

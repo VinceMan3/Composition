@@ -15,13 +15,14 @@ import * as add from './pages/add.js';
 import * as filed from './pages/filed.js';
 import * as notebook from './pages/notebook.js';
 import * as stats from './pages/stats.js';
+import * as calc from './pages/calc.js';
 import * as more from './pages/more.js';
 import * as stickers from './pages/stickers.js';
 import * as page from './pages/page.js';
 import * as library from './pages/library.js';
 import * as lift from './pages/lift.js';
 
-const PAGES = { cover, today, add, filed, notebook, stats, more, stickers, page, library, lift };
+const PAGES = { cover, today, add, filed, notebook, stats, calc, more, stickers, page, library, lift };
 
 const app = document.getElementById('app');
 const stack = document.getElementById('stack');
