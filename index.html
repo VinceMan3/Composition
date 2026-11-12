@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Composition</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Bowlby+One&family=Archivo+Narrow:wght@600;700&family=Special+Elite&family=Handlee&display=swap">
+<link rel="stylesheet" href="content/colors.css">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/motion.css">
+<link rel="stylesheet" href="styles/pages.css">
+</head>
+<body>
+<div class="app" id="app" data-page="cover">
+  <header class="strip">
+    <a class="wordmark" id="wordmark" href="#cover">Composition</a>
+    <span class="strip-note" id="strip-note"></span>
+  </header>
+  <div class="rings" aria-hidden="true"></div>
+
+  <main class="stack" id="stack"></main>
+
+  <div class="rest" id="rest" hidden></div>
+
+  <nav class="tabs" aria-label="Sections">
+    <a class="tab" href="#cover" data-tab="cover">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M8.5 7.5h7M8.5 11h7"/></svg>
+      <span data-tab-label></span>
+    </a>
+    <a class="tab" href="#today" data-tab="today">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 013 3L8 19l-4 1z"/></svg>
+      <span data-tab-label></span>
+    </a>
+    <a class="tab" href="#notebook" data-tab="notebook">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="1.5"/><path d="M8 3v4M12 3v4M16 3v4M8.5 12h7M8.5 16h7"/></svg>
+      <span data-tab-label></span>
+    </a>
+    <a class="tab" href="#stats" data-tab="stats">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M5 16l4-5 4 3 6-8"/></svg>
+      <span data-tab-label></span>
+    </a>
+    <a class="tab" href="#more" data-tab="more">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h9"/></svg>
+      <span data-tab-label></span>
+    </a>
+  </nav>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script type="module" src="app/main.js"></script>
+</body>
+</html>

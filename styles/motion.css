@@ -1,0 +1,141 @@
+/* Movement: the page flip, the pencil check, the stamp.
+   --flip sets how long a page takes to turn. Bigger is slower. */
+
+:root { --flip: 340ms; }
+
+/* ---------- the bending page (built in app/flip.js) ---------- */
+.sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+.sheet-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  transform-origin: 50% 0;
+  transform-style: preserve-3d;
+}
+.sheet-face, .sheet-back {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+/* The other side of the sheet, seen as it curls over. */
+.sheet-back {
+  transform: rotateX(180deg);
+  background: url(../art/paper.webp) 0 0 / 420px 420px, var(--paper-warm);
+  background-blend-mode: multiply;
+}
+.page.sheet-copy {
+  inset: auto;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+/* Shading that deepens down the sheet as it bends away from the light. */
+.sheet-face::after, .sheet-back::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(180deg, rgba(48, 30, 8, .75), rgba(48, 30, 8, 1));
+}
+.sheet-back::after { background: linear-gradient(180deg, rgba(255, 250, 232, .5), rgba(48, 30, 8, .5)); opacity: .5; }
+
+/* Going forward: the top lifts, the hinges below curl ahead of it. */
+@keyframes sheet-lift { to { transform: rotateX(100deg); } }
+@keyframes sheet-curl {
+  from { transform: rotateX(0deg); }
+  42% { transform: rotateX(9deg); }
+  to { transform: rotateX(4deg); }
+}
+@keyframes face-dim { to { opacity: calc(.1 + var(--k) * .32); } }
+.sheet-up > .sheet-strip { animation: sheet-lift var(--flip) cubic-bezier(.3, 0, .7, .45) forwards; }
+.sheet-up .sheet-hinge { animation: sheet-curl var(--flip) cubic-bezier(.2, .6, .4, 1) forwards; }
+.sheet-up .sheet-face::after { animation: face-dim var(--flip) ease-in forwards; }
+
+/* Going back: the sheet falls, its tail trailing, and settles with a flutter. */
+@keyframes sheet-fall {
+  from { transform: rotateX(100deg); animation-timing-function: cubic-bezier(.35, 0, .8, .6); }
+  74%, to { transform: rotateX(0deg); }
+}
+@keyframes sheet-trail {
+  from { transform: rotateX(5deg); animation-timing-function: ease-out; }
+  40% { transform: rotateX(8.5deg); animation-timing-function: ease-in; }
+  74% { transform: rotateX(3deg); animation-timing-function: ease-out; }
+  88% { transform: rotateX(-.7deg); animation-timing-function: ease-in-out; }
+  to { transform: rotateX(0deg); }
+}
+@keyframes face-light {
+  from { opacity: calc(.1 + var(--k) * .32); }
+  74%, to { opacity: 0; }
+}
+.sheet-down > .sheet-strip { animation: sheet-fall var(--flip) linear both; }
+.sheet-down .sheet-hinge { animation: sheet-trail var(--flip) linear both; }
+.sheet-down .sheet-face::after { animation: face-light var(--flip) ease-out both; }
+
+/* The shadow a turning page throws on the one beneath it. */
+@keyframes shade-clear { from { opacity: .34; } to { opacity: 0; } }
+@keyframes shade-fall { from { opacity: 0; } 74%, to { opacity: .34; } }
+.shade {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: linear-gradient(180deg, #2A1C0C, #17120B);
+  pointer-events: none;
+}
+.shade.is-clearing { animation: shade-clear var(--flip) ease-out forwards; }
+.shade.is-falling { animation: shade-fall var(--flip) ease-in forwards; }
+.page.is-waiting { visibility: hidden; }
+
+/* ---------- small moves ---------- */
+
+/* The pencil check being drawn. */
+.check path {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  transition: stroke-dashoffset .26s ease-out .03s;
+}
+.check[aria-pressed="true"] path { stroke-dashoffset: 0; }
+
+/* A number that just changed gives a little jump. */
+@keyframes bump {
+  40% { transform: translateY(-3px) scale(1.12); }
+}
+.is-bumped { animation: bump .18s ease-out; }
+
+/* The rubber stamp coming down. */
+@keyframes stamp-down {
+  from { transform: rotate(-6deg) scale(2); opacity: 0; }
+  55% { transform: rotate(-6deg) scale(.93); opacity: 1; }
+  to { transform: rotate(-6deg) scale(1); opacity: 1; }
+}
+.stamp.is-stamping { animation: stamp-down .24s cubic-bezier(.3, 0, .6, 1) both; }
+
+@keyframes toast-in {
+  from { transform: translate(-50%, 12px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+.toast:not([hidden]) { animation: toast-in .18s ease-out; }
+
+@keyframes rest-flash { 50% { background-color: var(--mustard-light); } }
+.rest.is-over { animation: rest-flash .5s ease-in-out 4; }
+
+@keyframes fade-in { from { opacity: 0; } }
+.page.is-fading-in { animation: fade-in .14s linear; }
+
+/* People who ask their device for less motion get a quick fade instead of
+   the flip (app/router.js skips it), and the small moves stay still. */
+@media (prefers-reduced-motion: reduce) {
+  .check path { transition: none; }
+  .is-bumped, .stamp.is-stamping, .toast:not([hidden]), .rest.is-over { animation: none; }
+  .btn, .tab svg, .stepper button { transition: none; }
+}

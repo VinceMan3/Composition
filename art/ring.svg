@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="36" viewBox="0 0 22 36">
+<defs>
+<linearGradient id="w" x1="0" x2="1" y1="0" y2="0">
+<stop offset="0" stop-color="#2a3138"/><stop offset=".22" stop-color="#8d98a2"/><stop offset=".4" stop-color="#eef2f5"/>
+<stop offset=".58" stop-color="#96a1ab"/><stop offset="1" stop-color="#262c33"/>
+</linearGradient>
+<radialGradient id="h" cx=".5" cy=".3" r=".75">
+<stop offset="0" stop-color="#0d0a08"/><stop offset=".7" stop-color="#2a2019"/><stop offset="1" stop-color="#57432f"/>
+</radialGradient>
+<filter id="b" x="-1" y="-.2" width="3" height="1.4"><feGaussianBlur stdDeviation="1"/></filter>
+</defs>
+<ellipse cx="10.7" cy="4.6" rx="3.2" ry="2.9" fill="#16242f" opacity=".85"/>
+<ellipse cx="10.7" cy="24" rx="4" ry="3.8" fill="url(#h)"/>
+<path d="M7.1 25.4a3.9 3.6 0 0 0 7.2 0" fill="none" stroke="#fff8e2" stroke-opacity=".55" stroke-width=".8"/>
+<rect x="11.4" y="5" width="3.4" height="19.5" rx="1.7" fill="#1a1208" opacity=".36" filter="url(#b)"/>
+<rect x="9" y="3.2" width="3.4" height="21.4" rx="1.7" fill="url(#w)"/>
+<rect x="9" y="3.2" width="3.4" height="21.4" rx="1.7" fill="none" stroke="#161b20" stroke-opacity=".5" stroke-width=".5"/>
+</svg>

@@ -1,0 +1,38 @@
+/*
+  COLORS
+  Safe to edit. Change a value after the colon and save; the whole app follows.
+  Each color is a hex code. Search "color picker" online to find new ones.
+*/
+:root {
+  /* The notebook cover */
+  --blue: #A9CBE0;          /* baby blue cover */
+  --blue-ray: #B9D6E8;      /* lighter rays on the cover */
+  --blue-deep: #86AFCA;     /* shaded parts of the cover */
+  --navy: #1D3B52;          /* heavy outlines and drop shadows */
+
+  /* The paper */
+  --paper: #F6EDCD;         /* cream page */
+  --paper-warm: #F1E3B8;    /* yellowing toward the edges */
+  --paper-edge: #E3CD96;    /* the most aged corners */
+  --card: #FAF4DE;          /* lighter cards and input boxes */
+  --rule: #A9C4D6;          /* ruled lines */
+  --margin-line: #D36F68;   /* the red margin line */
+
+  /* Ink */
+  --ink: #2B2420;           /* printed text */
+  --ink-soft: #4A3B2C;      /* quieter printed text */
+  --pen: #22347F;           /* blue ballpoint handwriting */
+  --pencil: #8D877B;        /* pencilled-in numbers from last time */
+
+  /* Accents */
+  --maroon: #7A2233;        /* main buttons, the masthead */
+  --maroon-dark: #5A1826;
+  --mustard: #E9B42C;       /* highlights and the shadow behind headings */
+  --mustard-light: #F0C64E;
+  --green: #2F5D3A;         /* done, up, selected */
+  --purple: #5B3F7A;        /* boxing and bag work */
+
+  /* Around the notebook */
+  --desk: #5A3F2B;          /* the wooden desk that shows on a wide screen */
+  --tape: #EFE2A6;          /* the tape holding the verse card */
+}

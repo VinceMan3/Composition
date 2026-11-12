@@ -1,0 +1,414 @@
+/* The notebook itself: fonts, the cover strip, the rings, the paper, the light
+   falling on it, the tabs, and the pieces every page shares.
+   Colors come from content/colors.css. */
+
+:root {
+  color-scheme: light;
+  --f-mast: 'Shrikhand', Georgia, serif;                       /* the masthead */
+  --f-head: 'Bowlby One', Impact, sans-serif;                  /* headings and big numbers */
+  --f-ui: 'Archivo Narrow', 'Arial Narrow', Arial, sans-serif; /* labels and buttons */
+  --f-type: 'Special Elite', 'Courier New', monospace;         /* typewriter captions */
+  --f-hand: 'Handlee', 'Segoe Print', cursive;                 /* handwriting */
+  --strip-h: 46px;
+  --tabs-h: 68px;
+  --side-l: max(56px, env(safe-area-inset-left, 0px));
+  --side-r: max(16px, env(safe-area-inset-right, 0px));
+  /* A card lying on the page: a tight contact shadow plus a soft one. */
+  --lift: 0 1px 1px rgba(60, 38, 12, .35), 2px 5px 10px rgba(60, 38, 12, .22);
+  /* The same card with the bold printed offset behind it. */
+  --pop: 4px 4px 0 var(--navy), 7px 12px 18px rgba(18, 32, 46, .3);
+}
+
+* { box-sizing: border-box; }
+html {
+  height: 100%;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+}
+body {
+  height: 100%;
+  margin: 0;
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 232, 190, .22), transparent 60%),
+    url(../art/desk.webp) 0 0 / 512px 512px,
+    var(--desk);
+  color: var(--ink);
+  font-family: var(--f-ui);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+/* Paint the phone's status-bar and home-bar areas so nothing shows through. */
+body::before, body::after { content: ""; position: fixed; left: 0; right: 0; z-index: 10; }
+body::before { top: 0; height: env(safe-area-inset-top, 0px); background: var(--blue); }
+body::after { bottom: 0; height: env(safe-area-inset-bottom, 0px); background: var(--paper-warm); }
+
+h1, h2, h3, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+a { color: inherit; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--pen); outline-offset: 2px; border-radius: 4px; }
+[hidden] { display: none !important; }
+
+/* ---------- the shell ---------- */
+.app {
+  position: relative;
+  height: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px rgba(20, 12, 4, .5), 0 2px 3px rgba(20, 12, 4, .5), 0 18px 50px rgba(20, 12, 4, .55);
+}
+
+/* The strip of cover above the rings. */
+.strip {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  height: var(--strip-h);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .22), transparent 40%, rgba(20, 40, 60, .16)),
+    url(../art/cover-wear.webp) 0 0 / 400px 400px,
+    radial-gradient(rgba(29, 59, 82, .2) 1px, transparent 1.5px) 0 0 / 6px 6px,
+    var(--blue);
+  box-shadow: 0 2px 5px rgba(30, 20, 8, .4);
+}
+.wordmark {
+  font-family: var(--f-mast);
+  font-size: 26px;
+  line-height: 1.2;
+  color: var(--maroon);
+  text-shadow: 2px 2px 0 var(--mustard);
+  text-decoration: none;
+  transition: opacity .2s;
+}
+.strip-note {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--navy);
+  white-space: nowrap;
+}
+/* On the cover the big label carries the name, so the strip stays plain. */
+.app[data-page="cover"] .wordmark,
+.app[data-page="cover"] .strip-note { opacity: 0; pointer-events: none; }
+
+/* The wire rings: one drawn loop, repeated across the top. */
+.rings {
+  position: absolute;
+  z-index: 6;
+  left: 0;
+  right: 0;
+  top: calc(var(--strip-h) - 15px);
+  height: 36px;
+  pointer-events: none;
+  background: url(../art/ring.svg) 50% 0 / 22px 36px repeat-x;
+}
+
+.stack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  perspective: 2200px;
+  perspective-origin: 50% 0;
+}
+/* Light on the page: shade under the binding, a warm glow from the upper
+   left, and darker toward the far corner and the cut edges. */
+.stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(40, 26, 8, .26), rgba(40, 26, 8, .07) 13px, transparent 32px),
+    linear-gradient(90deg, rgba(60, 38, 12, .1), transparent 8px, transparent calc(100% - 8px), rgba(60, 38, 12, .13)),
+    radial-gradient(90% 60% at 16% 10%, rgba(255, 252, 238, .3), transparent 70%),
+    radial-gradient(130% 100% at 22% 12%, transparent 58%, rgba(70, 44, 14, .12) 100%);
+}
+
+/* ---------- a page ---------- */
+.page {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background:
+    linear-gradient(90deg, transparent 42px, var(--margin-line) 42px, var(--margin-line) 44px, transparent 44px),
+    url(../art/paper.webp) 0 0 / 420px 420px,
+    radial-gradient(130% 80% at 40% 35%, var(--paper) 0%, var(--paper-warm) 60%, var(--paper-edge) 100%);
+  background-blend-mode: multiply, multiply, normal;
+}
+.page-inner {
+  position: relative;
+  min-height: 100%;
+  padding-block: 34px 32px;
+  padding-left: var(--side-l);
+  padding-right: var(--side-r);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  /* ruled lines, printed a little unevenly */
+  background: repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--rule) 62%, transparent) 31px 32.2px) 0 10px;
+}
+
+/* ---------- type ---------- */
+.kicker {
+  font-family: var(--f-type);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--maroon);
+}
+.heading {
+  font-family: var(--f-head);
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.1;
+  text-shadow: 2px 2px 0 var(--mustard);
+  text-wrap: balance;
+}
+.hand { font-family: var(--f-hand); font-weight: 400; color: var(--pen); }
+.label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.quiet { font-size: 14px; color: var(--ink-soft); }
+.warn { color: var(--maroon); font-weight: 700; }
+.up { color: var(--green); }
+.down { color: var(--maroon); }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .12)), var(--maroon);
+  color: var(--paper);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .35);
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255, 255, 255, .2), 0 1px 1px rgba(40, 20, 8, .45), 0 4px 8px rgba(40, 20, 8, .25);
+  transition: transform .08s, box-shadow .08s;
+}
+.btn:active { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .28), 0 1px 1px rgba(40, 20, 8, .45); }
+.btn-line {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 60%), var(--card);
+  color: var(--ink);
+  text-shadow: none;
+  border: 2.5px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--navy), 3px 5px 8px rgba(40, 26, 8, .22);
+}
+.btn-line:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--navy), 0 1px 2px rgba(40, 26, 8, .3); }
+.btn-small { min-height: 44px; padding: 0 12px; font-size: 14px; letter-spacing: .06em; }
+.btn[data-armed="yes"] { background: var(--mustard); color: var(--ink); text-shadow: none; }
+.link-btn {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-btn[data-armed="yes"] { color: var(--maroon); font-weight: 700; }
+
+.seg { display: inline-flex; flex: none; box-shadow: var(--lift); border-radius: 5px; }
+.seg button {
+  min-width: 58px;
+  height: 44px;
+  border: 2.5px solid var(--ink);
+  background: var(--card);
+  font-size: 16px;
+  font-weight: 700;
+}
+.seg button:first-child { border-radius: 5px 0 0 5px; border-right: 0; }
+.seg button:last-child { border-radius: 0 5px 5px 0; }
+.seg button[aria-pressed="true"] { background: var(--green); color: var(--paper); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .35); }
+
+/* An index card lying on the page. */
+.panel {
+  padding: 14px;
+  border: 1.5px solid rgba(74, 59, 44, .55);
+  border-radius: 3px;
+  background: url(../art/paper.webp) 120px 60px / 420px 420px, var(--card);
+  background-blend-mode: multiply;
+  box-shadow: var(--lift);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.row > div:first-child { min-width: 0; }
+.wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* A small minus / number / plus control. */
+.stepper { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.stepper button {
+  width: 42px;
+  height: 40px;
+  padding: 0;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, 0) 60%), var(--card);
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 var(--navy);
+  transition: transform .06s, box-shadow .06s;
+}
+.stepper button:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--navy); }
+.stepper-word { min-width: 34px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.stepper-value { min-width: 52px; text-align: center; font-family: var(--f-head); font-weight: 400; font-size: 20px; }
+
+.todo li {
+  position: relative;
+  padding: 4px 0 4px 26px;
+  min-height: 32px;
+  font-family: var(--f-hand);
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 24px;
+  color: var(--pen);
+}
+.todo li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--pen);
+  border-radius: 3px;
+}
+
+/* ---------- the rest timer, above the tabs ---------- */
+.rest {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 6px var(--side-r) 9px max(16px, env(safe-area-inset-left, 0px));
+  background: linear-gradient(180deg, rgba(255, 255, 255, .28), transparent 50%, rgba(90, 50, 0, .14)), var(--mustard);
+  border-top: 3px solid var(--navy);
+  box-shadow: 0 -5px 12px rgba(40, 26, 8, .28);
+  overflow: hidden;
+}
+.rest-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: var(--maroon);
+  transform-origin: 0 50%;
+  transition: transform .2s linear;
+}
+.rest-label { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.rest-time { font-family: var(--f-head); font-weight: 400; font-size: 26px; line-height: 1; min-width: 64px; }
+.rest-controls { margin-left: auto; display: flex; gap: 6px; }
+.rest-controls button {
+  min-width: 46px;
+  height: 40px;
+  padding: 0 8px;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px;
+  background: var(--card);
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 2px 2px 0 var(--navy);
+}
+.rest-controls button:active { transform: translate(2px, 2px); box-shadow: none; }
+.rest-controls .rest-stop { background: var(--maroon); color: var(--paper); }
+.rest.is-over .rest-time { display: none; }
+.rest.is-over .rest-label { font-size: 15px; }
+
+/* ---------- the tabs ---------- */
+.tabs {
+  position: relative;
+  z-index: 5;
+  flex: none;
+  height: var(--tabs-h);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  background:
+    linear-gradient(180deg, rgba(255, 252, 240, .5), transparent 40%, rgba(90, 60, 20, .1)),
+    url(../art/paper.webp) 40px 200px / 420px 420px,
+    var(--paper-warm);
+  background-blend-mode: normal, multiply, normal;
+  border-top: 3px solid var(--navy);
+  box-shadow: 0 -6px 14px rgba(40, 26, 8, .3);
+}
+.rest:not([hidden]) + .tabs { box-shadow: none; }
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #3D342C;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.tab svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .12s;
+}
+.tab:active svg { transform: scale(.84) rotate(-6deg); }
+.tab[aria-current="page"] { color: var(--maroon); }
+
+/* ---------- pop-up messages ---------- */
+.toast {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(var(--tabs-h) + 18px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  max-width: min(88vw, 420px);
+  padding: 11px 16px;
+  border: 2.5px solid var(--ink);
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .3), transparent 60%), var(--mustard);
+  color: var(--ink);
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 3px 3px 0 var(--navy), 5px 10px 18px rgba(20, 30, 40, .35);
+}
