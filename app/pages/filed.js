@@ -3,6 +3,7 @@
 
 import { h, put, art } from '../ui.js';
 import { niceDate } from '../log.js';
+import { findSticker } from '../awards.js';
 
 export function render(el, ctx) {
   const { words, store, sound } = ctx;
@@ -57,6 +58,21 @@ export function render(el, ctx) {
         h('p', { class: 'hand' }, `${w.estMax} ${r.now} ${unit} · ${w.was} ${r.was}`),
       ),
     )),
+    (sum.stickers || []).map(findSticker).filter(Boolean).map(def => h('div', { class: 'record is-sticker' },
+      art(def.art, '', null, null),
+      h('div', null,
+        h('p', { class: 'label' }, w.stickerLabel),
+        h('p', { class: 'record-name' }, def.name),
+        h('p', { class: 'hand' }, w.stickerNote),
+      ),
+    )),
+    (sum.cardio || []).length > 0 && h('div', null,
+      h('p', { class: 'label' }, w.cardioLabel),
+      h('div', { class: 'compare' }, sum.cardio.map(row => h('div', { class: 'compare-row' },
+        h('span', { class: `compare-name${row.boxing ? ' is-boxing' : ''}` }, row.name),
+        h('span', { class: 'compare-best' }, row.text),
+      ))),
+    ),
     sum.rows.length > 0 && h('div', null,
       h('p', { class: 'label' }, w.compareLabel),
       h('div', { class: 'compare' }, sum.rows.map(row => h('div', { class: 'compare-row' },

@@ -1,7 +1,7 @@
 // The notebook: every filed page, newest on top. Step 3 lets you open them.
 
 import { h, put, count, art, pageHead, comingList } from '../ui.js';
-import { niceDate } from '../log.js';
+import { niceDate, findCardio } from '../log.js';
 
 export function render(el, { words, store }) {
   const w = words.notebook;
@@ -14,10 +14,12 @@ export function render(el, { words, store }) {
       pages.length
         ? h('div', { class: 'filed-list' }, pages.map(page => {
           const sets = page.lifts.reduce((n, entry) => n + entry.sets.length, 0);
+          const cardio = (page.cardio || []).map(c => findCardio(c.kindId).name.toLowerCase());
+          const meta = [page.lifts.length && count(page.lifts.length, words.count.lift), sets && count(sets, words.count.set), ...cardio].filter(Boolean).join(' · ');
           return h('div', { class: 'filed-row' },
             h('span', { class: 'kicker' }, niceDate(page.date)),
             h('span', { class: 'filed-title' }, page.title),
-            h('span', { class: 'filed-meta' }, `${count(page.lifts.length, words.count.lift)} · ${count(sets, words.count.set)}`),
+            h('span', { class: 'filed-meta' }, meta),
           );
         }))
         : h('p', { class: 'hand', style: 'font-size:18px;line-height:32px' }, w.empty),

@@ -6,6 +6,7 @@ import { WORDS } from '../content/wording.js';
 import * as store from './store.js';
 import * as sound from './sound.js';
 import * as rest from './rest.js';
+import { collect } from './awards.js';
 import { toast, shortDate } from './ui.js';
 import { startRouter } from './router.js';
 import * as cover from './pages/cover.js';
@@ -15,8 +16,9 @@ import * as filed from './pages/filed.js';
 import * as notebook from './pages/notebook.js';
 import * as stats from './pages/stats.js';
 import * as more from './pages/more.js';
+import * as stickers from './pages/stickers.js';
 
-const PAGES = { cover, today, add, filed, notebook, stats, more };
+const PAGES = { cover, today, add, filed, notebook, stats, more, stickers };
 
 const app = document.getElementById('app');
 const stack = document.getElementById('stack');
@@ -43,6 +45,10 @@ const ctx = {
 };
 
 rest.initRest(document.getElementById('rest'), ctx);
+
+// Anything earned that was never handed out (say, after a restore) is
+// handed out now, and slapped on the cover the next time it opens.
+store.update(d => { ctx.state.newStickers = collect(d); });
 
 const router = startRouter({
   stack,

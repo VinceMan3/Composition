@@ -9,7 +9,7 @@ no build step. Put the folder on any web host and it runs.
 
 | Folder | What is in it | Safe to edit by hand? |
 | --- | --- | --- |
-| `content/` | Colors, wording, the lift list and the daily verses | Yes. See `HOW-TO-EDIT.md` |
+| `content/` | Colors, wording, the lift list, the cardio list and the daily verses | Yes. See `HOW-TO-EDIT.md` |
 | `art/` | Stickers, sketches, paper texture | Yes, swap a picture for one with the same name |
 | `styles/` | How things look: layout, type, the page flip | With care |
 | `app/` | How things work: pages, saving, sound | With care |
@@ -26,6 +26,7 @@ no build step. Put the folder on any web host and it runs.
   draws itself into `el`.
 - `app/log.js` is the arithmetic behind a workout page: last time's numbers,
   estimated maxes, plates, records, filing. It never touches the screen.
+- `app/awards.js` lists every sticker and the test that earns it.
 - `app/rest.js` is the rest timer above the tabs.
 - `app/store.js` saves to the device and makes backups.
 - `app/sound.js` builds every sound from scratch; there are no sound files.
@@ -42,6 +43,8 @@ One object, kept in the browser on the device (see `app/store.js`):
 - `draft`: the page being written today, or nothing
 - `pages`: every filed page, oldest first
 - `customLifts`: lifts the person added themselves
+- `earned`: which stickers have been earned, and when
+- `stickers`: where each sticker sits on the cover
 
 ## Running it on your own computer
 
@@ -56,7 +59,8 @@ Then visit http://localhost:8000 in a browser.
 ## Build steps so far
 
 1. Foundation: the notebook frame, five tabs, page flips, sounds, saving, backup. (done)
-2. Logging: today's page, add a lift, rest timer, filing a page, the daily verse. (done)
+2. Logging: today's page, add a lift, cardio, rest timer, filing a page, the daily verse,
+   movable stickers and the first earned stickers. (done)
 3. Looking back: the notebook, lift library, one lift's history.
 4. Cover: this week at a glance, more stickers and sketches.
 5. Stats: the Big Three, records, charts, calendar, Wilks and DOTS.

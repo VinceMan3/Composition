@@ -15,6 +15,7 @@ export const ROUTES = {
   notebook: { tab: 'notebook', at: 20 },
   stats: { tab: 'stats', at: 30 },
   more: { tab: 'more', at: 40 },
+  stickers: { tab: 'more', at: 41 },
 };
 
 const calm = window.matchMedia('(prefers-reduced-motion: reduce)');

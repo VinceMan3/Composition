@@ -14,8 +14,10 @@ function blank() {
     version: FORMAT,
     settings: { sound: true, units: 'lb', restSeconds: 120 },
     pages: [],
-    draft: null,
-    customLifts: [],
+    draft: null,     // the page being written today
+    customLifts: [], // lifts the person added themselves
+    earned: {},      // stickers earned: id -> the day it was earned
+    stickers: {},    // where each sticker sits on the cover: id -> { x, y, z, off }
   };
 }
 
@@ -33,6 +35,8 @@ function tidy(raw) {
     pages: Array.isArray(raw.pages) ? raw.pages.filter(p => p && Array.isArray(p.lifts)) : [],
     draft: raw.draft && Array.isArray(raw.draft.lifts) ? raw.draft : null,
     customLifts: Array.isArray(raw.customLifts) ? raw.customLifts.filter(l => l && l.id && l.name) : [],
+    earned: raw.earned && typeof raw.earned === 'object' ? raw.earned : {},
+    stickers: raw.stickers && typeof raw.stickers === 'object' ? raw.stickers : {},
   };
 }
 

@@ -4,6 +4,8 @@
 import { h, put, count, icon, art, shortDate, pageHead, twoTap } from '../ui.js';
 import * as log from '../log.js';
 import { clock } from '../rest.js';
+import { collect } from '../awards.js';
+import { CARDIO, CARDIO_UNITS } from '../../content/cardio.js';
 
 export function render(el, ctx) {
   return ctx.store.get().draft ? writing(el, ctx) : starting(el, ctx);
@@ -336,11 +338,87 @@ function writing(el, ctx) {
 
   const listEl = h('div', { class: 'lifts bleed' });
 
+  // ----- cardio: boxing, running and the rest -----
+  page.cardio = page.cardio || [];
+  const cardioEl = h('div', { class: 'lifts bleed' });
+
+  function cardioBlock(entry, ci) {
+    const kind = log.findCardio(entry.kindId);
+    const boxes = kind.fields.map(name => {
+      const input = h('input', {
+        type: 'text',
+        inputmode: 'decimal',
+        autocomplete: 'off',
+        value: entry.values[name] || '',
+        'aria-label': `${kind.name}, ${name}`,
+        onInput() {
+          const clean = cleanNumber(input.value);
+          if (clean !== input.value) input.value = clean;
+          entry.values[name] = clean;
+          save();
+        },
+      });
+      return h('label', { class: 'cardio-box' }, input, h('span', null, CARDIO_UNITS[name]));
+    });
+    const check = h('button', {
+      class: 'check',
+      type: 'button',
+      'aria-pressed': String(entry.done),
+      'aria-label': `${kind.name} done`,
+      'data-sound': 'none',
+      onClick() {
+        if (!entry.done && !log.hasNumbers(entry)) {
+          toast(w.needCardio);
+          boxes[0].querySelector('input').focus();
+          return;
+        }
+        entry.done = !entry.done;
+        save();
+        sound.play(entry.done ? 'pencil' : 'tap');
+        check.setAttribute('aria-pressed', String(entry.done));
+        block.classList.toggle('is-done', entry.done);
+      },
+    }, icon('M5 13l4.5 4.5L19 7'));
+    const remove = twoTap(
+      h('button', { class: 'lift-remove', type: 'button' }, w.removeLift),
+      w.removeLiftConfirm,
+      () => { page.cardio.splice(ci, 1); save(); drawCardio(); },
+    );
+    const block = h('section', { class: `lift cardio${kind.boxing ? ' is-boxing' : ''}${entry.done ? ' is-done' : ''}` },
+      h('div', { class: 'lift-head' }, h('div', null, h('h2', { class: 'lift-name' }, kind.name)), remove),
+      h('div', { class: 'cardio-row' }, boxes, check),
+    );
+    return block;
+  }
+
+  let cardioBlocks = [];
+  function drawCardio() {
+    cardioBlocks = page.cardio.map(cardioBlock);
+    cardioEl.replaceChildren(...cardioBlocks);
+    emptyNote.hidden = page.lifts.length + page.cardio.length > 0;
+  }
+
+  // The choices that open under "+ Add cardio".
+  const cardioTray = h('div', { class: 'chips', hidden: true }, CARDIO.map(kind =>
+    h('button', {
+      class: `chip${kind.boxing ? ' is-boxing' : ''}`,
+      type: 'button',
+      'data-sound': 'none',
+      onClick() {
+        log.addCardio(page, kind.id);
+        save();
+        sound.play('pencil');
+        cardioTray.hidden = true;
+        drawCardio();
+        cardioBlocks[cardioBlocks.length - 1].scrollIntoView({ block: 'center' });
+      },
+    }, kind.name)));
+
   function draw() {
     rows = [];
     blocks = page.lifts.map(liftBlock);
     listEl.replaceChildren(...blocks);
-    emptyNote.hidden = page.lifts.length > 0;
+    emptyNote.hidden = page.lifts.length + page.cardio.length > 0;
     page.lifts.forEach((entry, li) => {
       showGhosts(li);
       entry.sets.forEach((_, si) => showNote(li, si));
@@ -362,11 +440,15 @@ function writing(el, ctx) {
   });
   const emptyNote = h('p', { class: 'hand', style: 'font-size:18px' }, w.empty);
 
-  const doneCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0);
-  const openCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => !s.done).length, 0);
+  const doneCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0) + page.cardio.filter(c => c.done).length;
+  const openCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => !s.done).length, 0) + page.cardio.filter(c => !c.done).length;
   function fileIt() {
     ctx.rest.stop();
-    store.update(d => { log.fileDraft(d); });
+    store.update(d => {
+      const summary = log.fileDraft(d);
+      summary.stickers = collect(d);
+      ctx.state.newStickers = [...(ctx.state.newStickers || []), ...summary.stickers];
+    });
     ctx.state.justFiled = true;
     ctx.go('filed');
   }
@@ -394,13 +476,17 @@ function writing(el, ctx) {
     ),
     emptyNote,
     listEl,
+    cardioEl,
     h('div', { class: 'page-actions' },
       h('a', { class: 'btn btn-line', href: '#add' }, w.addLift),
+      h('button', { class: 'btn btn-line btn-cardio', type: 'button', onClick() { cardioTray.hidden = !cardioTray.hidden; } }, w.addCardio),
+      cardioTray,
       fileButton,
       tear,
     ),
   );
   draw();
+  drawCardio();
 
   // Coming back from "add a lift": bring the new lift into view.
   const focusLift = ctx.state.focusLift;

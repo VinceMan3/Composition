@@ -3,6 +3,7 @@
 
 import { h, put, pageHead } from '../ui.js';
 import { clock } from '../rest.js';
+import { STICKERS, hasSticker } from '../awards.js';
 
 export function render(el, ctx) {
   const { words, store, sound, toast } = ctx;
@@ -95,6 +96,16 @@ export function render(el, ctx) {
 
   put(el,
     pageHead(words.tabs.more, w.title, w.note),
+
+    h('div', { class: 'panel' },
+      h('div', { class: 'row' },
+        h('div', null,
+          h('p', { class: 'label' }, w.stickersLabel),
+          h('p', { class: 'quiet' }, `${STICKERS.filter(s => hasSticker(store.get(), s)).length} ${words.stickers.of} ${STICKERS.length} ${w.stickersNote}`),
+        ),
+        h('a', { class: 'btn btn-small', href: '#stickers' }, w.stickersButton),
+      ),
+    ),
 
     h('div', { class: 'panel' },
       h('div', { class: 'row' },

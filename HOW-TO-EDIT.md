@@ -42,6 +42,22 @@ logged that lift: your history is filed under it.
 
 `gear: 'Barbell'` is what switches on the plate line under a set.
 
+## Add a kind of cardio
+
+Open `content/cardio.js`. Each line is one kind:
+
+    { id: 'running', name: 'Running', fields: ['miles', 'minutes'] },
+
+`fields` are the boxes to fill in: any of `'rounds'`, `'minutes'`, `'miles'`,
+`'meters'`. Add `boxing: true` to mark it in purple and count it toward the
+boxing stickers.
+
+## Rename a sticker or change how it is earned
+
+The stickers are listed in `app/awards.js`. The `name` and `how` text are safe
+to change. The numbers in the `earned` line are the bar to clear: for example
+`>= 225` on the two plate bench. Leave the rest of that line alone.
+
 ## Add a verse
 
 Open `content/verses.js`. Each line is one verse:

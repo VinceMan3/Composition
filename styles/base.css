@@ -147,6 +147,9 @@ button { cursor: pointer; }
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* a scrollbar as faint as a pencil line */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(74, 59, 44, .28) transparent;
   background:
     linear-gradient(90deg, transparent 42px, var(--margin-line) 42px, var(--margin-line) 44px, transparent 44px),
     url(../art/paper.webp) 0 0 / 420px 420px,
@@ -165,6 +168,12 @@ button { cursor: pointer; }
   /* ruled lines, printed a little unevenly */
   background: repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--rule) 62%, transparent) 31px 32.2px) 0 10px;
 }
+
+.page::-webkit-scrollbar { width: 5px; }
+.page::-webkit-scrollbar-track { background: transparent; }
+.page::-webkit-scrollbar-thumb { background: rgba(74, 59, 44, .28); border-radius: 3px; }
+.page::-webkit-scrollbar-thumb:hover { background: rgba(74, 59, 44, .5); }
+.backup-box { scrollbar-width: thin; scrollbar-color: rgba(74, 59, 44, .28) transparent; }
 
 /* ---------- type ---------- */
 .kicker {
