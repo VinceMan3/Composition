@@ -110,6 +110,15 @@ export const WORDS = {
     needName: 'Give it a name first.',
   },
 
+  // Choosing the muscles a lift of your own works, so it counts on the muscle map
+  muscles: {
+    label: 'Muscles it works',
+    hint: 'Tap the main ones so it counts on the muscle map. You can skip this.',
+    worksLabel: 'Main muscles',
+    helpsLabel: 'Helpers',
+    addHelpers: '+ Add helper muscles',
+  },
+
   filed: {
     stamp: 'Filed',
     kicker: 'Page filed',

@@ -50,6 +50,28 @@ logged that lift: your history is filed under it.
 
 `gear: 'Barbell'` is what switches on the plate line under a set.
 
+`works` and `helps` are the muscles it trains, and they decide what lights up
+on the muscle map. Use names the map knows (they are listed in
+`content/muscles.js`); a check fails if a name does not count toward any part.
+
+## Change what the muscle map says
+
+Open `content/muscles.js`. Each part of the map is one entry:
+
+    { id: 'lats', group: 'lats', name: 'Lats', view: 'both',
+      names: 'lats',
+      does: "Pull your arm down and back toward your hip...",
+      fact: "They're the broadest muscle in your body..." },
+
+Change `name`, `does` and `fact` freely. These use double quotes, so
+apostrophes need no backslash. `names` lists the lift-list muscle names that
+count toward the part; to teach the map a new name, add it here (for example
+`'chest, lower chest'`). Leave `id`, `group` and `view` alone: they match the
+drawings.
+
+`PICK` at the bottom is the list of muscles you can choose from when you write
+in a lift of your own.
+
 ## Add a kind of cardio
 
 Open `content/cardio.js`. Each line is one kind:

@@ -2,6 +2,7 @@
 
 import { h, put } from '../ui.js';
 import * as log from '../log.js';
+import { musclePicker } from '../musclepick.js';
 
 export function render(el, ctx) {
   const { words, store, sound, toast } = ctx;
@@ -92,6 +93,7 @@ export function render(el, ctx) {
   const nameBox = h('input', { class: 'write-in', type: 'text', maxlength: '40', placeholder: w.namePlaceholder, 'aria-label': w.nameLabel, autocomplete: 'off' });
   const partChoice = choice([...bodyParts.filter(g => g !== 'Yours'), w.other], w.other);
   const gearChoice = choice(w.gearOptions, w.gearOptions[0]);
+  const muscles = musclePicker({ words });
   const form = h('div', { class: 'panel', hidden: true },
     h('p', { class: 'label' }, w.newTitle),
     nameBox,
@@ -99,6 +101,7 @@ export function render(el, ctx) {
     partChoice.el,
     h('p', { class: 'label' }, w.gearLabel),
     gearChoice.el,
+    muscles.el,
     h('button', {
       class: 'btn',
       type: 'button',
@@ -109,7 +112,7 @@ export function render(el, ctx) {
         const same = lifts.find(l => l.name.toLowerCase() === name.toLowerCase());
         if (same) return onPage.has(same.id) ? ctx.go('today') : pick(same.id);
         let id;
-        store.update(d => { id = log.addCustomLift(d, name, partChoice.get(), gearChoice.get() === w.other ? '' : gearChoice.get()).id; });
+        store.update(d => { id = log.addCustomLift(d, name, partChoice.get(), gearChoice.get() === w.other ? '' : gearChoice.get(), muscles.get()).id; });
         pick(id);
       },
     }, w.createButton),

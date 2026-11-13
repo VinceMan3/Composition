@@ -50,13 +50,20 @@ function tidy(raw) {
     settings,
     pages: Array.isArray(raw.pages) ? raw.pages.filter(p => p && Array.isArray(p.lifts)) : [],
     draft: raw.draft && Array.isArray(raw.draft.lifts) ? raw.draft : null,
-    customLifts: Array.isArray(raw.customLifts) ? raw.customLifts.filter(l => l && l.id && l.name) : [],
+    customLifts: Array.isArray(raw.customLifts) ? raw.customLifts.filter(l => l && l.id && l.name).map(tidyLift) : [],
     liftNotes: raw.liftNotes && typeof raw.liftNotes === 'object' ? raw.liftNotes : {},
     maxes: Array.isArray(raw.maxes) ? raw.maxes.filter(m => m && m.liftId && +m.w > 0 && m.date) : [],
     weighins,
     earned: raw.earned && typeof raw.earned === 'object' ? raw.earned : {},
     stickers: raw.stickers && typeof raw.stickers === 'object' ? raw.stickers : {},
   };
+}
+
+// A lift of your own: its muscle lists are always words, or left off.
+function tidyLift(lift) {
+  const out = { ...lift };
+  for (const key of ['works', 'helps']) if (typeof out[key] !== 'string' || !out[key].trim()) delete out[key];
+  return out;
 }
 
 let persistent = true;
