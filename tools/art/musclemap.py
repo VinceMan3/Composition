@@ -620,17 +620,44 @@ def centroid(poly):
     return (sum(xs) / len(xs), sum(ys) / len(ys)), max(max(xs) - min(xs), max(ys) - min(ys))
 
 
-def hatch(pairs, rng, centre, size, per_gap=4):
+def shade_axis(pc):
+    """How a shape takes the light: its centre, the direction toward the
+    light across it, and half its depth along that direction. A long shape
+    turns like a cylinder (across its width); a round one straight away from
+    the light."""
+    rect = list(pc.minimum_rotated_rectangle.exterior.coords)[:4]
+    e1 = (rect[1][0] - rect[0][0], rect[1][1] - rect[0][1])
+    e2 = (rect[2][0] - rect[1][0], rect[2][1] - rect[1][1])
+    l1, l2 = math.hypot(*e1), math.hypot(*e2)
+    cx = sum(q[0] for q in rect) / 4
+    cy = sum(q[1] for q in rect) / 4
+    long_, short = (e1, l2) if l1 >= l2 else (e2, l1)
+    longest = max(l1, l2)
+    dirx, diry = LIGHT
+    if longest > 1.4 * short and longest > 0:
+        ax, ay = long_[0] / longest, long_[1] / longest
+        along = LIGHT[0] * ax + LIGHT[1] * ay
+        dirx, diry = LIGHT[0] - along * ax * 0.8, LIGHT[1] - along * ay * 0.8
+        n = math.hypot(dirx, diry) or 1
+        return cx, cy, dirx / n, diry / n, short * 0.58
+    return cx, cy, dirx, diry, longest * 0.55
+
+
+def hatch(pairs, rng, centre, size, per_gap=4, axis=None):
     """Short pen strokes laid along the fibers. Each fiber line between
     neighbouring (start, end) pairs is walked from start to end; strokes are
     dense on the shadow side of the muscle and thin out toward the light."""
     lines = []
     for (s0, e0), (s1, e1) in zip(pairs, pairs[1:]):
+        # how far apart neighbouring fibers are at the start and the end: where
+        # fibers gather into a tendon, strokes are thinned so they do not pile up
+        gs = math.hypot(s1[0] - s0[0], s1[1] - s0[1]) / per_gap
+        ge = math.hypot(e1[0] - e0[0], e1[1] - e0[1]) / per_gap
         for k in range(per_gap):
             t = (k + rng.uniform(0.25, 0.75)) / per_gap
-            lines.append((lerp(s0, s1, t), lerp(e0, e1, t)))
+            lines.append((lerp(s0, s1, t), lerp(e0, e1, t), gs, ge))
     out = []
-    for s, e in lines:
+    for s, e, gs, ge in lines:
         L = math.hypot(e[0] - s[0], e[1] - s[1])
         if L < 4:
             continue
@@ -642,8 +669,15 @@ def hatch(pairs, rng, centre, size, per_gap=4):
             seg = rng.uniform(7, 15)
             t0, t1 = pos / L, min(L, pos + seg) / L
             mid = lerp(s, e, (t0 + t1) / 2)
-            shade = ((mid[0] - centre[0]) * -LIGHT[0] + (mid[1] - centre[1]) * -LIGHT[1]) / size
+            if axis:
+                ax_cx, ax_cy, ax_dx, ax_dy, ax_h = axis
+                shade = ((mid[0] - ax_cx) * -ax_dx + (mid[1] - ax_cy) * -ax_dy) / (2 * ax_h)
+            else:
+                shade = ((mid[0] - centre[0]) * -LIGHT[0] + (mid[1] - centre[1]) * -LIGHT[1]) / size
             keep = 0.12 + 1.6 * (shade + 0.15)
+            gap = gs + (ge - gs) * ((t0 + t1) / 2)
+            crowd = min(1.0, max(0.12, gap / 3.6))
+            keep *= crowd
             if rng.random() < keep:
                 p = []
                 for j in range(3):
@@ -652,7 +686,7 @@ def hatch(pairs, rng, centre, size, per_gap=4):
                     b = bow * math.sin(math.pi * t) + (0.6 if j == 1 else 0) * rng.uniform(-1, 1)
                     p.append((q[0] + nx * b, q[1] + ny * b))
                 out.append(p)
-            if shade > 0.28 and rng.random() < 0.55:
+            if shade > 0.28 and rng.random() < 0.55 * crowd:
                 # deepest shadow: a short cross stroke over the fiber stroke
                 c = lerp(s, e, (t0 + t1) / 2)
                 a = math.atan2(uy, ux) + math.radians(rng.uniform(50, 70))
@@ -1000,6 +1034,16 @@ def resample(line, closed=False, step=4.0):
     return out
 
 
+def poly_d_holes(pc):
+    """A shape with holes, as one path drawn with the even-odd rule."""
+    out = []
+    for g in getattr(pc, 'geoms', [pc]):
+        for ring in [g.exterior] + list(g.interiors):
+            pts = list(ring.coords)[:-1]
+            out.append('M' + ' '.join('%.1f %.1f' % q for q in pts) + 'Z')
+    return ''.join(out) + '" clip-rule="evenodd'
+
+
 def poly_d(pc):
     out = []
     for g in getattr(pc, 'geoms', [pc]):
@@ -1013,36 +1057,121 @@ def poly_d(pc):
     return ''.join(out)
 
 
+def edge_runs(poly, closed, soft, rng, body=None):
+    """Split an outline into runs by how it faces the light, the way a
+    graphite artist lets an edge go dark where the form turns away from the
+    light and fade, or vanish, where the light hits it. Returns
+    [(weight, points)] with weight 'dark', 'mid' or 'light'."""
+    from shapely.geometry import Point
+    n = len(poly)
+    if n < 2:
+        return []
+    area = sum(poly[i][0] * poly[(i + 1) % n][1] - poly[(i + 1) % n][0] * poly[i][1]
+               for i in range(n)) if closed else 0
+    sign = 1 if area > 0 else -1
+    runs, run, cur = [], [], None
+    segs = range(n if closed else n - 1)
+    for i in segs:
+        a, b = poly[i], poly[(i + 1) % n]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        L = math.hypot(dx, dy) or 1
+        ox, oy = sign * dy / L, -sign * dx / L
+        f = ox * -LIGHT[0] + oy * -LIGHT[1] if closed else 0.0
+        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+        outer = False
+        if body is not None and closed:
+            outer = not body.contains(Point(mid[0] + ox * 2.5, mid[1] + oy * 2.5))
+        if soft is not None and soft.distance(Point(mid)) < 1.8:
+            w = None                                  # a join the eye should not stop at
+        elif outer:
+            # the body's own outline: firm in shadow, lighter in the light
+            w = 'dark' if f > -0.05 else 'mid'
+        elif f > 0.45:
+            w = 'mid'                                 # inside the body, edges are quieter
+        elif f > -0.2:
+            w = 'light'
+        else:
+            w = None if rng.random() < 0.4 else 'light'    # lost edges in the light
+        if w != cur:
+            if cur and len(run) > 1:
+                runs.append((cur, run))
+            run = [a] if w else []
+            cur = w
+        if w:
+            run.append(b)
+    if cur and len(run) > 1:
+        runs.append((cur, run))
+    return runs
+
+
 def build2(view, regions, details, extras, fibers, seed):
-    """Draw one view. Layers, bottom to top: the tap shapes (one per part),
-    the soft tone, pen hatching, the gloss for lit muscles, detail lines,
-    muscle borders, the heavier shadow-side pass, then the outline."""
-    from shapely.geometry import box
+    """Draw one view in graphite. Layers, bottom to top: the tap shapes (one
+    per part), the soft tone on muscle and skin, graphite hatching, the gloss
+    for lit muscles, construction lines, details, then the edges, weighted by
+    the light."""
+    from shapely.geometry import box, Polygon, LineString
     from shapely.ops import unary_union
     rng = random.Random(seed)
     taken = {'L': box(0, 0, 0, 0), 'R': box(0, 0, 0, 0)}
     half = {'L': box(-10, -10, CX, H + 10), 'R': box(CX, -10, W + 10, H + 10)}
-    fills, gloss, defs, ink, heavy, inner_ink, hatching = [], [], [], [], [], [], []
-    tones = {}
+    soft = {side: unary_union([LineString(sample([to_xy(q, side) for q in ln], step=1.5))
+                               for ln in extras.get('soft', [])]) if extras.get('soft') else None
+            for side in ('L', 'R')}
+    fills, gloss, defs, hatching = [], [], [], []
+    tones, skin_tones = {}, []
+    edges = {'dark': [], 'mid': [], 'light': [], 'search': []}
+    creases, crease_lines = [], []
     detail_ink, out_ink, construct = [], [], []
+
+    def tone_gradient(tid, pc, strength=1.0):
+        cx, cy, dirx, diry, h = shade_axis(pc)
+        stops = ((.2, 0), (.6, .17), (.88, .38), (1, .5))
+        defs.append('<linearGradient id="%s" gradientUnits="userSpaceOnUse" '
+                    'x1="%.0f" y1="%.0f" x2="%.0f" y2="%.0f">%s</linearGradient>'
+                    % (tid, cx + dirx * h, cy + diry * h, cx - dirx * h, cy - diry * h,
+                       ''.join('<stop offset="%g" stop-color="var(--map-shade,#1C1C1F)" '
+                               'stop-opacity="%.2f"/>' % (o, a * strength) for o, a in stops)))
+
+    pending = []
+
+    def ink_outline(points, closed, side):
+        pending.append((points, closed, side))
+
+    def ink_now(points, closed, side, body):
+        for w, run in edge_runs(dense(points, 3) if closed else points, closed, soft[side], rng,
+                                body):
+            edges[w].append(polyline(run))
+            # a second, searching pass of the pencil beside the firm line
+            if w in ('dark', 'mid') and rng.random() < 0.45 and len(run) > 3:
+                off = rng.uniform(-1.1, 1.1)
+                k0 = rng.randrange(0, max(1, len(run) // 3))
+                k1 = min(len(run), k0 + rng.randrange(3, max(4, len(run))))
+                seg = run[k0:k1]
+                if len(seg) > 1:
+                    edges['search'].append(polyline([(x + off, y + off * 0.6) for x, y in seg]))
+
     for gid, polys in regions:
         group_d = []
         for side in ('L', 'R'):
             polys_xy = [dedupe([to_xy(q, side) for q in poly]) for poly in polys]
             for p in polys_xy:
                 group_d.append(smooth(p, closed=True))
-                w = wobble(p, rng)
-                ink.append(smooth(w, closed=True))
-                for run in shadow_side(dense(w), rng):
-                    heavy.append(smooth(run))
+                ink_outline(sample(wobble(p, rng, 0.45), closed=True, step=2.5), True, side)
                 if gid in fibers:
                     c, size = centroid(p)
+                    axis = shade_axis(Polygon(p).buffer(0))
                     pairs = [(to_xy(a, side), to_xy(b, side)) for a, b in fibers[gid]]
-                    for ln in hatch(pairs, rng, c, size, per_gap=5):
+                    for ln in hatch(pairs, rng, c, size, per_gap=6, axis=axis):
                         hatching.append((gid, polyline(ln)))
             parts, inner = cut_parts(view, gid, polys_xy, side)
+            # Where two parts of one muscle group meet there is no drawn line,
+            # just the soft shadow of the crease between two rounded forms and
+            # a faint touch of the pencil.
             for ln in inner:
-                inner_ink.append(smooth(wobble(ln[::max(1, len(ln) // 12)] + [ln[-1]], rng, 0.4)))
+                pts = ln[::max(1, len(ln) // 14)] + [ln[-1]]
+                creases.append(smooth(wobble(pts, rng, 0.3)))
+                if rng.random() < 0.85:
+                    crease_lines.append(smooth(wobble(pts, rng, 0.45)))
             for k, (part, pc) in enumerate(parts):
                 # Shapes never overlap: each half stops at the midline, and a
                 # piece gives up anything a neighbour drawn earlier already has.
@@ -1053,63 +1182,104 @@ def build2(view, regions, details, extras, fibers, seed):
                 fills.append('<path class="mm-muscle" data-group="%s" data-part="%s" d="%s"/>'
                              % (grp, part, d))
                 gloss.append('<path data-part="%s" d="%s"/>' % (part, d))
-                # Tone: each muscle turns away from the light; clear on the lit
-                # side, darker toward the shadow side and along its shadow edge.
-                minx, miny, maxx, maxy = pc.bounds
-                cx, cy = (minx + maxx) / 2, (miny + maxy) / 2
-                h = max(maxx - minx, maxy - miny) * 0.55
                 tid = 'mm-%s-%s-%s%d' % (view, part, side, k)
-                defs.append('<linearGradient id="%s" gradientUnits="userSpaceOnUse" '
-                            'x1="%.0f" y1="%.0f" x2="%.0f" y2="%.0f">'
-                            '<stop offset=".22" stop-color="var(--map-shade,#1A2766)" stop-opacity="0"/>'
-                            '<stop offset=".62" stop-color="var(--map-shade,#1A2766)" stop-opacity=".16"/>'
-                            '<stop offset=".9" stop-color="var(--map-shade,#1A2766)" stop-opacity=".36"/>'
-                            '<stop offset="1" stop-color="var(--map-shade,#1A2766)" stop-opacity=".46"/>'
-                            '</linearGradient>'
-                            % (tid, cx + LIGHT[0] * h, cy + LIGHT[1] * h,
-                               cx - LIGHT[0] * h, cy - LIGHT[1] * h))
+                tone_gradient(tid, pc)
                 tones.setdefault(gid, []).append(('<path fill="url(#%s)" d="%s"/>' % (tid, d),
                                                   '<path stroke="url(#%s)" d="%s"/>' % (tid, d)))
         rid = 'mm-%s-%s' % (view, gid)
         defs.append('<clipPath id="%s-c"><path d="%s"/></clipPath>' % (rid, ''.join(group_d)))
+
+    # Skin that is not a muscle group (head, neck, knees, shins, hands, feet)
+    # gets the same tone, so nothing reads as a flat diagram.
+    skin_d = []
+    for k, poly in enumerate(extras.get('skin', [])):
+        both = []
+        for side in ('L', 'R'):
+            sh = Polygon(sample([to_xy(q, side) for q in poly], closed=True, step=1.5)).buffer(0)
+            both.append(sh.intersection(half[side]).difference(taken[side]).buffer(0))
+        # a shape that crosses the midline (head, neck) is shaded as one form
+        merged = unary_union([b.buffer(0.3) for b in both]).buffer(-0.3)
+        for j, sh in enumerate(getattr(merged, 'geoms', [merged])):
+            if sh.area < 4:
+                continue
+            d = poly_d(sh)
+            if not d:
+                continue
+            skin_d.append(d)
+            tid = 'mm-%s-skin%d-%d' % (view, k, j)
+            tone_gradient(tid, sh, 0.8)
+            skin_tones.append(('<path fill="url(#%s)" d="%s"/>' % (tid, d),
+                               '<path stroke="url(#%s)" d="%s"/>' % (tid, d)))
+    defs.append('<clipPath id="mm-%s-skin-c"><path d="%s"/></clipPath>' % (view, ''.join(skin_d)))
+    # Now the whole body is known: edges on its outside never vanish.
+    body = {side: unary_union([taken[side]] + [
+        Polygon(sample([to_xy(q, side) for q in poly], closed=True, step=2)).buffer(0)
+        for poly in extras.get('skin', [])]).buffer(0.8) for side in ('L', 'R')}
+    whole = unary_union([body['L'], body['R']])
 
     by_group = {}
     for gid, d in hatching:
         by_group.setdefault(gid, []).append(d)
     hatch_svg = ''.join('<path clip-path="url(#mm-%s-%s-c)" d="%s"/>' % (view, g, ''.join(ds))
                         for g, ds in by_group.items())
-    # The wash fills each muscle; the edge shading is the same gradient drawn
+    # The wash fills each shape; the edge shading is the same gradient drawn
     # as a wide stroke and softened, like graphite smudged along the form.
-    tone_svg = ''.join('<g clip-path="url(#mm-%s-%s-c)">%s<g class="mm-edge">%s</g></g>'
-                       % (view, g, ''.join(f for f, _ in ts), ''.join(e for _, e in ts))
+    # Edge shading stays away from the soft joins (wrists, ankles).
+    from shapely.geometry import box as _box
+    nosoft = _box(-20, -20, W + 20, H + 20)
+    for side in ('L', 'R'):
+        if soft[side] is not None:
+            nosoft = nosoft.difference(soft[side].buffer(7))
+    defs.append('<clipPath id="mm-%s-nosoft"><path d="%s"/></clipPath>' % (view, poly_d(nosoft) if
+                nosoft.geom_type == 'Polygon' and not nosoft.interiors else poly_d_holes(nosoft)))
+    tone_svg = ''.join('<g clip-path="url(#mm-%s-%s-c)">%s<g clip-path="url(#mm-%s-nosoft)">'
+                       '<g class="mm-edge">%s</g></g></g>'
+                       % (view, g, ''.join(f for f, _ in ts), view, ''.join(e for _, e in ts))
                        for g, ts in tones.items())
+    tone_svg += ('<g clip-path="url(#mm-%s-skin-c)">%s<g clip-path="url(#mm-%s-nosoft)">'
+                 '<g class="mm-edge">%s</g></g></g>'
+                 % (view, ''.join(f for f, _ in skin_tones), view, ''.join(e for _, e in skin_tones)))
+    tone_svg += '<g class="mm-crease"><path d="%s"/></g>' % ''.join(creases)
 
     for line in details:
         for side in ('L', 'R'):
             detail_ink.append(smooth(wobble([to_xy(q, side) for q in line], rng, 0.4)))
-    for key, bucket, amount in (('out', out_ink, 0.5), ('detail', detail_ink, 0.35),
-                                ('construct', construct, 0.3)):
+    for line, closed, mirror in extras.get('out', []):
+        line = resample(line, closed)
+        for side in (('L', 'R') if mirror else ('L',)):
+            w = wobble([to_xy(q, side) for q in line], rng, 0.45)
+            ink_outline(sample(w, closed=closed, step=2.5), closed, side)
+    for points, closed, side in pending:
+        ink_now(points, closed, side, whole)
+    for key, bucket, amount in (('detail', detail_ink, 0.35), ('construct', construct, 0.3)):
         for line, closed, mirror in extras.get(key, []):
             line = resample(line, closed)
             for side in (('L', 'R') if mirror else ('L',)):
                 bucket.append(smooth(wobble([to_xy(q, side) for q in line], rng, amount), closed))
 
     css = ('.mm-muscle{fill:var(--mm-fill,transparent)}'
-           '.mm-ink{fill:none;stroke:var(--map-ink,#1A2766);stroke-linecap:round;stroke-linejoin:round}'
+           '.mm-ink{fill:none;stroke:var(--map-ink,#2A2A2E);stroke-linecap:round;stroke-linejoin:round}'
            '.mm-ink,.mm-tone,.mm-gloss{pointer-events:none}'
+           '.mm-tone{opacity:var(--map-tone,1)}'
            '.mm-edge{filter:url(#mm-%s-soft)}.mm-edge path{fill:none;stroke-width:9}'
+           '.mm-crease{filter:url(#mm-%s-soft2)}'
+           '.mm-crease path{fill:none;stroke:var(--map-shade,#1C1C1F);stroke-width:3.4;opacity:.4}'
            '.mm-gloss path{fill:url(#mm-%s-gl);opacity:0}'
-           '.mm-line{stroke-width:1.5}.mm-inner{stroke-width:1.15}.mm-heavy{stroke-width:1.2}'
-           '.mm-out{stroke-width:2}.mm-detail{stroke-width:.95;opacity:.85}'
-           '.mm-construct{stroke-width:.8;opacity:.55}'
-           '.mm-hatch{stroke-width:.72;opacity:.8}') % (view, view)
+           '.mm-dark{stroke-width:1.55;opacity:.9}.mm-mid{stroke-width:1.05;opacity:.6}'
+           '.mm-light{stroke-width:.75;opacity:.3}.mm-search{stroke-width:.6;opacity:.22}'
+           '.mm-cline{stroke-width:.7;opacity:.3}'
+           '.mm-detail{stroke-width:.8;opacity:.55}'
+           '.mm-construct{stroke-width:.65;opacity:.4}'
+           '.mm-hatch{stroke-width:.6;opacity:.62}') % (view, view, view)
     gl = ('<radialGradient id="mm-%s-gl" cx=".34" cy=".3" r=".62">'
           '<stop offset="0" stop-color="#fff" stop-opacity=".75"/>'
           '<stop offset=".18" stop-color="#fff" stop-opacity=".42"/>'
           '<stop offset=".5" stop-color="#fff" stop-opacity=".1"/>'
           '<stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>'
           '<filter id="mm-%s-soft" x="-5%%" y="-5%%" width="110%%" height="110%%">'
-          '<feGaussianBlur stdDeviation="2.4"/></filter>') % (view, view)
+          '<feGaussianBlur stdDeviation="2.4"/></filter>'
+          '<filter id="mm-%s-soft2" x="-5%%" y="-5%%" width="110%%" height="110%%">'
+          '<feGaussianBlur stdDeviation="1.3"/></filter>') % (view, view, view)
     return ''.join([
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" class="mm mm-%s">' % (W, H, view),
         '<style>%s</style>' % css,
@@ -1120,10 +1290,11 @@ def build2(view, regions, details, extras, fibers, seed):
         '<g class="mm-gloss">%s</g>' % ''.join(gloss),
         '<g class="mm-ink mm-construct"><path d="%s"/></g>' % ''.join(construct),
         '<g class="mm-ink mm-detail"><path d="%s"/></g>' % ''.join(detail_ink),
-        '<g class="mm-ink mm-inner"><path d="%s"/></g>' % ''.join(inner_ink),
-        '<g class="mm-ink mm-line"><path d="%s"/></g>' % ''.join(ink),
-        '<g class="mm-ink mm-heavy"><path d="%s"/></g>' % ''.join(heavy),
-        '<g class="mm-ink mm-out"><path d="%s"/></g>' % ''.join(out_ink),
+        '<g class="mm-ink mm-cline"><path d="%s"/></g>' % ''.join(crease_lines),
+        '<g class="mm-ink mm-search"><path d="%s"/></g>' % ''.join(edges['search']),
+        '<g class="mm-ink mm-light"><path d="%s"/></g>' % ''.join(edges['light']),
+        '<g class="mm-ink mm-mid"><path d="%s"/></g>' % ''.join(edges['mid']),
+        '<g class="mm-ink mm-dark"><path d="%s"/></g>' % ''.join(edges['dark']),
         '</svg>',
     ])
 
@@ -1146,158 +1317,251 @@ def circle_pts(c, r, a0=0, a1=360, step=6):
             for a in range(a0, a1 + 1, step)]
 
 
-def hand_shape():
-    """The hand as one outline: palm, four fingers and the thumb, in the
-    hand's own frame (u down the hand, v toward the thumb), then placed."""
-    from shapely.geometry import Polygon, LineString
+def capsule_chain(pts, radii):
+    """A tapering finger or toe: one rounded segment per bone, each a little
+    narrower than the last, with a slight swell at the joints."""
+    from shapely.geometry import LineString
     from shapely.ops import unary_union
-    palm = Polygon([(0, -13), (0, 13), (10, 16), (24, 16), (38, 13.5), (41, 7), (41, -4),
-                    (39, -13.5), (24, -15.5), (10, -15)])
-    # knuckle to fingertip, and half the finger's width; the tips fan out a
-    # little, as in a relaxed hand, so each finger reads on its own
-    fingers = [((39, 9.0), (70, 13.2), 3.1), ((40, 2.2), (76, 3.2), 3.3),
-               ((39, -4.6), (72, -7.4), 3.1), ((36, -10.6), (62, -16.4), 2.6)]
-    parts = [palm] + [LineString([a, b]).buffer(r, quad_segs=6) for a, b, r in fingers]
-    parts.append(LineString([(6, 10), (22, 15.5)]).buffer(5.8, quad_segs=6))    # thumb metacarpal
-    parts.append(LineString([(22, 15.5), (38, 18)]).buffer(3.9, quad_segs=6))   # thumb
-    shape = unary_union(parts).buffer(0.3).buffer(-0.3)
-    outline = [HAND(u, v) for u, v in list(shape.simplify(0.25).exterior.coords)]
-    # finger joints: two creases on each finger, and the thumb's
-    joints = []
-    for (a, b, r) in fingers:
-        for t in (0.36, 0.66):
-            m = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
-            joints.append([HAND(m[0], m[1] - r * 0.7), HAND(m[0] + 0.6, m[1] + r * 0.7)])
-    joints.append([HAND(29, 13.6), HAND(30, 20.6)])
-    return outline, joints, fingers
+    segs = []
+    for (a, b), r in zip(zip(pts, pts[1:]), radii):
+        segs.append(LineString([a, b]).buffer(r, quad_segs=8))
+    for q, r in zip(pts[1:-1], radii[1:]):
+        from shapely.geometry import Point
+        segs.append(Point(q).buffer(r + 0.35, quad_segs=8))
+    return unary_union(segs)
+
+
+# Fingers in the hand's frame (u down the hand, v toward the thumb): the
+# knuckle, the angle each finger fans to, the length of each bone and the
+# half-width of each bone. A relaxed hand fans slightly.
+FINGERS = [((39, 9.0), 3, (14, 9.5, 7), (3.15, 2.85, 2.5)),       # index
+           ((40.5, 2.3), 0.5, (15.5, 10.5, 7.5), (3.35, 3.0, 2.6)), # middle
+           ((39.5, -4.4), -2.5, (14.5, 9.5, 7), (3.15, 2.8, 2.45)), # ring
+           ((37, -10.4), -6.5, (11.5, 7.5, 6), (2.7, 2.4, 2.1))]    # little
+THUMB = ([(5, 10), (20, 15.2), (32, 18.6), (42, 20.2)], (5.6, 3.7, 3.2))
+
+
+def finger_pts(base, ang, lengths):
+    pts = [base]
+    a = math.radians(ang)
+    for L in lengths:
+        u, v = pts[-1]
+        pts.append((u + L * math.cos(a), v + L * math.sin(a)))
+    return pts
+
+
+def hand_shape():
+    """The hand as one outline: palm, four tapering fingers and the thumb,
+    in the hand's own frame, then placed at the end of the forearm."""
+    from shapely.geometry import Polygon
+    from shapely.ops import unary_union
+    palm = Polygon([(-3, -13.6), (-3, 13.6), (8, 15.6), (16, 16), (24, 15), (38, 12.5),
+                    (40.5, 6), (41, 0), (40, -6), (38, -12.5), (26, -15.6), (12, -15.2)])
+    shapes = [palm]
+    bones = []
+    for base, ang, lengths, radii in FINGERS:
+        pts = finger_pts(base, ang, lengths)
+        bones.append((pts, radii))
+        shapes.append(capsule_chain(pts, radii))
+    shapes.append(capsule_chain(*THUMB))
+    shape = unary_union(shapes).buffer(0.25).buffer(-0.25)
+    outline = [HAND(u, v) for u, v in list(shape.simplify(0.2).exterior.coords)]
+    return outline, bones
 
 
 def hand_extras(view):
-    outline, joints, fingers = hand_shape()
+    outline, bones = hand_shape()
     out = [(outline, True, True)]
-    detail = [(j, False, True) for j in joints]
-    # the cleft between fingers: a short line where they part
-    for a, b in ((2.6, 9.6), (-4.6, 2.6), (-11, -4.6)):
-        pass
+    detail = []
+    for pts, radii in bones:
+        # the bend at each finger joint: two short creases (palm) or a soft
+        # wrinkle over the knuckle (back)
+        for q, r in zip(pts[1:-1], radii[1:]):
+            a = math.atan2(pts[-1][1] - pts[0][1], pts[-1][0] - pts[0][0])
+            nu, nv = -math.sin(a), math.cos(a)
+            c1 = (q[0] - nu * r * 0.75, q[1] - nv * r * 0.75)
+            c2 = (q[0] + nu * r * 0.75, q[1] + nv * r * 0.75)
+            if view == 'front':
+                detail.append(([HAND(*c1), HAND(*c2)], False, True))
+            else:
+                mid = (q[0] - 0.9 * math.cos(a), q[1] - 0.9 * math.sin(a))
+                detail.append(([HAND(*c1), HAND(*mid), HAND(*c2)], False, True))
     if view == 'front':
-        # palm side: the life line round the thumb's pad, the head line and
-        # the heart line, and the creases where the fingers meet the palm
-        detail += [([HAND(6, 9), HAND(16, 6), HAND(26, 7), HAND(33, 11)], False, True),
-                   ([HAND(16, 13), HAND(22, 2), HAND(26, -8)], False, True),
-                   ([HAND(27, 12), HAND(30, 2), HAND(33, -8), HAND(32, -14)], False, True)]
+        # palm: the life line round the thumb's pad, the head line, the heart
+        # line, the wrist creases and the edge of the pad below the little finger
+        detail += [([HAND(5, 7), HAND(14, 4.5), HAND(23, 5.5), HAND(31, 9.5), HAND(35, 12.5)], False, True),
+                   ([HAND(22, 14.5), HAND(26, 6), HAND(29, -3), HAND(31, -9)], False, True),
+                   ([HAND(33, -14.5), HAND(32.5, -7), HAND(34, 0), HAND(37, 6)], False, True),
+                   ([HAND(1.5, -11), HAND(1, 0), HAND(1.5, 11)], False, True),
+                   ([HAND(10, -13), HAND(20, -11.5), HAND(29, -12.5)], False, True)]
     else:
-        # back of the hand: knuckles, the tendons that fan to the fingers,
+        # back of the hand: the knuckles, the tendons fanning to the fingers,
         # and the nails
-        for (a, b, r) in fingers:
-            detail.append(([HAND(a[0] - 1.5, a[1] - r * 0.6), HAND(a[0] + 0.8, a[1]),
-                            HAND(a[0] - 1.5, a[1] + r * 0.6)], False, True))
-            detail.append(([HAND(6, 0.25 * a[1]), HAND(a[0] - 5, a[1] * 0.95)], False, True))
-            tip = b
-            detail.append(([HAND(tip[0] - 6, tip[1] - r * 0.55), HAND(tip[0] - 1.2, tip[1] - r * 0.5),
-                            HAND(tip[0] - 1.2, tip[1] + r * 0.5), HAND(tip[0] - 6, tip[1] + r * 0.55)],
-                           False, True))
-    return out, detail
+        for pts, radii in bones:
+            k = pts[0]
+            detail.append(([HAND(k[0] - 1.8, k[1] - radii[0] * 0.7), HAND(k[0] + 0.6, k[1]),
+                            HAND(k[0] - 1.8, k[1] + radii[0] * 0.7)], False, True))
+            detail.append(([HAND(4, k[1] * 0.3), HAND(k[0] - 6, k[1] * 0.92)], False, True))
+            t, prev = pts[-1], pts[-2]
+            a = math.atan2(t[1] - prev[1], t[0] - prev[0])
+            nu, nv = -math.sin(a), math.cos(a)
+            r = radii[-1] * 0.62
+            back = (t[0] - 4.2 * math.cos(a), t[1] - 4.2 * math.sin(a))
+            detail.append(([HAND(back[0] + nu * r, back[1] + nv * r),
+                            HAND(t[0] - 0.9 * math.cos(a) + nu * r, t[1] - 0.9 * math.sin(a) + nv * r),
+                            HAND(t[0] - 0.9 * math.cos(a) - nu * r, t[1] - 0.9 * math.sin(a) - nv * r),
+                            HAND(back[0] - nu * r, back[1] - nv * r)], False, True))
+    return out, detail, outline
+
+
+TOES = [([(27, 810), (26.7, 819), (26.4, 826)], (5.0, 4.5)),
+        ([(34.5, 812), (34.8, 820), (35, 826.5)], (3.2, 2.8)),
+        ([(41, 813), (41.3, 820), (41.6, 825.5)], (3.0, 2.6)),
+        ([(47.2, 813), (47.6, 819), (48, 823.5)], (2.8, 2.4)),
+        ([(53, 812), (53.8, 817), (54.6, 821)], (2.6, 2.2))]
 
 
 def foot_front():
-    """The foot seen from the front: ankle, instep, five toes."""
-    from shapely.geometry import Polygon, LineString
+    """The foot from the front: ankle, the instep widening to the ball of the
+    foot, and five tapering toes."""
+    from shapely.geometry import Polygon
     from shapely.ops import unary_union
-    instep = Polygon([(28, 772), (51, 762), (50, 778), (52, 790), (55, 800), (58, 810), (60, 818),
-                      (54, 821), (24, 821), (22, 812), (25, 800), (27, 790), (28, 780)])
-    toes = [((27, 815), (26.6, 828), 4.3), ((34.6, 817), (34.8, 829), 3.0),
-            ((41.2, 817), (41.6, 828.4), 2.9), ((47.4, 816.5), (48.2, 827.2), 2.7),
-            ((53.4, 815), (55, 825), 2.5)]
-    shape = unary_union([instep] + [LineString([a, b]).buffer(r, quad_segs=6) for a, b, r in toes])
-    shape = shape.buffer(0.4).buffer(-0.4)
+    instep = Polygon([(28, 770), (51, 762), (51.5, 776), (53, 788), (55.5, 798), (58, 806),
+                      (60, 812), (56.5, 816), (24, 816), (22.6, 812), (23.2, 806), (24.6, 799),
+                      (26, 792), (27.6, 782)])
+    shape = unary_union([instep] + [capsule_chain(p, r) for p, r in TOES])
+    shape = shape.buffer(0.3).buffer(-0.3)
     ext = list(shape.simplify(0.25).exterior.coords)
-    # leave out the edge across the top of the ankle: the leg's own lines
-    # meet the foot there
-    k = min(range(len(ext)), key=lambda i: ext[i][1] + ext[i][0] * 0.01)
-    ext = ext[k:-1] + ext[:k]
-    runs, run = [], []
-    for q in ext:
-        if q[1] > 768:
-            run.append(q)
-        elif run:
-            runs.append(run)
-            run = []
-    if run:
-        runs.append(run)
-    return max(runs, key=len), toes
+    return ext
 
 
 def extras_front():
-    out, detail, construct = [], [], []
-    # head: the ball, the jaw to the chin, the ears
+    out, detail, construct, skin = [], [], [], []
+    # Head: the ball of the cranium, the jaw down to the chin and the ears,
+    # with the construction lines a figure drawing starts from.
     out.append((circle_pts(HEAD_C, HEAD_R, -50, 230), False, False))
-    jaw = [(31, 62), (29, 80), (24, 97), (15, 110), (6, 115), (0, 116)]
+    jaw = [(31, 62), (29.5, 80), (24, 97), (15, 110), (6, 115), (0, 116)]
     out.append((jaw, False, True))
-    construct += [([(0, 12), (0, 126)], False, False),
-                  ([(-36, BROW), (36, BROW)], False, False),
-                  ([(-31, 64), (-16, 68), (0, 69), (16, 68), (31, 64)], False, False),
-                  ([(-5, NOSE), (5, NOSE)], False, False),
-                  ([(-4, 94), (4, 94)], False, False),
-                  ([(-3, CHIN), (3, CHIN)], False, False),
-                  ([(25, 84), (29, 86)], False, True)]
     out.append(([(32, 53), (37, 54), (39.5, 63), (38, 75), (34, 82)], False, True))
+    construct += [([(0, 10), (0, 128)], False, False),                       # center line
+                  ([(-37, BROW), (37, BROW)], False, False),                 # brow line
+                  ([(-31, 64), (-16, 68.5), (0, 69.5), (16, 68.5), (31, 64)], False, False),  # eye line
+                  ([(-6, NOSE), (6, NOSE)], False, False),                   # base of the nose
+                  ([(-5, 95), (5, 95)], False, False),                       # mouth
+                  ([(-8, CHIN - 1), (8, CHIN - 1)], False, False),           # chin
+                  ([(-26, 29), (-14, 24.5), (0, 23.5), (14, 24.5), (26, 29)], False, False),  # hairline
+                  (circle_pts((0.6, 49.4), 33.6, -40, 220, 8), False, False),  # second pass
+                  ([(23, 23), (26.5, 37), (27.5, 51), (25.5, 66), (21, 78)], False, True),  # side plane
+                  ([(3.5, 52), (6, 81)], False, True),                       # sides of the nose
+                  ([(8, 108), (8.5, 116)], False, True),                     # the chin's box
+                  ([(30, 82), (19, 103), (9, 114)], False, True),            # jaw guide
+                  ([(9, 68), (22, 68)], False, True)]                        # eye marks
     out.append(([(26, 100), (29, 108), (31, 116)], False, True))
-    detail += [([(30, 94), (24, 112), (14, 132), (5, 149)], False, True),
+    detail += [([(30, 94), (24, 112), (14, 132), (5, 149)], False, True),    # neck: SCM
                ([(27, 104), (22, 122), (16, 140), (15, 150)], False, True),
-               ([(-2, 318), (0, 324), (2, 318)], False, False),
-               ([(-4, 146), (0, 150), (4, 146)], False, False)]
-    # knee: the kneecap and its tendon, and the leg outline where no muscle is
+               ([(-2.5, 124), (0, 128), (2.5, 124)], False, False),          # Adam's apple
+               ([(-2, 318), (0, 324), (2, 318)], False, False),              # navel
+               ([(-4, 146), (0, 150), (4, 146)], False, False)]              # notch of the sternum
+    skin.append([(0, 17)] + circle_pts(HEAD_C, HEAD_R, 90, -20, -6)[1:] +
+                [(29.5, 80), (24, 97), (15, 110), (6, 115), (0, 116)])
+    skin.append([(0, 104), (24, 100), (29, 108), (31, 116), (33, 122), (38, 126), (50, 134), (58, 147),
+                 (34, 150), (6, 150), (0, 150)])
+    skin.append([(0, 420), (6, 419), (12, 416), (5, 440), (0, 442)])
+    # Knees and the bare parts of the lower leg.
     out += [([(66, 603), (63, 612), (61, 626), (63, 638)], False, True),
-            ([(24, 614), (26, 624), (23, 638), (25, 636)], False, True),
+            ([(24, 614), (26, 624), (23, 638)], False, True),
             ([(56, 728), (53, 742), (51, 754), (51, 762)], False, True),
             ([(22, 740), (26, 756), (28, 772)], False, True)]
-    detail += [([(40, 607), (48, 611), (51, 622), (46, 633), (40, 636), (34, 633), (30, 622),
-                 (32, 611), (40, 607)], True, True),
-               ([(36, 636), (37, 648)], False, True), ([(44, 636), (43, 648)], False, True),
-               # the fibular muscles and the long toe extensor beside the shin
-               ([(60, 650), (61, 690), (56, 730), (50, 770)], False, True)]
-    o, d = hand_extras('front')
+    detail += [
+        # The kneecap, a rounded triangle, left open on its lit upper side
+        ([(46.5, 609), (50, 615), (49.5, 622), (46, 629), (40, 633), (34, 629), (30.5, 622),
+          (30, 615)], False, True),
+        # its tendon down to the bump of the tibia
+        ([(36, 633), (37.6, 648)], False, True),
+        ([(44, 633), (42.4, 648)], False, True),
+        ([(37, 650.5), (40, 652.5), (43, 650.5)], False, True),
+        # the fat pads either side of the tendon
+        ([(32, 632), (30.6, 638), (32.6, 643)], False, True),
+        ([(48, 632), (49.4, 638), (47.4, 643)], False, True),
+        # the iliotibial band to its bump on the tibia, and the head of the fibula
+        ([(63, 606), (59, 622), (55.5, 638)], False, True),
+        ([(60, 641), (62, 645.5), (60.5, 650)], False, True),
+        # fibular muscles beside the shin
+        ([(60, 652), (61, 690), (56, 730), (50, 770)], False, True)]
+    skin.append([(66, 603), (63, 612), (61, 626), (63, 638), (67, 654), (70, 670), (69, 688),
+                 (64, 706), (58, 724), (56, 728), (53, 742), (51, 754), (51, 762), (51.5, 776),
+                 (53, 788), (55.5, 798), (58, 806), (60, 812), (56, 818), (40, 820), (24, 818),
+                 (22.6, 812), (23.2, 806), (24.6, 799), (26, 792), (27.6, 782), (28, 772),
+                 (26, 756), (22, 740), (17, 724), (13, 708), (11, 690), (12, 672), (16, 654),
+                 (22, 638), (26, 624), (24, 614), (27, 614), (33, 608), (40, 606), (47, 603),
+                 (56, 601)])
+    # Hands.
+    o, d, hand = hand_extras('front')
     out += o
     detail += d
-    foot, toes = foot_front()
-    out.append((foot, False, True))
-    for a, b, r in toes:
-        detail.append(([(b[0] - r * 0.6, b[1] - 2.5), (b[0], b[1] - 3.6), (b[0] + r * 0.6, b[1] - 2.5)],
-                       False, True))
-    detail += [([(36, 772), (32, 786), (29, 798)], False, True),      # tibialis anterior tendon
-               ([(41, 782), (35, 798), (29, 810)], False, True),      # big toe extensor
-               ([(45, 786), (42, 800), (40, 812)], False, True),      # long toe extensor
-               ([(27, 786), (24.5, 791), (26, 797)], False, True),    # inner ankle bone
-               ([(52, 788), (55, 795), (53, 801)], False, True)]      # outer ankle bone
-    for x in (31.2, 38.0, 44.4, 50.6):                                 # between the toes
-        detail.append(([(x, 818), (x + 0.3, 825)], False, True))
-    return {'out': out, 'detail': detail, 'construct': construct}
+    skin.append(hand)
+    # Feet.
+    foot = foot_front()
+    out.append((foot, True, True))
+    skin.append(foot)       # the toes; the rest of the foot shades with the leg
+    for p, r in TOES:
+        t = p[-1]
+        detail.append(([(t[0] - r[1] * 0.6, t[1] - 2.6), (t[0], t[1] - 3.6), (t[0] + r[1] * 0.6, t[1] - 2.6)],
+                       False, True))                                          # toenails
+    detail += [([(36, 772), (32, 786), (29, 798)], False, True),             # tibialis anterior tendon
+               ([(41, 782), (35, 798), (29, 809)], False, True),             # big toe extensor
+               ([(45, 786), (42, 800), (40, 811)], False, True),             # long toe extensor
+               ([(27, 786), (24.5, 791), (26, 797)], False, True),           # inner ankle bone
+               ([(52, 788), (55, 795), (53, 801)], False, True),             # outer ankle bone
+               ([(24, 806), (32, 808.5), (42, 809.5), (55, 808)], False, True)]  # the ball of the foot
+    for x in (30.9, 37.9, 44.3, 50.3):                                        # between the toes
+        detail.append(([(x, 815.5), (x + 0.4, 822.5)], False, True))
+    soft = [[FORE(119, 18), FORE(122, 0), FORE(119, -17)],
+            [(27, 772.5), (40, 767), (52, 762)]]
+    return {'out': out, 'detail': detail, 'construct': construct, 'skin': skin, 'soft': soft}
 
 
 def extras_back():
-    out, detail, construct = [], [], []
-    out.append((circle_pts(HEAD_C, HEAD_R, -55, 235), False, False))
-    out.append(([(31, 74), (30.5, 92), (30.5, 102), (30, 108)], False, True))
-    construct += [([(0, 12), (0, 98)], False, False),
-                  ([(-36, BROW), (36, BROW)], False, False),
-                  ([(-31, 64), (-16, 61), (0, 60), (16, 61), (31, 64)], False, False)]
+    out, detail, construct, skin = [], [], [], []
+    # From behind: the ball of the skull, its lower curve over the nape kept
+    # light, and the neck coming down from behind the ears into the traps.
+    out.append((circle_pts(HEAD_C, HEAD_R, -28, 208), False, False))
+    construct.append((circle_pts(HEAD_C, HEAD_R, 208, 332), False, False))
+    out.append(([(26.5, 82), (28.2, 90), (29.6, 99), (30.2, 108)], False, True))
     out.append(([(32, 53), (37, 54), (39.5, 63), (38, 75), (34, 82)], False, True))
+    construct += [([(0, 10), (0, 100)], False, False),
+                  ([(-37, BROW), (37, BROW)], False, False),
+                  ([(-31, 64), (-16, 61), (0, 60), (16, 61), (31, 64)], False, False),
+                  (circle_pts((-0.6, 49.4), 33.6, -40, 220, 8), False, False),
+                  ([(23, 23), (26.5, 37), (27.5, 51), (25.5, 66), (21, 78)], False, True),
+                  ([(-22, 86), (-10, 90), (0, 91), (10, 90), (22, 86)], False, False),   # base of the skull
+                  ([(16, 92), (20, 98)], False, True)]
+    skin.append([(0, 17)] + circle_pts(HEAD_C, HEAD_R, 90, -36, -6)[1:] +
+                [(26.5, 82), (28.2, 90), (29.6, 99), (30.2, 108), (31, 113), (32, 120), (28, 110),
+                 (21, 102), (11, 99.5), (0, 99)])
     for y in range(140, 360, 13):
         detail.append(([(0, y), (1.2, y + 3), (0, y + 6)], False, False))
-    o, d = hand_extras('back')
+    o, d, hand = hand_extras('back')
     out += o
     detail += d
-    # heel and the back of the ankle
-    out.append(([(51, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
-                 (32, 820), (28, 806), (30, 792), (29, 782), (28, 772)], False, True))
+    skin.append(hand)
+    # The back of the knee: the skin crease across it.
+    detail += [([(28, 622), (36, 624.5), (44, 625), (54, 623)], False, True)]
+    # Heel and the back of the ankle.
+    heel = [(51, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
+            (32, 820), (28, 806), (30, 792), (29, 782), (28, 772)]
+    out.append((heel, False, True))
+    skin.append(heel + [(35, 760), (41, 756), (47, 758)])
     detail += [([(49, 784), (53, 790), (51, 797)], False, True),
                ([(30, 786), (27, 792), (29, 798)], False, True),
-               ([(34, 812), (40, 815), (46, 812)], False, True),
-               ([(37, 790), (38, 808)], False, True), ([(43, 790), (42, 808)], False, True),
-               # the forefoot showing either side of the heel
-               ([(52, 806), (56, 812), (58, 820), (54, 824)], False, True),
-               ([(28, 806), (24, 814), (24, 822), (29, 824)], False, True)]
-    return {'out': out, 'detail': detail, 'construct': construct}
+               ([(34, 812), (40, 815.5), (46, 812)], False, True),
+               ([(37.5, 772), (37, 790), (38, 806)], False, True),           # Achilles tendon
+               ([(43.5, 772), (43, 790), (42, 806)], False, True),
+               ([(52, 806), (56, 812), (58, 819), (55, 824)], False, True),  # the forefoot either side
+               ([(28, 806), (24, 813), (24, 821), (28, 824)], False, True)]
+    soft = [[FORE(119, 18), FORE(122, 0), FORE(119, -17)],
+            [(51, 762), (46, 757), (41, 754), (35, 758), (28, 771)]]
+    return {'out': out, 'detail': detail, 'construct': construct, 'skin': skin, 'soft': soft}
 
 
 def svg_back():

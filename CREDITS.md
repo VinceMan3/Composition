@@ -7,7 +7,8 @@ picture is copied into the app. Every muscle's borders, start points and end
 points were checked against these public domain references:
 
 - Gray's Anatomy of the Human Body, 20th edition (Henry Gray, 1918). Public
-  domain.
+  domain. Regional plates used for the finer parts: Fig. 414 (front of the
+  forearm), Fig. 434 (gluteal region and back of the thigh) and the hand.
 - "Muscles anterior labeled" and "Muscle posterior labeled", collages of
   Gray's plates by Mikael Häggström on Wikimedia Commons, released into the
   public domain. A French labeled version of the front collage (built on the

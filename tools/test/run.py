@@ -695,6 +695,83 @@ with sync_playwright() as p:
         check('offline: no script errors', not errors, '; '.join(errors[:4]))
         ctx.close()
 
+    # ---------- muscle map art ----------
+    import xml.dom.minidom as _xml
+    MAP_PARTS = {
+        'traps': ['traps-upper', 'traps-middle', 'traps-lower'], 'front-delts': ['front-delts'],
+        'side-delts': ['side-delts'], 'rear-delts': ['rear-delts'],
+        'chest': ['chest-upper', 'chest-middle', 'chest-lower'],
+        'biceps': ['biceps-long', 'biceps-short', 'brachialis'],
+        'triceps': ['triceps-long', 'triceps-lateral', 'triceps-medial'],
+        'forearms': ['brachioradialis', 'wrist-flexors', 'wrist-extensors'],
+        'upper-back': ['rhomboids', 'infraspinatus', 'teres-minor', 'teres-major'],
+        'lats': ['lats'], 'lower-back': ['lower-back'], 'abs': ['abs'],
+        'obliques': ['external-oblique', 'serratus'], 'glutes': ['glute-max', 'glute-med'],
+        'quads': ['rectus-femoris', 'vastus-lateralis', 'vastus-medialis', 'sartorius', 'tfl', 'hip-flexors'],
+        'hamstrings': ['biceps-femoris', 'semitendinosus', 'semimembranosus'],
+        'adductors': ['adductor-longus', 'adductor-magnus', 'gracilis', 'pectineus'],
+        'calves': ['gastroc-medial', 'gastroc-lateral', 'soleus'], 'shins': ['tibialis-anterior']}
+    part_group = {pt: g for g, pts in MAP_PARTS.items() for pt in pts}
+    seen = {}
+    for view in ('front', 'back'):
+        path = os.path.join(REPO, 'art', f'muscle-{view}.svg')
+        svg = open(path).read()
+        try:
+            _xml.parseString(svg); ok = True
+        except Exception as e:
+            ok = False
+        check(f'muscle map {view}: the drawing is well formed', ok)
+        shapes = _re.findall(r'<path class="mm-muscle" data-group="([^"]+)" data-part="([^"]+)"', svg)
+        wrong = [(g, pt) for g, pt in shapes if part_group.get(pt) != g]
+        check(f'muscle map {view}: every shape names a known part in the right group', shapes and not wrong, str(wrong[:4]))
+        for g, pt in shapes: seen.setdefault(pt, set()).add(view)
+        check(f'muscle map {view}: only the muscle shapes take taps',
+              '.mm-ink,.mm-tone,.mm-gloss{pointer-events:none}' in svg)
+        # every part can actually be tapped: some point inside it reaches it
+        ctx = browser.new_context(viewport={'width': 390, 'height': 700}, device_scale_factor=2)
+        page = ctx.new_page()
+        page.set_content(f"<html><body style='margin:0'><style>svg{{width:380px}}</style>{svg}</body></html>")
+        missed = page.evaluate("""() => {
+          const out = [];
+          const svg = document.querySelector('svg');
+          const done = new Set();
+          for (const el of document.querySelectorAll('.mm-muscle')) {
+            const key = el.dataset.part;
+            if (done.has(key)) continue;
+            const b = el.getBBox(), m = el.getScreenCTM();
+            let hit = false;
+            for (let i = 1; i < 12 && !hit; i++) for (let j = 1; j < 12 && !hit; j++) {
+              const p = svg.createSVGPoint(); p.x = b.x + b.width * i / 12; p.y = b.y + b.height * j / 12;
+              if (!el.isPointInFill(p)) continue;
+              const s = p.matrixTransform(m);
+              const at = document.elementFromPoint(s.x, s.y);
+              if (at && at.dataset && at.dataset.part === key) hit = true;
+            }
+            if (hit) done.add(key);
+          }
+          for (const el of document.querySelectorAll('.mm-muscle')) if (!done.has(el.dataset.part)) out.push(el.dataset.part);
+          return [...new Set(out)];
+        }""")
+        check(f'muscle map {view}: every part can be tapped', not missed, str(missed))
+        # muscle shapes do not overlap: paint each and count shared pixels
+        over = page.evaluate("""() => {
+          const els = [...document.querySelectorAll('.mm-muscle')];
+          const W = 560, H = 860, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+          const c = cv.getContext('2d'); const count = new Uint8Array(W * H);
+          for (const el of els) {
+            c.clearRect(0, 0, W, H); c.fill(new Path2D(el.getAttribute('d')));
+            const px = c.getImageData(0, 0, W, H).data;
+            for (let i = 0; i < W * H; i++) if (px[i * 4 + 3] > 200) count[i]++;
+          }
+          let inside = 0, shared = 0;
+          for (const n of count) { if (n) inside++; if (n > 1) shared++; }
+          return [shared, inside];
+        }""")
+        check(f'muscle map {view}: no two muscles overlap', over[0] <= over[1] * 0.002, f'{over[0]} of {over[1]} pixels shared')
+        ctx.close()
+    missing = [pt for pt in part_group if pt not in seen]
+    check('muscle map: all 19 groups and every part are drawn', not missing and len(MAP_PARTS) == 19, str(missing))
+
     # ---------- reduced motion and keyboard ----------
     ctx, page, errors = open_app(browser, reduced_motion='reduce')
     tab(page, 'today'); check('reduced motion: no flip, page still changes', page.locator('.sheet').count() == 0)
