@@ -30,9 +30,50 @@
   --mustard: #E9B42C;       /* highlights and the shadow behind headings */
   --mustard-light: #F0C64E;
   --green: #2F5D3A;         /* done, up, selected */
+  --green-ink: #2F5D3A;     /* green writing: lift names, gains */
   --purple: #5B3F7A;        /* boxing and bag work */
 
   /* Around the notebook */
   --desk: #5A3F2B;          /* the wooden desk that shows on a wide screen */
   --tape: #EFE2A6;          /* the tape holding the verse card */
+  --tomato: #C8452F;        /* red pen: the best day on a chart */
+  --on-color: #F6EDCD;      /* text on maroon, green and other solid buttons */
+}
+
+/*
+  THE DIM GARAGE LOOK
+  Switched on under More. The same notebook under one warm bulb: brown paper,
+  pale ink, never black. Change these the same way as the colors above.
+*/
+:root[data-look="garage"] {
+  --blue: #6E8FA5;
+  --blue-ray: #7A9BB0;
+  --blue-deep: #587A90;
+  --navy: #14100C;
+
+  --paper: #4B3F32;
+  --paper-warm: #43372B;
+  --paper-edge: #362B21;
+  --card: #554737;
+  --rule: #7F95A3;
+  --margin-line: #B4544C;
+
+  --ink: #F0E4C6;
+  --ink-soft: #CDBB98;
+  --pen: #A9C2F0;
+  --pencil: #A0927B;
+
+  --maroon: #B04A5B;
+  --maroon-dark: #E39AA6;
+  --on-color: #FBF3DE;
+  --mustard: #C99620;
+  --mustard-light: #E2B23A;
+  --green: #4E8A5D;
+  --green-ink: #93CDA0;
+  --purple: #B79AD8;
+  --tomato: #EE7A62;
+
+  --desk: #2A1D14;
+  --tape: #B9A867;
+  color-scheme: dark;
 }

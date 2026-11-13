@@ -15,6 +15,12 @@ is used:
 Change the code after the colon (keep the `#` and the semicolon). To find a
 new code, search the web for "color picker".
 
+## Change the dim garage colors
+
+Below the main colors in `content/colors.css` is a second block,
+`:root[data-look="garage"]`. Those are the same names with the colors used
+when the dim garage look is switched on under More.
+
 ## Change wording
 
 Open `content/wording.js`. Change only the text between the quotes:
@@ -42,6 +48,22 @@ logged that lift: your history is filed under it.
 
 `gear: 'Barbell'` is what switches on the plate line under a set.
 
+## Add a kind of cardio
+
+Open `content/cardio.js`. Each line is one kind:
+
+    { id: 'running', name: 'Running', fields: ['miles', 'minutes'] },
+
+`fields` are the boxes to fill in: any of `'rounds'`, `'minutes'`, `'miles'`,
+`'meters'`. Add `boxing: true` to mark it in purple and count it toward the
+boxing stickers.
+
+## Rename a sticker or change how it is earned
+
+The stickers are listed in `app/awards.js`. The `name` and `how` text are safe
+to change. The numbers in the `earned` line are the bar to clear: for example
+`>= 225` on the two plate bench. Leave the rest of that line alone.
+
 ## Add a verse
 
 Open `content/verses.js`. Each line is one verse:
@@ -64,13 +86,31 @@ The pictures are in `art/`. To replace one, upload a new picture with exactly
 the same file name (for example `sticker-gloves.png`). Files with a
 see-through background look best.
 
+## Change the strength levels
+
+Open `content/standards.js`. Each lift has five numbers: where Novice,
+Intermediate, Advanced, Elite and World class begin, as a multiple of
+bodyweight for a lifter at the reference bodyweight (176 lb for men, 132 lb
+for women). The app scales them for every other bodyweight. Raise a number
+to make that level harder to reach.
+
+## Choose which pose goes with which muscle
+
+Open `content/poses.js`. Each line pairs a body part with a drawing in `art/`:
+
+    Chest: 'sketch-front.webp',     // to draw: most muscular
+
+A page shows the pose for the body part it works most. When a new drawing
+arrives, put it in `art/` and change the file name on its line.
+
 ## Change how fast pages turn
 
 Open `styles/motion.css` and change the number on this line near the top:
 
-    :root { --flip: 340ms; }
+    :root { --flip: 290ms; --flip-quick: 150ms; }
 
-Bigger is slower. 1000ms is one second.
+`--flip` is the cover; `--flip-quick` is every other page. Bigger is slower.
+1000ms is one second.
 
 ## If something breaks
 

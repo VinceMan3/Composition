@@ -10,6 +10,8 @@
   works  are the main muscles; helps are the supporting ones
   kind   is only for lifts that are not weight x reps:
          'bodyweight' (weight is optional) or 'timed' (seconds instead of reps)
+
+  Boxing, running and other cardio live in content/cardio.js.
 */
 export const LIFTS = [
   { id: 'bench-press', name: 'Bench Press', group: 'Chest', gear: 'Barbell', works: 'chest', helps: 'front delts, triceps' },
@@ -108,10 +110,4 @@ export const LIFTS = [
   { id: 'snatch', name: 'Snatch', group: 'Power', gear: 'Barbell', works: 'glutes, hamstrings, traps', helps: 'quads, front delts, lower back' },
   { id: 'kettlebell-swing', name: 'Kettlebell Swing', group: 'Power', gear: 'Kettlebell', works: 'glutes, hamstrings', helps: 'lower back, abs' },
   { id: 'farmers-carry', name: 'Farmer\'s Carry', group: 'Power', gear: 'Dumbbell', works: 'forearms, traps', helps: 'abs, glutes' },
-  { id: 'heavy-bag', name: 'Heavy Bag', group: 'Conditioning', gear: 'Boxing', works: 'front delts, abs', helps: 'obliques, calves, lats', kind: 'timed' },
-  { id: 'speed-bag', name: 'Speed Bag', group: 'Conditioning', gear: 'Boxing', works: 'side delts, front delts', helps: 'forearms', kind: 'timed' },
-  { id: 'shadowboxing', name: 'Shadowboxing', group: 'Conditioning', gear: 'Boxing', works: 'front delts, abs', helps: 'obliques, calves', kind: 'timed' },
-  { id: 'jump-rope', name: 'Jump Rope', group: 'Conditioning', gear: 'Rope', works: 'calves', helps: 'forearms, side delts', kind: 'timed' },
-  { id: 'rowing-machine', name: 'Rowing Machine', group: 'Conditioning', gear: 'Machine', works: 'lats, quads', helps: 'hamstrings, biceps, lower back', kind: 'timed' },
-  { id: 'stationary-bike', name: 'Stationary Bike', group: 'Conditioning', gear: 'Machine', works: 'quads', helps: 'glutes, calves', kind: 'timed' },
 ];

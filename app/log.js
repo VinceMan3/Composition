@@ -6,8 +6,15 @@
 //     lifts: [ { liftId: 'bench-press', sets: [ { w: '185', r: '5', rpe: '', done: true } ] } ] }
 
 import { LIFTS } from '../content/lifts.js';
+import { CARDIO, CARDIO_UNITS } from '../content/cardio.js';
 
 export const STEP = { lb: 5, kg: 2.5 };
+
+// Estimated one-rep maxes are only worked out for these three.
+export const BIG_THREE = ['squat', 'bench-press', 'deadlift'];
+export const isBigThree = id => BIG_THREE.includes(id);
+const TO_LB = { lb: 1, kg: 2.20462262 };
+export const toLb = (w, unit) => num(w) * (TO_LB[unit] || 1);
 const BAR = { lb: 45, kg: 20 };
 const PLATES = { lb: [45, 35, 25, 10, 5, 2.5], kg: [25, 20, 15, 10, 5, 2.5, 1.25] };
 
@@ -41,19 +48,47 @@ export function allLifts(data) {
 }
 
 export function findLift(data, id) {
-  return allLifts(data).find(l => l.id === id) || { id, name: id, group: 'Other', gear: '' };
+  return allLifts(data).find(l => l.id === id) || findCardio(id);
 }
 
 export function isBarbell(lift) {
   return /barbell/i.test(lift.gear || '');
 }
 
-export function addCustomLift(data, name) {
+// ---- cardio ----
+
+export function findCardio(id) {
+  return CARDIO.find(c => c.id === id) || { id, name: id.replace(/-/g, ' '), group: 'Other', gear: '', fields: ['minutes'] };
+}
+
+export function addCardio(page, kindId) {
+  page.cardio = page.cardio || [];
+  page.cardio.push({ kindId, values: {}, done: false });
+}
+
+export function hasNumbers(entry) {
+  return findCardio(entry.kindId).fields.some(f => num(entry.values[f]) > 0);
+}
+
+// "6 rounds · 18 min"
+export function cardioText(entry) {
+  return findCardio(entry.kindId).fields
+    .filter(f => num(entry.values[f]) > 0)
+    .map(f => `${tidy(num(entry.values[f]))} ${CARDIO_UNITS[f]}`)
+    .join(' · ');
+}
+
+export function doneCardio(page) {
+  return (page.cardio || []).filter(c => c.done);
+}
+
+export function addCustomLift(data, name, group = 'Yours', gear = '') {
   const clean = name.trim().replace(/\s+/g, ' ');
   const base = 'my-' + (clean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'lift');
   let id = base;
   for (let i = 2; allLifts(data).some(l => l.id === id); i++) id = `${base}-${i}`;
-  const lift = { id, name: clean, group: 'Yours', gear: '' };
+  const lift = { id, name: clean, group, gear };
+  if (gear === 'Bodyweight') lift.kind = 'bodyweight';
   data.customLifts = [...(data.customLifts || []), lift];
   return lift;
 }
@@ -64,23 +99,32 @@ function blankSet() {
   return { w: '', r: '', rpe: '', done: false };
 }
 
-export function newPage(title) {
+export function newPage(title, unit = 'lb') {
   return {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     date: dateKey(),
     title,
     startedAt: Date.now(),
     filedAt: null,
-    unit: 'lb',
+    unit: unit === 'kg' ? 'kg' : 'lb',
     lifts: [],
+    cardio: [],
   };
 }
 
 // The most recent filed entry for a lift, or null.
-export function lastTime(data, liftId) {
+// Pass `unit` to get the weights in that unit when last time's page was
+// written in the other one (rounded to the nearest plate step).
+export function lastTime(data, liftId, unit) {
   for (let i = data.pages.length - 1; i >= 0; i--) {
-    const entry = data.pages[i].lifts.find(l => l.liftId === liftId);
-    if (entry) return entry;
+    const page = data.pages[i];
+    const entry = page.lifts.find(l => l.liftId === liftId);
+    if (!entry) continue;
+    const from = page.unit || 'lb';
+    if (!unit || unit === from) return entry;
+    const step = unit === 'kg' ? 2.5 : 5;
+    const convert = w => (num(w) ? String(Math.round(toLb(w, from) / toLb(1, unit) / step) * step) : w);
+    return { ...entry, sets: entry.sets.map(s => ({ ...s, w: convert(s.w) })) };
   }
   return null;
 }
@@ -93,8 +137,9 @@ export function addLift(data, page, liftId) {
 
 // A new page with the same title and lifts as an old one.
 export function repeatPage(data, old) {
-  const page = newPage(old.title);
+  const page = newPage(old.title, data.settings && data.settings.units);
   for (const entry of old.lifts) addLift(data, page, entry.liftId);
+  for (const entry of old.cardio || []) addCardio(page, entry.kindId);
   return page;
 }
 
@@ -190,12 +235,24 @@ export function plates(total, unit = 'lb') {
 // ---- filing ----
 
 // Best estimated max for a lift across every filed page.
-function bestEver(data, liftId) {
+// The best a lift has ever been, in the page's unit: for the Big Three the
+// estimated max (counting maxes logged straight in), for anything else the
+// heaviest weight lifted.
+function bestEver(data, liftId, unit) {
+  const big = isBigThree(liftId);
   let best = 0;
   for (const page of data.pages) {
+    const scale = toLb(1, page.unit || 'lb') / toLb(1, unit);
     for (const entry of page.lifts) {
       if (entry.liftId !== liftId) continue;
-      for (const s of doneSets(entry)) best = Math.max(best, estMax(s.w, s.r));
+      for (const s of doneSets(entry)) {
+        best = Math.max(best, (big ? estMax(s.w, s.r) : num(s.r) >= 1 ? num(s.w) : 0) * scale);
+      }
+    }
+  }
+  if (big) {
+    for (const m of data.maxes || []) {
+      if (m.liftId === liftId) best = Math.max(best, toLb(m.w, m.unit) / toLb(1, unit));
     }
   }
   return best;
@@ -204,13 +261,13 @@ function bestEver(data, liftId) {
 // Everything the "page filed" screen shows. Work it out before the page
 // joins the notebook, so "last time" still means the time before.
 export function summarize(data, page) {
-  const out = { lifts: 0, sets: 0, volume: 0, minutes: 0, records: [], rows: [] };
+  const out = { lifts: 0, sets: 0, volume: 0, minutes: 0, records: [], rows: [], cardio: [], stickers: [] };
   for (const entry of page.lifts) {
     const done = doneSets(entry);
     if (!done.length) continue;
     const lift = findLift(data, entry.liftId);
     const best = bestSet(entry);
-    const prev = lastTime(data, entry.liftId);
+    const prev = lastTime(data, entry.liftId, page.unit);
     const prevBest = prev ? bestSet(prev) : null;
     out.lifts += 1;
     out.sets += done.length;
@@ -220,11 +277,17 @@ export function summarize(data, page) {
       best: setText(best, lift),
       change: prevBest ? compare(best, prevBest, page.unit, lift) : null,
     });
-    const top = Math.max(...done.map(s => estMax(s.w, s.r)));
-    const before = bestEver(data, entry.liftId);
+    const big = isBigThree(entry.liftId);
+    const top = Math.max(...done.map(s => (big ? estMax(s.w, s.r) : num(s.r) >= 1 ? num(s.w) : 0)));
+    const before = bestEver(data, entry.liftId, page.unit);
     if (before && top > before + 0.01) {
-      out.records.push({ name: lift.name, now: Math.round(top), was: Math.round(before) });
+      const r = n => (big ? Math.round(n) : Math.round(n * 10) / 10);
+      out.records.push({ name: lift.name, now: r(top), was: r(before), kind: big ? 'max' : 'top', unit: page.unit });
     }
+  }
+  for (const entry of doneCardio(page)) {
+    const kind = findCardio(entry.kindId);
+    out.cardio.push({ name: kind.name, text: cardioText(entry), boxing: !!kind.boxing });
   }
   out.minutes = Math.max(1, Math.round(((page.filedAt || Date.now()) - page.startedAt) / 60000));
   return out;
@@ -239,6 +302,7 @@ export function fileDraft(data) {
   page.lifts = page.lifts
     .map(entry => ({ ...entry, sets: doneSets(entry) }))
     .filter(entry => entry.sets.length);
+  page.cardio = doneCardio(page);
   const summary = summarize(data, page);
   page.summary = summary;
   data.pages.push(page);

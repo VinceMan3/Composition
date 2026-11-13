@@ -1,9 +1,12 @@
 // Today's page. Before a page is started it offers to repeat a past page or
 // start a fresh one; after that it is the page you write your sets on.
 
-import { h, put, count, icon, art, shortDate, pageHead, twoTap } from '../ui.js';
+import { h, put, titleBox, count, icon, art, shortDate, pageHead, twoTap, noteField } from '../ui.js';
 import * as log from '../log.js';
 import { clock } from '../rest.js';
+import { poseSketch } from '../poses.js';
+import { collect } from '../awards.js';
+import { CARDIO, CARDIO_UNITS } from '../../content/cardio.js';
 
 export function render(el, ctx) {
   return ctx.store.get().draft ? writing(el, ctx) : starting(el, ctx);
@@ -22,7 +25,7 @@ function starting(el, ctx) {
     ctx.refresh();
   }
 
-  const titleBox = h('input', {
+  const nameBox = h('input', {
     class: 'write-in',
     type: 'text',
     maxlength: '40',
@@ -32,7 +35,8 @@ function starting(el, ctx) {
     autocomplete: 'off',
     onKeydown(e) { if (e.key === 'Enter') startBlank(); },
   });
-  const startBlank = () => begin(log.newPage(titleBox.value.trim() || w.untitled));
+  const units = store.get().settings.units;
+  const startBlank = () => begin(log.newPage(nameBox.value.trim() || w.untitled, units));
 
   put(el,
     art('sketch-front.webp', 'sketch sketch-front', 640, 587),
@@ -55,9 +59,9 @@ function starting(el, ctx) {
 
     h('div', { class: 'start' },
       h('p', { class: 'label' }, past.length ? w.blankLabel : w.startLabel),
-      titleBox,
+      nameBox,
       h('div', { class: 'chips' }, w.titleIdeas.map(idea =>
-        h('button', { class: 'chip', type: 'button', 'data-sound': 'none', onClick: () => begin(log.newPage(idea)) }, idea))),
+        h('button', { class: 'chip', type: 'button', 'data-sound': 'none', onClick: () => begin(log.newPage(idea, units)) }, idea))),
       h('button', { class: 'btn', type: 'button', 'data-sound': 'none', onClick: startBlank }, w.blankButton),
     ),
   );
@@ -86,7 +90,7 @@ function writing(el, ctx) {
   }
 
   const liftOf = li => log.findLift(data, page.lifts[li].liftId);
-  const prevOf = li => log.lastTime(data, page.lifts[li].liftId);
+  const prevOf = li => log.lastTime(data, page.lifts[li].liftId, page.unit);
   const cleanNumber = text => text.replace(',', '.').replace(/[^0-9.]/g, '');
 
   // ----- the tools under the set you are on -----
@@ -282,6 +286,22 @@ function writing(el, ctx) {
 
   // ----- one lift -----
 
+  // The standing note for a lift: cues, seat settings, anything worth
+  // remembering. It belongs to the lift, so it shows on every page.
+  function liftNote(lift) {
+    return noteField({
+      get: () => store.get().liftNotes[lift.id],
+      set: text => store.updateSoon(d => {
+        if (text.trim()) d.liftNotes[lift.id] = text;
+        else delete d.liftNotes[lift.id];
+      }),
+      placeholder: w.notePlaceholder,
+      addLabel: w.addNote,
+      doneLabel: w.noteDone,
+      label: `${lift.name}: ${w.noteLabel}`,
+    });
+  }
+
   function liftBlock(entry, li) {
     const lift = liftOf(li);
     const prev = prevOf(li);
@@ -297,6 +317,7 @@ function writing(el, ctx) {
         h('div', null,
           h('h2', { class: 'lift-name' }, lift.name),
           h('p', { class: 'lift-last' }, prev ? `${w.lastTime}: ${log.setsText(prev.sets, lift)}` : w.firstTime),
+          liftNote(lift),
         ),
         remove,
       ),
@@ -330,17 +351,124 @@ function writing(el, ctx) {
           },
         }, w.removeSet),
       ),
+      // A note about this lift today only ("left shoulder felt off").
+      h('div', { class: 'day-note' }, noteField({
+        get: () => entry.note,
+        set: text => { if (text.trim()) entry.note = text; else delete entry.note; store.updateSoon(() => {}); },
+        placeholder: w.dayNotePlaceholder,
+        addLabel: w.addDayNote,
+        doneLabel: w.noteDone,
+        label: `${lift.name}: ${w.dayNoteLabel}`,
+      })),
     );
     return block;
   }
 
   const listEl = h('div', { class: 'lifts bleed' });
 
+  // ----- cardio: boxing, running and the rest -----
+  page.cardio = page.cardio || [];
+  const cardioEl = h('div', { class: 'lifts bleed' });
+
+  function cardioBlock(entry, ci) {
+    const kind = log.findCardio(entry.kindId);
+    const boxes = kind.fields.map(name => {
+      const input = h('input', {
+        type: 'text',
+        inputmode: 'decimal',
+        autocomplete: 'off',
+        value: entry.values[name] || '',
+        'aria-label': `${kind.name}, ${name}`,
+        onInput() {
+          const clean = cleanNumber(input.value);
+          if (clean !== input.value) input.value = clean;
+          entry.values[name] = clean;
+          save();
+        },
+      });
+      return h('label', { class: 'cardio-box' }, input, h('span', null, CARDIO_UNITS[name]));
+    });
+    const check = h('button', {
+      class: 'check',
+      type: 'button',
+      'aria-pressed': String(entry.done),
+      'aria-label': `${kind.name} done`,
+      'data-sound': 'none',
+      onClick() {
+        if (!entry.done && !log.hasNumbers(entry)) {
+          toast(w.needCardio);
+          boxes[0].querySelector('input').focus();
+          return;
+        }
+        entry.done = !entry.done;
+        save();
+        sound.play(entry.done ? 'pencil' : 'tap');
+        check.setAttribute('aria-pressed', String(entry.done));
+        block.classList.toggle('is-done', entry.done);
+      },
+    }, icon('M5 13l4.5 4.5L19 7'));
+    const remove = twoTap(
+      h('button', { class: 'lift-remove', type: 'button' }, w.removeLift),
+      w.removeLiftConfirm,
+      () => { page.cardio.splice(ci, 1); save(); drawCardio(); },
+    );
+    const block = h('section', { class: `lift cardio${kind.boxing ? ' is-boxing' : ''}${entry.done ? ' is-done' : ''}` },
+      h('div', { class: 'lift-head' }, h('div', null, h('h2', { class: 'lift-name' }, kind.name)), remove),
+      h('div', { class: 'cardio-row' }, boxes, check),
+      kind.boxing && h('div', { class: 'lift-foot' },
+        h('button', {
+          class: 'btn btn-small',
+          type: 'button',
+          onClick() {
+            const s = store.get().settings;
+            ctx.rest.startRounds({
+              rounds: s.roundCount,
+              work: s.roundSeconds,
+              rest: s.breakSeconds,
+              // Each finished round is written into this entry, even if the
+              // page has been flipped away from.
+              onRound(done, seconds) {
+                entry.values.rounds = String(done);
+                entry.values.minutes = log.tidy(Math.round(seconds / 6) / 10);
+                store.update(() => {});
+                window.dispatchEvent(new CustomEvent('composition:rounds'));
+              },
+            });
+          },
+        }, `${w.roundsButton} ${data.settings.roundCount} × ${clock(data.settings.roundSeconds)}`),
+      ),
+    );
+    return block;
+  }
+
+  let cardioBlocks = [];
+  function drawCardio() {
+    cardioBlocks = page.cardio.map(cardioBlock);
+    cardioEl.replaceChildren(...cardioBlocks);
+    emptyNote.hidden = page.lifts.length + page.cardio.length > 0;
+  }
+
+  // The choices that open under "+ Add cardio".
+  const cardioTray = h('div', { class: 'chips', hidden: true }, CARDIO.map(kind =>
+    h('button', {
+      class: `chip${kind.boxing ? ' is-boxing' : ''}`,
+      type: 'button',
+      'data-sound': 'none',
+      onClick() {
+        log.addCardio(page, kind.id);
+        save();
+        sound.play('pencil');
+        cardioTray.hidden = true;
+        drawCardio();
+        cardioBlocks[cardioBlocks.length - 1].scrollIntoView({ block: 'center' });
+      },
+    }, kind.name)));
+
   function draw() {
     rows = [];
     blocks = page.lifts.map(liftBlock);
     listEl.replaceChildren(...blocks);
-    emptyNote.hidden = page.lifts.length > 0;
+    emptyNote.hidden = page.lifts.length + page.cardio.length > 0;
     page.lifts.forEach((entry, li) => {
       showGhosts(li);
       entry.sets.forEach((_, si) => showNote(li, si));
@@ -350,9 +478,7 @@ function writing(el, ctx) {
 
   // ----- the page around the lifts -----
 
-  const title = h('input', {
-    class: 'title-input',
-    type: 'text',
+  const title = titleBox({
     maxlength: '40',
     value: page.title,
     'aria-label': w.titleLabel,
@@ -362,11 +488,15 @@ function writing(el, ctx) {
   });
   const emptyNote = h('p', { class: 'hand', style: 'font-size:18px' }, w.empty);
 
-  const doneCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0);
-  const openCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => !s.done).length, 0);
+  const doneCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => s.done).length, 0) + page.cardio.filter(c => c.done).length;
+  const openCount = () => page.lifts.reduce((n, e) => n + e.sets.filter(s => !s.done).length, 0) + page.cardio.filter(c => !c.done).length;
   function fileIt() {
     ctx.rest.stop();
-    store.update(d => { log.fileDraft(d); });
+    store.update(d => {
+      const summary = log.fileDraft(d);
+      summary.stickers = collect(d);
+      ctx.state.newStickers = [...(ctx.state.newStickers || []), ...summary.stickers];
+    });
     ctx.state.justFiled = true;
     ctx.go('filed');
   }
@@ -388,24 +518,35 @@ function writing(el, ctx) {
   });
 
   put(el,
-    h('div', { class: 'head-block', style: 'padding-right:0;min-height:0' },
+    poseSketch(data, page),
+    h('div', { class: 'head-block with-pose' },
       h('p', { class: 'kicker' }, shortDate()),
       title,
     ),
     emptyNote,
     listEl,
+    cardioEl,
     h('div', { class: 'page-actions' },
       h('a', { class: 'btn btn-line', href: '#add' }, w.addLift),
+      h('button', { class: 'btn btn-line btn-cardio', type: 'button', onClick() { cardioTray.hidden = !cardioTray.hidden; } }, w.addCardio),
+      cardioTray,
       fileButton,
       tear,
     ),
   );
   draw();
+  drawCardio();
 
   // Coming back from "add a lift": bring the new lift into view.
   const focusLift = ctx.state.focusLift;
   ctx.state.focusLift = null;
+
+  // The round timer writes rounds into a boxing entry; show them as they land.
+  const onRounds = () => drawCardio();
+  window.addEventListener('composition:rounds', onRounds);
+
   return {
+    cleanUp() { window.removeEventListener('composition:rounds', onRounds); },
     onAttached() {
       if (focusLift == null || !blocks[focusLift]) return;
       const scroller = el.parentElement;

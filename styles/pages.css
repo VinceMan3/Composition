@@ -83,7 +83,7 @@
   position: relative;
   align-self: center;
   width: min(100%, 370px);
-  margin-top: 8px;
+  margin: 8px 0 0;
   padding: 18px 16px 12px;
   background:
     repeating-linear-gradient(180deg, transparent 0 25px, color-mix(in srgb, var(--rule) 50%, transparent) 25px 26px) 0 20px,
@@ -108,48 +108,60 @@
 .verse::before { left: 12px; transform: rotate(-7deg); }
 .verse::after { right: 12px; transform: rotate(5deg); }
 .verse-label { font-family: var(--f-type); font-size: 11px; font-weight: 400; letter-spacing: .14em; text-transform: uppercase; color: var(--maroon); line-height: 22px; }
-.verse-text { font-family: var(--f-hand); font-weight: 400; font-size: 18px; line-height: 26px; color: var(--pen); }
+.verse-text { margin: 0; font-family: var(--f-hand); font-weight: 400; font-size: 18px; line-height: 26px; color: var(--pen); }
 .verse-text.is-long { font-size: 16px; }
 .verse-ref { margin-top: 2px; font-family: var(--f-hand); font-weight: 400; font-size: 17px; line-height: 26px; color: var(--pen); text-align: right; }
 
 /* Stickers: a paper edge, a soft shadow, and a sheen across the top. */
-.stickers {
-  align-self: center;
-  width: min(100%, 370px);
-  flex: 1 0 auto;
-  min-height: 128px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+.sticker-gap { flex: 1 0 auto; min-height: 124px; }
+/* The stickers float over the whole cover. Each can be dragged anywhere on
+   it; app/pages/cover.js remembers where it was left. */
+.sticker-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; isolation: isolate; transform: translateZ(0); }
 .sticker { position: relative; flex: none; filter: drop-shadow(0 1px 0 rgba(20, 34, 48, .5)) drop-shadow(2px 5px 5px rgba(20, 34, 48, .32)); }
-.sticker img { display: block; width: 100%; height: auto; }
+.sticker img { display: block; width: 100%; height: auto; pointer-events: none; }
+.sticker-layer .sticker {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transform: rotate(var(--turn, 0deg));
+  will-change: transform, translate;
+  backface-visibility: hidden;
+}
+.sticker-layer .sticker.is-held {
+  cursor: grabbing;
+  /* Only the size changes while held: changing the shadow mid-drag is what
+     left smears on phones. */
+  transform: rotate(var(--turn, 0deg)) scale(1.07);
+}
 .sticker-shine {
   position: absolute;
   inset: 0;
+  pointer-events: none;
   background: linear-gradient(128deg, rgba(255, 255, 255, .5) 0%, rgba(255, 255, 255, .1) 30%, rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, 0) 68%, rgba(0, 0, 0, .16) 100%);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
-.sticker-gloves { width: 25%; transform: rotate(-8deg); }
-.sticker-pose { width: 30%; margin: -10px -3% 0; transform: rotate(5deg); }
-.sticker-barbell { width: 33%; margin: 16px -3% 0; transform: rotate(-4deg); }
-.sticker-ribbons { width: 22%; transform: rotate(9deg); }
 
+/* The small card that takes you to today's page. */
 .cover-card {
-  padding: 11px 14px 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 8px 10px 9px 12px;
   border: 3px solid var(--navy);
   border-radius: 5px;
   background: url(../art/paper.webp) 90px 250px / 420px 420px, var(--paper);
   background-blend-mode: multiply;
   box-shadow: var(--pop);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
 }
-.cover-card .label { color: var(--maroon); }
-.cover-card-title { font-family: var(--f-head); font-weight: 400; font-size: 26px; line-height: 1.12; color: var(--green); overflow-wrap: anywhere; }
-.cover-card .btn { margin-top: 8px; }
+.cover-card .label { color: var(--maroon); font-size: 12px; }
+.cover-card-title { font-family: var(--f-head); font-weight: 400; font-size: 21px; line-height: 1.12; color: var(--green-ink); overflow-wrap: anywhere; }
+.cover-card .hand { font-size: 15px; line-height: 1.25; }
 
 /* ---------- today: starting a page ---------- */
 .page-today .page-inner, .page-filed .page-inner, .page-add .page-inner { background: none; }
@@ -201,11 +213,15 @@
   font-weight: 700;
   box-shadow: 0 1px 2px rgba(60, 38, 12, .3);
 }
-.chip[aria-pressed="true"] { background: var(--green); color: var(--paper); border-color: var(--green); }
+.chip[aria-pressed="true"] { background: var(--green); color: var(--on-color); border-color: var(--green); }
 
 /* ---------- today: writing the page ---------- */
 .title-input {
+  display: block;
   width: 100%;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
   padding: 0;
   border: 0;
   border-bottom: 2px dashed transparent;
@@ -222,7 +238,7 @@
 .lift:last-child { border-bottom: 2.5px solid var(--rule); }
 .lift-head { display: flex; align-items: flex-start; gap: 8px; padding: 10px var(--side-r) 6px var(--side-l); }
 .lift-head > div { flex: 1; min-width: 0; }
-.lift-name { font-family: var(--f-head); font-weight: 400; font-size: 21px; line-height: 1.12; color: var(--green); }
+.lift-name { font-family: var(--f-head); font-weight: 400; font-size: 21px; line-height: 1.12; color: var(--green-ink); }
 .lift-last { font-family: var(--f-hand); font-weight: 400; font-size: 16px; line-height: 1.3; color: var(--pen); }
 .lift-remove { flex: none; min-height: 36px; padding: 0 6px; border: 0; background: none; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; }
 .lift-remove[data-armed="yes"] { color: var(--maroon); }
@@ -264,7 +280,7 @@
   border: 2.5px solid var(--ink);
   border-radius: 48% 52% 50% 50%;
   background: var(--card);
-  color: var(--green);
+  color: var(--green-ink);
   display: grid;
   place-items: center;
   box-shadow: inset 0 2px 3px rgba(60, 38, 12, .18);
@@ -291,7 +307,7 @@
   padding: 2px 5px 1px;
   border-radius: 3px;
   background: linear-gradient(180deg, #3A4651, #1C242C);
-  color: var(--paper);
+  color: var(--on-color);
   font-family: var(--f-ui);
   font-size: 13px;
   font-weight: 700;
@@ -334,7 +350,7 @@
 .pick-meta { grid-column: 1; font-size: 13px; color: var(--ink-soft); }
 .pick-last { grid-row: 1 / span 2; grid-column: 2; font-family: var(--f-hand); font-weight: 400; font-size: 16px; color: var(--pen); text-align: right; }
 .pick:disabled { opacity: .55; }
-.pick-own .pick-name { color: var(--green); }
+.pick-own .pick-name { color: var(--green-ink); }
 
 /* ---------- page filed ---------- */
 .stamp-big { align-self: flex-start; margin: 2px 0 4px -6px; font-size: 40px; padding: 6px 18px 8px; border-width: 6px; }
@@ -385,3 +401,367 @@
   box-shadow: inset 0 2px 4px rgba(60, 38, 12, .2);
 }
 .version { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+
+/* ---------- cardio on today's page ---------- */
+.cardio .lift-name { color: var(--navy); }
+.cardio.is-boxing .lift-name, .compare-name.is-boxing { color: var(--purple); }
+.cardio-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 2px max(10px, env(safe-area-inset-right, 0px)) 4px var(--side-l);
+  border-top: 1.5px solid var(--rule);
+}
+.cardio-box { display: flex; align-items: baseline; gap: 6px; flex: 1 1 0; min-width: 0; }
+.cardio-box span { flex: none; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+.cardio-box input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 1.5px dotted color-mix(in srgb, var(--pencil) 70%, transparent);
+  border-radius: 0;
+  background: none;
+  font-family: var(--f-hand);
+  font-size: 26px;
+  color: var(--pen);
+  text-align: center;
+}
+.cardio-box input:focus { outline: none; border-bottom: 1.5px solid var(--pen); }
+.cardio.is-done .cardio-box input { color: var(--ink); border-bottom-color: transparent; }
+.cardio-row .check { flex: none; }
+.chip.is-boxing { border-color: var(--purple); color: var(--purple); }
+
+/* ---------- add a lift: browsing, and writing one in ---------- */
+.browse { display: flex; flex-direction: column; gap: 14px; }
+
+/* ---------- a newly earned sticker on the filed page ---------- */
+.record.is-sticker { border-color: var(--navy); background: url(../art/paper.webp) 0 0 / 420px 420px, var(--card); }
+.record.is-sticker img { width: 84px; transform: rotate(-6deg); }
+
+/* ---------- the sticker book ---------- */
+.page-stickers .page-inner { background: none; }
+.book { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.book-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 8px 10px;
+  border: 1.5px solid rgba(74, 59, 44, .55);
+  border-radius: 3px;
+  background: url(../art/paper.webp) 30px 140px / 420px 420px, var(--card);
+  background-blend-mode: multiply;
+  box-shadow: var(--lift);
+  text-align: center;
+}
+button.book-card:active { transform: translateY(2px); }
+.book-art { width: 72%; aspect-ratio: 1; display: grid; place-items: center; }
+.book-art img { max-width: 100%; max-height: 100%; width: auto; height: auto; filter: drop-shadow(0 1px 0 rgba(20, 34, 48, .45)) drop-shadow(2px 4px 4px rgba(20, 34, 48, .3)); transition: opacity .15s; }
+.book-card.is-locked .book-art img { filter: brightness(0) opacity(.16); }
+.book-card.is-off .book-art img { opacity: .4; }
+.book-name { font-family: var(--f-head); font-weight: 400; font-size: 15px; line-height: 1.15; }
+.book-how, .book-date { font-size: 13px; line-height: 1.25; color: var(--ink-soft); }
+.book-state { font-family: var(--f-hand); font-weight: 400; font-size: 15px; line-height: 1.25; color: var(--pen); }
+
+/* ---------- the notebook's filed rows ---------- */
+button.filed-row { width: 100%; border: 0; background: none; text-align: left; font: inherit; padding: 6px 0 5px; }
+button.filed-row:active { background: rgba(233, 180, 44, .25); }
+.filed-open { grid-row: 2; grid-column: 2; justify-self: end; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--maroon); }
+
+/* ---------- one filed page, and fixing it ---------- */
+.page-page .page-inner { background: none; }
+.read-lifts .lift-head { padding-top: 8px; padding-bottom: 8px; }
+.read-lifts .lift-last { font-size: 18px; }
+.page-page .stamp { align-self: flex-start; }
+
+/* ---------- one lift's story ---------- */
+.page-lift .page-inner, .page-library .page-inner { background: none; }
+.chart { gap: 6px; padding-bottom: 12px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .chips { justify-content: center; }
+.session-row { border: 0; background: none; text-align: left; font: inherit; width: 100%; }
+.session-row:active { background: rgba(233, 180, 44, .25); }
+.session-row .kicker { line-height: 22px; }
+
+/* ---------- more: bodyweight and round lengths ---------- */
+.setting-name { font-family: var(--f-hand); font-weight: 400; font-size: 19px; color: var(--pen); }
+.total-unit { font-size: .55em; text-shadow: none; }
+.bw-in { width: 92px; flex: none; text-align: center; font-size: 26px; height: 44px; }
+
+/* A lift name on a filed page that opens its history. */
+.lift-link { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: inherit; align-items: center; }
+.lift-link:active { background: rgba(233, 180, 44, .25); }
+.lift-link .filed-open { flex: none; }
+
+/* ---------- notes on a lift ---------- */
+.note { margin-top: 2px; }
+.note-shown {
+  display: block;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font-family: var(--f-hand);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--maroon);
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.note-shown.is-empty { font-size: 14px; color: var(--ink-soft); opacity: .8; text-decoration: underline dotted; text-underline-offset: 3px; }
+.note-editor { display: flex; align-items: flex-end; gap: 8px; }
+.note-box {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 6px 8px;
+  border: 0;
+  border-bottom: 1.5px solid var(--pen);
+  border-radius: 0;
+  background: rgba(255, 255, 255, .35);
+  font-family: var(--f-hand);
+  font-size: 17px;
+  line-height: 1.35;
+  color: var(--maroon);
+  resize: none;
+  overflow: hidden;
+}
+.note-box:focus { outline: none; background: rgba(255, 255, 255, .55); }
+.note-box::placeholder { color: var(--pencil); opacity: 1; }
+.note-done { flex: none; min-height: 36px; padding: 0 10px; border: 2px solid var(--ink); border-radius: 5px; background: var(--card); font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.lift-notes { gap: 4px; }
+.lift-notes .note-shown { font-size: 18px; }
+
+/* ---------- this week, at the top of the notebook ---------- */
+.week-box { display: flex; flex-direction: column; gap: 6px; }
+.week-count { font-size: 17px; }
+.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.week-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-height: 82px;
+  padding: 5px 0 4px;
+  border: 1.5px solid rgba(74, 59, 44, .4);
+  border-radius: 3px;
+  background: url(../art/paper.webp) 40px 90px / 420px 420px, var(--card);
+  background-blend-mode: multiply;
+  box-shadow: 0 1px 1px rgba(60, 38, 12, .25);
+  font: inherit;
+  color: inherit;
+}
+button.week-day:active { transform: translateY(1px); }
+.week-day.is-future { background: transparent; box-shadow: none; border-style: dashed; opacity: .7; }
+.week-name { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-soft); }
+.week-date { position: relative; font-family: var(--f-head); font-size: 17px; line-height: 1.2; }
+/* Today's date, circled in red pen. */
+.week-day.is-today .week-date::after {
+  content: "";
+  position: absolute;
+  inset: -3px -8px -2px -8px;
+  border: 2px solid var(--margin-line);
+  border-radius: 50% 45% 52% 48%;
+  transform: rotate(-8deg);
+}
+.week-marks { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 1px; min-height: 22px; }
+.week-mark { width: 21px; height: 21px; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.week-mark.is-lift { stroke: var(--pen); }
+.week-mark.is-box { stroke: var(--purple); }
+.week-mark.is-cardio { stroke: var(--navy); stroke-width: 2.6; }
+.week-key { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; font-size: 13px; color: var(--ink-soft); }
+.week-key .week-mark { width: 16px; height: 16px; margin-left: 4px; }
+.week-key .week-mark:first-child { margin-left: 0; }
+
+/* The pose sketch in the corner of a workout page. */
+.sketch-pose { right: 4px; top: 22px; width: 118px; transform: rotate(3deg); opacity: .92; }
+.sketch-pose.sketch-arm { width: 84px; right: 14px; transform: rotate(6deg); }
+.sketch-pose.sketch-back { transform: rotate(-3deg); }
+.head-block.with-pose { min-height: 112px; padding-right: 118px; }
+
+/* ---------- stats ---------- */
+.page-stats .page-inner, .page-calc .page-inner { background: none; }
+.stats-part { display: flex; flex-direction: column; gap: 10px; }
+.part-title { font-family: var(--f-head); font-weight: 400; font-size: 22px; line-height: 1.1; text-shadow: 2px 2px 0 var(--mustard); }
+.standards-row { justify-content: flex-start; flex-wrap: wrap; gap: 6px 10px; }
+.standards-row .chip { min-height: 36px; }
+
+/* One of the Big Three. */
+.big { width: 100%; text-align: left; font: inherit; color: inherit; gap: 6px; }
+button.big:active { transform: translateY(2px); }
+.big-name { font-family: var(--f-head); font-size: 20px; line-height: 1.1; color: var(--green-ink); }
+.big-row { display: flex; align-items: center; gap: 12px; }
+.big-n { white-space: nowrap; font-family: var(--f-head); font-weight: 400; font-size: 36px; line-height: 1; text-shadow: 2px 2px 0 var(--mustard); font-variant-numeric: tabular-nums; }
+.big-side { display: flex; flex-direction: column; min-width: 0; }
+.big-side .hand { font-size: 16px; }
+.big-total .row { align-items: flex-end; }
+.scores { display: flex; gap: 14px; text-align: right; }
+.scores p { display: flex; flex-direction: column; }
+.score-n { font-family: var(--f-head); font-size: 22px; line-height: 1.1; color: var(--maroon); }
+
+/* A lift's strength level: five steps, the current one filling up. */
+.level { display: flex; flex-direction: column; gap: 5px; }
+.level-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.level-name {
+  padding: 1px 8px 2px;
+  border: 2.5px double currentColor;
+  border-radius: 3px;
+  font-family: var(--f-head);
+  font-size: 14px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  transform: rotate(-2deg);
+}
+.level-0 { color: var(--ink-soft); }
+.level-1 { color: var(--navy); }
+.level-2 { color: var(--green-ink); }
+.level-3 { color: var(--purple); }
+.level-4 { color: var(--maroon); }
+.level-5 { color: #B07A10; }
+.level-next { font-family: var(--f-hand); font-size: 16px; color: var(--pen); }
+.level-track { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+.level-step { position: relative; height: 9px; border: 1.5px solid var(--ink); border-radius: 2px; background: rgba(255, 255, 255, .4); overflow: hidden; }
+.level-step.is-full { background: var(--mustard); }
+.level-fill { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(-45deg, var(--mustard) 0 4px, var(--mustard-light) 4px 7px); }
+
+.chart-empty { font-size: 17px; padding: 22px 0; text-align: center; }
+.weigh-row { display: flex; align-items: flex-end; gap: 10px; }
+.weigh-row .write-in { flex: 1; min-width: 0; height: 44px; font-size: 22px; }
+.down-weight, .up-weight { font-size: 16px; text-align: right; }
+
+/* The training calendar. */
+.cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-month { font-family: var(--f-head); font-size: 18px; }
+.cal-arrow { width: 44px; height: 40px; border: 2px solid var(--ink); border-radius: 6px; background: var(--card); font-size: 24px; line-height: 1; box-shadow: 2px 2px 0 var(--navy); }
+.cal-arrow:active { transform: translate(2px, 2px); box-shadow: none; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; margin-top: 6px; }
+.cal-name { text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-soft); }
+.cal-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 46px;
+  padding: 3px 0 2px;
+  border: 1px solid rgba(74, 59, 44, .25);
+  border-radius: 2px;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+.cal-day.is-blank { border: 0; }
+.cal-day.has-page { background: rgba(255, 255, 255, .45); border-color: rgba(74, 59, 44, .5); }
+.cal-n { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.cal-day.is-today .cal-n { color: var(--maroon); text-decoration: underline 2px var(--margin-line); text-underline-offset: 2px; }
+.cal-marks { display: flex; flex-wrap: wrap; justify-content: center; }
+.cal-marks .week-mark { width: 16px; height: 16px; }
+.cal-count { text-align: right; font-size: 16px; margin-top: 4px; }
+
+/* Records and ribbons. */
+.record-row { width: 100%; border: 0; border-bottom: 1.5px solid var(--rule); background: none; font: inherit; color: inherit; text-align: left; }
+.record-row .compare-name { display: flex; align-items: center; gap: 8px; }
+.record-ribbon { width: 22px; height: auto; flex: none; filter: drop-shadow(1px 1px 1px rgba(40, 20, 8, .35)); }
+
+/* ---------- the calculator ---------- */
+.calc-row { display: grid; grid-template-columns: minmax(0, 1fr) 96px auto; align-items: center; gap: 10px; }
+.calc-in {
+  width: 100%;
+  height: 44px;
+  padding: 0 6px;
+  border: 0;
+  border-bottom: 1.5px solid var(--pen);
+  border-radius: 0;
+  background: rgba(255, 255, 255, .35);
+  font-family: var(--f-hand);
+  font-size: 24px;
+  color: var(--pen);
+  text-align: center;
+}
+.calc-in:focus { outline: none; background: rgba(255, 255, 255, .6); }
+.calc-out { display: flex; flex-direction: column; gap: 12px; }
+.calc-level { display: flex; flex-direction: column; gap: 4px; }
+
+/* A note about a lift on one day only. */
+.day-note { padding: 2px var(--side-r) 0 var(--side-l); }
+.day-note .note-shown:not(.is-empty), .day-note-text { font-family: var(--f-hand); font-size: 16px; line-height: 1.3; color: var(--pen); }
+.day-note-text { display: block; white-space: pre-wrap; overflow-wrap: anywhere; }
+.day-note-text { padding-left: 8px; border-left: 2px solid color-mix(in srgb, var(--pen) 55%, transparent); }
+.big-total .row, .calc-out > .row { flex-wrap: wrap; row-gap: 8px; }
+
+/* ---------- the Big Three, as in the mockup ---------- */
+.b3-head { display: grid; grid-template-columns: minmax(0, 1fr) 128px; gap: 12px; align-items: start; }
+.b3-title { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.b3-heading { font-family: var(--f-head); font-weight: 400; font-size: 40px; line-height: .98; text-shadow: 3px 3px 0 var(--mustard); text-wrap: balance; }
+.b3-sub { font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--ink); }
+.b3-fig { margin: 4px 0 0; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+.b3-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1.05;
+  border: 3px solid var(--ink);
+  background:
+    radial-gradient(rgba(90, 50, 0, .25) 1px, transparent 1.6px) 0 0 / 5px 5px,
+    repeating-conic-gradient(from 0deg at 50% 60%, var(--mustard) 0deg 10deg, var(--mustard-light) 10deg 20deg);
+  box-shadow: 6px 6px 0 var(--navy), 8px 12px 16px rgba(18, 32, 46, .3);
+  transform: rotate(2deg);
+  overflow: hidden;
+}
+.b3-frame img { position: absolute; left: 10%; top: 5%; width: 80%; height: auto; mix-blend-mode: multiply; }
+.b3-fig figcaption { font-family: var(--f-type); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; text-align: center; }
+
+.b3 { border-top: 5px solid var(--ink); }
+.b3-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 6px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 0 12px;
+  border: 0;
+  border-bottom: 3px solid var(--ink);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.b3-row:active { background: rgba(233, 180, 44, .2); }
+.b3-n { font-family: var(--f-head); font-weight: 400; font-size: 52px; line-height: .95; letter-spacing: -.01em; white-space: nowrap; font-variant-numeric: tabular-nums; text-shadow: 3px 3px 0 var(--mustard); }
+.b3-n .total-unit { font-size: 20px; text-shadow: none; }
+.b3-row.is-record .b3-n { color: var(--maroon); }
+.b3-info { display: flex; flex-direction: column; min-width: 0; gap: 1px; }
+.b3-name { font-size: 20px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.b3-change { font-size: 15px; font-weight: 700; color: var(--ink-soft); }
+.b3-change.up { color: var(--green-ink); }
+.b3-source { font-family: var(--f-type); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--maroon); }
+.b3-ribbon { position: absolute; right: 0; top: 8px; width: 34px; height: auto; transform: rotate(8deg); filter: drop-shadow(1px 2px 1px rgba(40, 20, 8, .4)); }
+.b3-level { grid-column: 1 / -1; }
+
+.b3-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 4px 4px 4px 0;
+  padding: 12px 16px 13px;
+  border: 3px solid var(--ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .12), transparent 50%, rgba(0, 0, 0, .15)), var(--maroon);
+  color: var(--on-color);
+  box-shadow: 6px 6px 0 var(--navy), 8px 12px 16px rgba(18, 32, 46, .3);
+  transform: rotate(-1deg);
+}
+.b3-total-label { font-size: 15px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--mustard-light); }
+.b3-total-n { font-family: var(--f-head); font-size: 34px; line-height: 1; white-space: nowrap; text-shadow: 2px 2px 0 rgba(0, 0, 0, .35); }
+.b3-total-n .total-unit { font-size: 18px; }
+.b3-scores { flex: 1 0 auto; text-align: right; font-size: 16px; font-weight: 700; letter-spacing: .02em; }
+.log-max .chips { margin-bottom: 2px; }
+.log-day { font-family: var(--f-ui); font-size: 17px; }
+.b3-row.is-record .b3-info { padding-right: 38px; }
+.sketch-pose.sketch-back-hand { width: 96px; right: 12px; top: 18px; transform: rotate(-2deg); }

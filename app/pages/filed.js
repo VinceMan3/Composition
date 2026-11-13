@@ -3,6 +3,8 @@
 
 import { h, put, art } from '../ui.js';
 import { niceDate } from '../log.js';
+import { findSticker } from '../awards.js';
+import { poseSketch } from '../poses.js';
 
 export function render(el, ctx) {
   const { words, store, sound } = ctx;
@@ -37,7 +39,7 @@ export function render(el, ctx) {
   };
 
   put(el,
-    art('sketch-arm.webp', 'sketch sketch-arm', 540, 605),
+    poseSketch(data, page),
     stamp,
     h('div', { class: 'head-block', style: 'padding-right:0;min-height:0' },
       h('p', { class: 'kicker' }, `${w.kicker} · ${niceDate(page.date)}`),
@@ -54,9 +56,24 @@ export function render(el, ctx) {
       h('div', null,
         h('p', { class: 'label' }, w.recordLabel),
         h('p', { class: 'record-name' }, r.name),
-        h('p', { class: 'hand' }, `${w.estMax} ${r.now} ${unit} · ${w.was} ${r.was}`),
+        h('p', { class: 'hand' }, `${r.kind === 'top' ? w.heaviest : w.estMax} ${r.now} ${r.unit || unit} · ${w.was} ${r.was}`),
       ),
     )),
+    (sum.stickers || []).map(findSticker).filter(Boolean).map(def => h('div', { class: 'record is-sticker' },
+      art(def.art, '', null, null),
+      h('div', null,
+        h('p', { class: 'label' }, w.stickerLabel),
+        h('p', { class: 'record-name' }, def.name),
+        h('p', { class: 'hand' }, w.stickerNote),
+      ),
+    )),
+    (sum.cardio || []).length > 0 && h('div', null,
+      h('p', { class: 'label' }, w.cardioLabel),
+      h('div', { class: 'compare' }, sum.cardio.map(row => h('div', { class: 'compare-row' },
+        h('span', { class: `compare-name${row.boxing ? ' is-boxing' : ''}` }, row.name),
+        h('span', { class: 'compare-best' }, row.text),
+      ))),
+    ),
     sum.rows.length > 0 && h('div', null,
       h('p', { class: 'label' }, w.compareLabel),
       h('div', { class: 'compare' }, sum.rows.map(row => h('div', { class: 'compare-row' },

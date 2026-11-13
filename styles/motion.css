@@ -1,7 +1,9 @@
 /* Movement: the page flip, the pencil check, the stamp.
-   --flip sets how long a page takes to turn. Bigger is slower. */
+   --flip sets how long the cover takes to turn, --flip-quick how long the
+   inner pages take. Bigger is slower. */
 
-:root { --flip: 340ms; }
+:root { --flip: 300ms; --flip-quick: 180ms; }
+.sheet.is-quick, .shade.is-quick { --flip: var(--flip-quick); }
 
 /* ---------- the bending page (built in app/flip.js) ---------- */
 .sheet {
@@ -82,6 +84,24 @@
 .sheet-down .sheet-hinge { animation: sheet-trail var(--flip) linear both; }
 .sheet-down .sheet-face::after { animation: face-light var(--flip) ease-out both; }
 
+/* ---------- the quick turn between inner pages (app/router.js) ---------- */
+@keyframes turn-up { to { transform: rotateX(97deg); } }
+@keyframes turn-down {
+  from { transform: rotateX(97deg); }
+  to { transform: rotateX(0deg); }
+}
+.page.turn-up, .page.turn-down {
+  z-index: 3;
+  transform-origin: 50% 0;
+  will-change: transform;
+  pointer-events: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 26px 34px rgba(20, 30, 40, .32);
+}
+.page.turn-up { animation: turn-up var(--flip-quick) cubic-bezier(.45, 0, .75, .5) forwards; }
+.page.turn-down { animation: turn-down var(--flip-quick) cubic-bezier(.25, .55, .35, 1) both; }
+
 /* The shadow a turning page throws on the one beneath it. */
 @keyframes shade-clear { from { opacity: .34; } to { opacity: 0; } }
 @keyframes shade-fall { from { opacity: 0; } 74%, to { opacity: .34; } }
@@ -129,6 +149,19 @@
 @keyframes rest-flash { 50% { background-color: var(--mustard-light); } }
 .rest.is-over { animation: rest-flash .5s ease-in-out 4; }
 
+/* A sticker picked up, tapped, or slapped on for the first time. */
+@keyframes sticker-wiggle {
+  30% { transform: rotate(calc(var(--turn) - 7deg)) scale(1.05); }
+  65% { transform: rotate(calc(var(--turn) + 5deg)) scale(1.03); }
+}
+@keyframes sticker-slap {
+  from { transform: rotate(calc(var(--turn) + 14deg)) scale(2.1); opacity: 0; }
+  60% { transform: rotate(var(--turn)) scale(.94); opacity: 1; }
+  to { transform: rotate(var(--turn)) scale(1); }
+}
+.sticker.is-wiggling { animation: sticker-wiggle .3s ease-in-out; }
+.sticker.is-slapped { animation: sticker-slap .28s cubic-bezier(.3, 0, .6, 1) both; }
+
 @keyframes fade-in { from { opacity: 0; } }
 .page.is-fading-in { animation: fade-in .14s linear; }
 
@@ -136,6 +169,6 @@
    the flip (app/router.js skips it), and the small moves stay still. */
 @media (prefers-reduced-motion: reduce) {
   .check path { transition: none; }
-  .is-bumped, .stamp.is-stamping, .toast:not([hidden]), .rest.is-over { animation: none; }
+  .is-bumped, .stamp.is-stamping, .toast:not([hidden]), .rest.is-over, .sticker.is-wiggling, .sticker.is-slapped { animation: none; }
   .btn, .tab svg, .stepper button { transition: none; }
 }

@@ -6,6 +6,7 @@ import { WORDS } from '../content/wording.js';
 import * as store from './store.js';
 import * as sound from './sound.js';
 import * as rest from './rest.js';
+import { collect } from './awards.js';
 import { toast, shortDate } from './ui.js';
 import { startRouter } from './router.js';
 import * as cover from './pages/cover.js';
@@ -14,9 +15,14 @@ import * as add from './pages/add.js';
 import * as filed from './pages/filed.js';
 import * as notebook from './pages/notebook.js';
 import * as stats from './pages/stats.js';
+import * as calc from './pages/calc.js';
 import * as more from './pages/more.js';
+import * as stickers from './pages/stickers.js';
+import * as page from './pages/page.js';
+import * as library from './pages/library.js';
+import * as lift from './pages/lift.js';
 
-const PAGES = { cover, today, add, filed, notebook, stats, more };
+const PAGES = { cover, today, add, filed, notebook, stats, calc, more, stickers, page, library, lift };
 
 const app = document.getElementById('app');
 const stack = document.getElementById('stack');
@@ -29,6 +35,7 @@ for (const tab of document.querySelectorAll('.tab')) {
 }
 
 sound.setMuted(!store.get().settings.sound);
+document.documentElement.dataset.look = store.get().settings.look;
 
 // What every page is handed when it draws itself.
 const ctx = {
@@ -44,6 +51,10 @@ const ctx = {
 
 rest.initRest(document.getElementById('rest'), ctx);
 
+// Anything earned that was never handed out (say, after a restore) is
+// handed out now, and slapped on the cover the next time it opens.
+store.update(d => { ctx.state.newStickers = collect(d); });
+
 const router = startRouter({
   stack,
   render: (name, el) => PAGES[name].render(el, ctx),
@@ -52,6 +63,8 @@ const router = startRouter({
     const data = store.get();
     if (name === 'add' && !data.draft) return 'today';
     if (name === 'filed' && !data.pages.length) return 'today';
+    if (name === 'page' && !data.pages.some(p => p.id === ctx.state.openPage)) return 'notebook';
+    if (name === 'lift' && !ctx.state.openLift) return 'library';
     return name;
   },
   onShow(name, tabName) {
@@ -62,7 +75,7 @@ const router = startRouter({
       else tab.removeAttribute('aria-current');
     }
   },
-  onFlip() { sound.play('flip'); },
+  onFlip(forward, quick) { sound.play(quick ? 'flick' : 'flip'); },
 });
 
 // Phones only allow sound after a touch.

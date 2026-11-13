@@ -13,8 +13,13 @@ export const ROUTES = {
   add: { tab: 'today', at: 11 },
   filed: { tab: 'today', at: 12 },
   notebook: { tab: 'notebook', at: 20 },
+  page: { tab: 'notebook', at: 21 },
+  library: { tab: 'notebook', at: 22 },
+  lift: { tab: 'notebook', at: 23 },
   stats: { tab: 'stats', at: 30 },
+  calc: { tab: 'stats', at: 31 },
   more: { tab: 'more', at: 40 },
+  stickers: { tab: 'more', at: 41 },
 };
 
 const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -58,6 +63,9 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
 
     const prev = currentEl;
     const forward = current ? ROUTES[name].at > ROUTES[current].at : true;
+    // Opening or closing the cover gets the full, slower turn. Between the
+    // inner pages the turn is quick, so moving back and forth stays light.
+    const quick = current && current !== 'cover' && name !== 'cover';
     const next = build(name);
     current = name;
     currentEl = next;
@@ -77,17 +85,21 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
       return;
     }
 
-    // Forward: a copy of the old page curls away, showing the new one beneath.
-    // Backward: a copy of the new page falls onto the old one.
     stack.append(next);
     if (next.onAttached) next.onAttached();
-    const shade = h('div', { class: `shade ${forward ? 'is-clearing' : 'is-falling'}` });
+    onFlip(forward, quick);
+    if (quick) return turnQuick(prev, next, forward);
+
+    // The cover: a copy of the page, cut into strips, curls over the rings.
+    // Forward: a copy of the old page curls away, showing the new one beneath.
+    // Backward: a copy of the new page falls onto the old one.
+    const shade = h('div', { class: `shade ${forward ? 'is-clearing' : 'is-falling'}${quick ? ' is-quick' : ''}` });
     const sheet = makeSheet(forward ? prev : next, forward ? 'up' : 'down');
+    if (quick) sheet.el.classList.add('is-quick');
     stack.append(shade, sheet.el);
     sheet.settle();
     if (forward) discard(prev);
     else next.classList.add('is-waiting');
-    onFlip(forward);
 
     let done = false;
     const finish = () => {
@@ -104,6 +116,32 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
     };
     sheet.top.addEventListener('animationend', e => { if (e.target === sheet.top) finish(); });
     const timer = setTimeout(finish, 800); // in case the animation never reports back
+    finishFlip = finish;
+  }
+
+  // Between inner pages: the real page turns, in one piece, with nothing
+  // copied, so the phone's graphics chip can do all of the moving.
+  function turnQuick(prev, next, forward) {
+    const mover = forward ? prev : next;
+    const under = forward ? next : prev;
+    const shade = h('div', { class: `shade is-quick ${forward ? 'is-clearing' : 'is-falling'}` });
+    under.after(shade);
+    // The turning page sits above the other (z-index in motion.css); it is not
+    // moved in the page, which would lose its scroll position.
+    mover.classList.add(forward ? 'turn-up' : 'turn-down');
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      shade.remove();
+      next.classList.remove('turn-down');
+      discard(prev);
+      if (finishFlip === finish) finishFlip = null;
+    };
+    mover.addEventListener('animationend', e => { if (e.target === mover) finish(); });
+    const timer = setTimeout(finish, 600);
     finishFlip = finish;
   }
 

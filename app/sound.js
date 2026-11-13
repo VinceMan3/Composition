@@ -2,10 +2,13 @@
 // and hiss, so the app stays small and works offline.
 //
 //   play('tap')     a light click for buttons
-//   play('flip')    a page turning
+//   play('flip')    a page turning (the cover)
+//   play('flick')   a quick turn between inner pages
 //   play('pencil')  a check mark being scratched in
 //   play('stamp')   the rubber stamp on a filed page
 //   play('bell')    the boxing bell when rest is over
+//   play('bells')   three bells: the last round is done
+//   play('knock')   two knocks on wood: ten seconds left in the round
 
 let ctx = null;
 let out = null;
@@ -102,6 +105,12 @@ const SOUNDS = {
     hissBurst(t + 0.3, 0.08, { type: 'lowpass', from: 520 }, [[0.006, 0.34]]);
   },
 
+  flick(t) {
+    // A quick turn: just the swish of the sheet, then a light settle.
+    hissBurst(t, 0.15, { type: 'bandpass', from: 1100, to: 4200, q: 0.7 }, [[0.03, 0.24], [0.11, 0.14]]);
+    hissBurst(t + 0.15, 0.05, { type: 'lowpass', from: 600 }, [[0.004, 0.2]]);
+  },
+
   pencil(t) {
     // Short stroke down, long stroke up: a check mark.
     hissBurst(t, 0.07, { type: 'bandpass', from: 2300, to: 1900, q: 1.6 }, [[0.012, 0.3], [0.05, 0.2]]);
@@ -126,6 +135,20 @@ const SOUNDS = {
     }
     hissBurst(t, 0.03, { type: 'highpass', from: 3200 }, [[0.002, 0.3]]);
     buzz([40, 60, 40]);
+  },
+
+  bells(t) {
+    for (const at of [0, 0.42, 0.84]) SOUNDS.bell(t + at);
+  },
+
+  knock(t) {
+    // Two raps of a stick on the ring post.
+    for (const at of [0, 0.16]) {
+      tone(t + at, 0.09, 920, 610, 0.34, 'triangle');
+      tone(t + at, 0.05, 1900, 1500, 0.08);
+      hissBurst(t + at, 0.03, { type: 'bandpass', from: 2400, q: 1.4 }, [[0.002, 0.32]]);
+    }
+    buzz([12, 120, 12]);
   },
 };
 
