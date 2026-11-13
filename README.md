@@ -75,6 +75,11 @@ run:
 
 Then visit http://localhost:8000 in a browser.
 
+## Checks
+
+`tools/` holds the browser checks, the preview builder and the scripts that
+drew the art. See `tools/README.md`.
+
 ## Build steps so far
 
 1. Foundation: the notebook frame, five tabs, page flips, sounds, saving, backup. (done)
