@@ -229,14 +229,10 @@ def back_details():
         [(40, 196), (44, 201), (49, 204)],
         # Upper back: infraspinatus over teres minor over teres major, and
         # rhomboid major's lower edge in the triangle of auscultation.
-        [(42, 212), (56, 212), (70, 212), (84, 212)],
-        [(42, 234), (56, 231), (70, 226), (83, 218)],
-        [(29, 244), (34, 250), (39, 253)],
         # Rear delt and side delt: the middle bundles.
         [(70, 168), ARM(30, 0), ARM(62, 8)],
         [ARM(0, 28), ARM(36, 32), ARM(70, 20)],
         # Triceps: long head and lateral head meeting the common tendon.
-        [ARM(56, -6), ARM(76, -2), ARM(96, 2)],
         [ARM(84, 26), ARM(100, 17), ARM(113, 9), ARM(126, 5)],
         [ARM(94, -26), ARM(107, -15), ARM(118, -7), ARM(128, -2)],
         # Forearm: olecranon, the back edge of the ulna (flexor carpi
@@ -244,8 +240,6 @@ def back_details():
         # brachioradialis and the radial wrist extensors, extensor digitorum,
         # and the two thumb muscles that cross the lower third.
         [FORE(-4, -10), FORE(6, -11), FORE(10, -4)],
-        [FORE(10, -7), FORE(40, -11), FORE(80, -10), FORE(118, -8)],
-        [FORE(4, 19), FORE(40, 18), FORE(76, 13), FORE(110, 9)],
         [FORE(6, 7), FORE(40, 5), FORE(80, 2), FORE(116, 0)],
         [FORE(64, 5), FORE(86, 11), FORE(106, 14)],
         [FORE(70, -2), FORE(92, 5), FORE(112, 10)],
@@ -255,15 +249,10 @@ def back_details():
         [(76, 432), (82, 470), (79, 515), (71, 565), (63, 612)],
         # Hamstrings: biceps femoris against semitendinosus, the long and
         # short heads of biceps femoris, and semimembranosus on the inner side.
-        [(36, 456), (39, 500), (41, 540), (42, 575), (43, 606)],
-        [(27, 540), (30, 566), (32, 590), (34, 610)],
         [(52, 520), (55, 560), (55, 592)],
         # Calves: the split between the two heads of gastrocnemius, the
         # lower edges of both heads, and the Achilles tendon.
         [(55, 628), (48, 632), (41, 637)], [(28, 627), (34, 632), (41, 637)],
-        [(41, 637), (40, 662), (41, 690), (42, 704)],
-        [(12, 712), (24, 726), (38, 731)],
-        [(66, 694), (57, 708), (45, 716)],
         [(38, 731), (39, 755)],
         [(45, 718), (44, 754)],
     ]
@@ -427,16 +416,16 @@ def front_regions():
         ('quads', [quad]),
         ('adductors', [add]),
         ('calves', [calf_in, calf_out]),
+        # Tibialis anterior, beside the front edge of the shin bone.
+        ('shins', [[(40, 650), (46, 646), (52, 646), (56, 680), (53, 720), (45, 760), (38, 774),
+                    (35, 766), (37, 730), (39, 690)]]),
     ]
 
 
 def front_details():
     return [
         # Neck: sternocleidomastoid, its sternal and collarbone heads.
-        [(30, 94), (24, 112), (14, 132), (5, 149)],
-        [(27, 104), (22, 122), (16, 140), (15, 150)],
         # Pec: the line between the collarbone head and the sternal head.
-        [(14, 166), (38, 172), (62, 182), (84, 197)],
         # Delts: the middle bundles.
         [ARM(0, 27), ARM(34, 31), ARM(70, 24)],
         [(74, 152), ARM(30, 6), ARM(60, 10)],
@@ -448,15 +437,9 @@ def front_details():
         # External oblique: where its muscle turns into flat tendon.
         [ASIS, (48, 358), (36, 348), (28, 340)],
         # Abs: the three tendinous lines across the rectus.
-        [(0, 268), (14, 266), (30.5, 270)],
-        [(0, 295), (14, 294), (31, 298)],
-        [(0, 321), (14, 320), (28.5, 323)],
         # Biceps: its outer edge against brachialis, and the two heads.
-        [ARM(80, 13), ARM(100, 18), ARM(118, 15), ARM(134, 8), FORE(10, 3)],
-        [ARM(62, -2), ARM(86, 0), ARM(106, 0)],
         # Forearm: brachioradialis, flexor carpi radialis, the long finger
         # flexors and flexor carpi ulnaris, and pronator teres crossing.
-        [FORE(18, 0), FORE(44, 16), FORE(80, 12), FORE(116, 8)],
         [FORE(20, -2), FORE(60, 2), FORE(116, 2)],
         [FORE(12, -8), FORE(60, -7), FORE(116, -4)],
         [FORE(4, -20), FORE(60, -17), FORE(116, -10)],
@@ -464,20 +447,10 @@ def front_details():
         # Quads: rectus femoris down the middle, vastus lateralis outside,
         # the vastus medialis teardrop, tensor fasciae latae at the hip, and
         # the sartorius' outer edge.
-        [(60, 396), (64, 440), (63, 490), (58, 540), (51, 580), (46, 601)],
-        [(52, 396), (48, 440), (44, 490), (40, 540), (37, 590), (37, 604)],
         [(21, 548), (29, 562), (35, 582), (37, 600)],
-        [(60, 372), (64, 394), (70, 420), (78, 446)],
-        F['sart_out'],
         # Adductors: adductor longus, and pectineus beside it.
-        [(19, 412), (22, 444), (21, 476), (17, 506)],
-        [(34, 397), (30, 420), (25, 442)],
         # The shin bone's front edge and the kneecap's tendon.
-        [(40, 650), (39, 690), (37, 730), (34, 768)],
-        [(36, 636), (37, 648)], [(44, 636), (43, 648)],
         # Lower leg: the shin (tibialis anterior and the long toe extensor).
-        [(52, 646), (56, 680), (53, 720), (45, 760), (40, 778)],
-        [(60, 650), (61, 690), (56, 730), (50, 770)],
     ]
 
 
@@ -562,14 +535,14 @@ def dedupe(p):
     return out
 
 
-def smooth(points, closed=False):
-    """Catmull-Rom through the points, written as SVG cubic Beziers."""
+def _segments(points, closed=False):
+    """Catmull-Rom through the points as cubic Bezier segments (p1, c1, c2, p2).
+    A point where the line turns sharply (where two muscles meet at an
+    angle) stays a corner instead of being rounded into a spike."""
     Pn = points
     n = len(Pn)
 
     def corner(i):
-        # A point where the line turns sharply (where two muscles meet at an
-        # angle) stays a corner instead of being rounded into a spike.
         if not closed and (i == 0 or i == n - 1):
             return False
         a, b, c = Pn[(i - 1) % n], Pn[i], Pn[(i + 1) % n]
@@ -582,7 +555,7 @@ def smooth(points, closed=False):
         return cos < math.cos(math.radians(62))
 
     sharp = [corner(i) for i in range(n)]
-    out = ['M%.1f %.1f' % Pn[0]]
+    segs = []
     for i in range(n if closed else n - 1):
         p0 = Pn[(i - 1) % n] if (closed or i > 0) else Pn[i]
         p1, p2 = Pn[i], Pn[(i + 1) % n]
@@ -593,10 +566,35 @@ def smooth(points, closed=False):
             p3 = p2
         c1 = (p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6)
         c2 = (p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6)
+        segs.append((p1, c1, c2, p2))
+    return segs
+
+
+def smooth(points, closed=False):
+    """Catmull-Rom through the points, written as SVG cubic Beziers."""
+    segs = _segments(points, closed)
+    out = ['M%.1f %.1f' % points[0]]
+    for p1, c1, c2, p2 in segs:
         out.append('C%.1f %.1f %.1f %.1f %.1f %.1f' % (*c1, *c2, *p2))
     if closed:
         out.append('Z')
     return ''.join(out)
+
+
+def sample(points, closed=False, step=2.0):
+    """The same curve as smooth(), as a dense list of points."""
+    out = []
+    for p1, c1, c2, p2 in _segments(points, closed):
+        L = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+        k = max(2, int(L / step))
+        for j in range(k):
+            t = j / k
+            mt = 1 - t
+            out.append((mt ** 3 * p1[0] + 3 * mt * mt * t * c1[0] + 3 * mt * t * t * c2[0] + t ** 3 * p2[0],
+                        mt ** 3 * p1[1] + 3 * mt * mt * t * c1[1] + 3 * mt * t * t * c2[1] + t ** 3 * p2[1]))
+    if not closed:
+        out.append(points[-1])
+    return out
 
 
 def wobble(points, rng, amount=0.55):
@@ -798,12 +796,516 @@ def build(view, regions, details, outline, fibers, seed):
     ])
 
 
+# ---------------------------------------------------------------------------
+# PARTS: each group is cut into its muscles and heads along these lines.
+# Lines run a little past the edges of the group so each one cuts cleanly;
+# a seed point inside each piece says which part it is. Figure's left half.
+# ---------------------------------------------------------------------------
+
+PART_NAMES = {
+    'chest-upper': 'Upper chest', 'chest-middle': 'Middle chest', 'chest-lower': 'Lower chest',
+    'front-delts': 'Front delts', 'side-delts': 'Side delts', 'rear-delts': 'Rear delts',
+    'biceps-long': 'Biceps, long head', 'biceps-short': 'Biceps, short head',
+    'brachialis': 'Brachialis',
+    'triceps-long': 'Triceps, long head', 'triceps-lateral': 'Triceps, lateral head',
+    'triceps-medial': 'Triceps, medial head',
+    'brachioradialis': 'Brachioradialis', 'wrist-flexors': 'Wrist flexors',
+    'wrist-extensors': 'Wrist extensors',
+    'traps-upper': 'Upper traps', 'traps-middle': 'Middle traps', 'traps-lower': 'Lower traps',
+    'rhomboids': 'Rhomboids', 'infraspinatus': 'Infraspinatus', 'teres-minor': 'Teres minor',
+    'teres-major': 'Teres major',
+    'lats': 'Lats', 'lower-back': 'Spinal erectors', 'abs': 'Abs',
+    'external-oblique': 'External oblique', 'serratus': 'Serratus',
+    'glute-max': 'Gluteus maximus', 'glute-med': 'Gluteus medius',
+    'rectus-femoris': 'Rectus femoris', 'vastus-lateralis': 'Vastus lateralis',
+    'vastus-medialis': 'Vastus medialis', 'sartorius': 'Sartorius',
+    'tfl': 'Tensor fasciae latae', 'hip-flexors': 'Hip flexors (iliopsoas)',
+    'biceps-femoris': 'Biceps femoris', 'semitendinosus': 'Semitendinosus',
+    'semimembranosus': 'Semimembranosus',
+    'adductor-longus': 'Adductor longus', 'adductor-magnus': 'Adductor magnus',
+    'gracilis': 'Gracilis', 'pectineus': 'Pectineus',
+    'gastroc-medial': 'Calf, inner head', 'gastroc-lateral': 'Calf, outer head',
+    'soleus': 'Soleus', 'tibialis-anterior': 'Tibialis anterior',
+}
+
+# A part normally belongs to the group it is cut from. The hip flexors sit
+# inside the adductor shape at the top of the thigh but count with the quads.
+PART_GROUP = {'hip-flexors': 'quads'}
+
+SPLITS = {
+    'back': {
+        'traps': ([[(-1, 140), (40, 144), (80, 149), (100, 154)],
+                   [(-1, 200), (30, 193), (50, 183), (60, 180)]],
+                  {'traps-upper': [(40, 132)], 'traps-middle': [(40, 165)],
+                   'traps-lower': [(15, 240)]}),
+        'upper-back': ([[(30, 213), (56, 212), (70, 212), (92, 212)],
+                        [(30, 236), (42, 234), (56, 231), (70, 226), (83, 218), (92, 215)],
+                        [(26, 237), (34, 250), (42, 258)]],
+                       {'infraspinatus': [(60, 200)], 'teres-minor': [(60, 220)],
+                        'teres-major': [(60, 238)], 'rhomboids': [(30.5, 245)]}),
+        'triceps': ([[ARM(36, -8), ARM(56, -6), ARM(76, -2), ARM(96, 2), ARM(120, 2),
+                      ARM(156, 2)],
+                     [ARM(100, -42), ARM(110, -20), ARM(124, -12), ARM(156, -10)]],
+                    {'triceps-long': [ARM(80, -18)], 'triceps-lateral': [ARM(106, 18)],
+                     'triceps-medial': [ARM(132, -20)]}),
+        'forearms': ([[FORE(-14, 22), FORE(4, 20), FORE(40, 19), FORE(76, 14), FORE(108, 10),
+                       FORE(132, 9)],
+                      [FORE(-12, -8), FORE(10, -7), FORE(40, -11), FORE(80, -10),
+                       FORE(116, -8), FORE(132, -8)]],
+                     {'brachioradialis': [FORE(30, 26)], 'wrist-extensors': [FORE(50, 4)],
+                      'wrist-flexors': [FORE(50, -20)]}),
+        'obliques': ([], {'external-oblique': [(58.5, 335)]}),
+        'glutes': ([], {'glute-med': [(70, 370)], 'glute-max': [(40, 410)]}),
+        'hamstrings': ([[(36, 436), (36, 456), (39, 500), (41, 540), (42, 575), (43, 606),
+                         (43, 640)],
+                        [(24, 495), (30, 540), (34, 570), (37, 595), (40, 612), (42, 640)]],
+                       {'biceps-femoris': [(55, 520)], 'semitendinosus': [(35, 500)],
+                        'semimembranosus': [(30, 580)]}),
+        'adductors': ([[(9, 436), (12, 470), (14, 494), (17, 522), (20, 550), (24, 575),
+                        (30, 590)]],
+                      {'gracilis': [(12.5, 500)], 'adductor-magnus': [(20, 480)]}),
+        'quads': ([], {'vastus-lateralis': [(75, 520)]}),
+        'calves': ([[(43, 600), (41, 637), (40, 662), (41, 690), (42, 704), (42, 740), (41, 780)],
+                    [(6, 712), (24, 726), (38, 731), (48, 731)],
+                    [(76, 692), (57, 708), (45, 716), (36, 716)]],
+                   {'gastroc-medial': [(25, 670)], 'gastroc-lateral': [(58, 670)],
+                    'soleus': [(32, 748), (50, 740)]}),
+    },
+    'front': {
+        'traps': ([], {'traps-upper': [(60, 142)]}),
+        'chest': ([[(-1, 164), (14, 166), (38, 172), (60, 182), (72, 190), (84, 192)],
+                   [(-1, 212), (20, 222), (46, 226), (68, 224), (86, 215), (94, 211)]],
+                  {'chest-upper': [(40, 160)], 'chest-middle': [(40, 196)],
+                   'chest-lower': [(40, 238)]}),
+        'biceps': ([[ARM(68, 16), ARM(80, 14), ARM(100, 18), ARM(118, 15), ARM(134, 8),
+                     FORE(10, 3), FORE(26, 3)],
+                    [ARM(44, -2), ARM(62, -2), ARM(86, 0), ARM(106, 0), ARM(126, 0),
+                     FORE(12, 0), FORE(26, 0)],
+                    [ARM(118, -32), ARM(126, -16), ARM(134, -10), ARM(146, -4), FORE(26, -2)]],
+                   {'biceps-long': [ARM(95, 8)], 'biceps-short': [ARM(95, -10)],
+                    'brachialis': [ARM(112, 24), ARM(138, -18)]}),
+        'triceps': ([[ARM(100, -40), ARM(102, -24), ARM(104, -12)]],
+                    {'triceps-long': [ARM(70, -25)], 'triceps-medial': [ARM(118, -23)]}),
+        'forearms': ([[FORE(12, -2), FORE(18, 0), FORE(44, 16), FORE(80, 12), FORE(116, 8),
+                       FORE(132, 8)]],
+                     {'brachioradialis': [FORE(50, 24)], 'wrist-flexors': [FORE(60, -10)]}),
+        'obliques': ([[(56, 247), (56, 262), (58, 280), (64, 296), (76, 302), (84, 300)]],
+                     {'serratus': [(72, 262)], 'external-oblique': [(45, 320)]}),
+        'quads': ([[(57, 360), (56, 380), (53, 396), (45, 428), (37, 462), (29, 496), (23, 528),
+                    (20, 556), (19, 572), (17, 586)],
+                   [(62, 356), (62, 372), (64, 394), (70, 420), (78, 446), (86, 452), (95, 452)],
+                   [(52, 382), (56, 388), (60, 396), (64, 440), (63, 490), (58, 540), (51, 580),
+                    (46, 601), (45, 614)],
+                   [(52, 382), (52, 396), (48, 440), (44, 490), (40, 540), (37, 590), (37, 604),
+                    (37, 614)]],
+                  {'sartorius': [(40, 430)], 'tfl': [(72, 400)], 'rectus-femoris': [(54, 470)],
+                   'vastus-lateralis': [(76, 500)], 'vastus-medialis': [(28, 575)]}),
+        'adductors': ([[(45, 383), (42, 400), (39, 416), (40, 425)],
+                       [(32, 394), (29, 420), (26, 440), (28, 452), (31, 458)],
+                       [(15, 410), (12, 440), (12, 470), (14, 494), (19, 500)]],
+                      {'hip-flexors': [(44, 400)], 'pectineus': [(35, 410)],
+                       'adductor-longus': [(22, 450)], 'gracilis': [(10, 460)]}),
+        'shins': ([], {'tibialis-anterior': [(47, 700)]}),
+        # The abs stay one part, cut at their three tendinous lines so each
+        # block of the six-pack is shaded as its own rounded form.
+        'abs': ([[(-1, 268), (14, 266), (34, 270)], [(-1, 295), (14, 294), (34, 298)],
+                 [(-1, 321), (14, 320), (32, 323)]],
+                {'abs': [(14, 255), (14, 281), (14, 308), (14, 370)]}),
+        'calves': ([[(6, 712), (20, 722), (34, 728)], [(76, 694), (62, 704), (52, 712)]],
+                   {'gastroc-medial': [(18, 680)], 'gastroc-lateral': [(66, 672)],
+                    'soleus': [(22, 738), (60, 714)]}),
+    },
+}
+
+# Groups that are one part, named after the group.
+SINGLE = {'front-delts', 'side-delts', 'rear-delts', 'lats', 'lower-back'}
+
+
+def cut_parts(view, gid, polys_xy, side):
+    """Cut one group (already in drawing coordinates) into its parts.
+    Returns [(part, shapely polygon)], and the cut lines clipped to the group."""
+    from shapely.geometry import Polygon, LineString, Point
+    from shapely.ops import split, unary_union
+    shapes = [Polygon(sample(p, closed=True, step=1.5)).buffer(0) for p in polys_xy]
+    whole = unary_union(shapes)
+    if gid in SINGLE or gid not in SPLITS[view]:
+        return [(gid, sh) for sh in shapes], []
+    lines, seeds = SPLITS[view][gid]
+    pieces = list(shapes)
+    cuts = []
+    for line in lines:
+        L = LineString(sample([to_xy(q, side) for q in line], step=1.5))
+        cuts.append(L)
+        nxt = []
+        for pc in pieces:
+            if L.crosses(pc):
+                res = split(pc, L)
+                nxt.extend(g for g in res.geoms if g.area > 0.5)
+            else:
+                nxt.append(pc)
+        pieces = nxt
+    # A cut that clips the corner of a neighbouring muscle leaves a sliver;
+    # give each sliver back to the piece it shares the longest edge with.
+    seed_pts = [Point(to_xy(q, side)) for pts in seeds.values() for q in pts]
+    has_seed = lambda g: any(g.contains(pt) for pt in seed_pts)
+    slivers = [g for g in pieces if not has_seed(g) and g.area < 60]
+    pieces = [g for g in pieces if g not in slivers]
+    for sl in slivers:
+        best = max(pieces, key=lambda g: sl.buffer(0.3).intersection(g).area)
+        pieces[pieces.index(best)] = unary_union([best, sl]).buffer(0)
+    out = []
+    for pc in pieces:
+        hits = [part for part, pts in seeds.items()
+                for q in pts if pc.contains(Point(to_xy(q, side)))]
+        if len(hits) != 1:
+            raise SystemExit('%s %s %s: piece at %s has seeds %s'
+                             % (view, gid, side, tuple(round(c) for c in pc.centroid.coords[0]), hits))
+        out.append((hits[0], pc))
+    found = {part for part, _ in out}
+    missing = set(seeds) - found
+    if missing:
+        raise SystemExit('%s %s: no piece for %s' % (view, gid, missing))
+    inner = []
+    for L in cuts:
+        g = L.intersection(whole.buffer(-0.3))
+        for seg in getattr(g, 'geoms', [g]):
+            if seg.length > 2:
+                inner.append(list(seg.simplify(0.4).coords))
+    return out, inner
+
+
+def resample(line, closed=False, step=4.0):
+    """Thin out a dense outline to points about `step` apart, keeping corners,
+    so the hand wobble does not turn it ragged."""
+    if len(line) < 24:
+        return line
+    out = [line[0]]
+    acc = 0.0
+    n = len(line)
+    for i in range(1, n):
+        a, b = line[i - 1], line[i]
+        acc += math.hypot(b[0] - a[0], b[1] - a[1])
+        sharp = False
+        if 0 < i < n - 1:
+            c = line[i + 1]
+            v1 = (b[0] - a[0], b[1] - a[1]); v2 = (c[0] - b[0], c[1] - b[1])
+            l1, l2 = math.hypot(*v1), math.hypot(*v2)
+            if l1 and l2 and (v1[0] * v2[0] + v1[1] * v2[1]) / (l1 * l2) < 0.5:
+                sharp = True
+        if acc >= step or sharp:
+            out.append(b)
+            acc = 0.0
+    if not closed and out[-1] != line[-1]:
+        out.append(line[-1])
+    return out
+
+
+def poly_d(pc):
+    out = []
+    for g in getattr(pc, 'geoms', [pc]):
+        if g.area < 1:
+            continue
+        g = g.simplify(0.05)
+        if not g.is_valid:
+            g = g.buffer(0.02).buffer(-0.02)
+        ext = list(g.exterior.coords)[:-1]
+        out.append('M' + ' '.join('%.1f %.1f' % q for q in ext) + 'Z')
+    return ''.join(out)
+
+
+def build2(view, regions, details, extras, fibers, seed):
+    """Draw one view. Layers, bottom to top: the tap shapes (one per part),
+    the soft tone, pen hatching, the gloss for lit muscles, detail lines,
+    muscle borders, the heavier shadow-side pass, then the outline."""
+    from shapely.geometry import box
+    from shapely.ops import unary_union
+    rng = random.Random(seed)
+    taken = {'L': box(0, 0, 0, 0), 'R': box(0, 0, 0, 0)}
+    half = {'L': box(-10, -10, CX, H + 10), 'R': box(CX, -10, W + 10, H + 10)}
+    fills, gloss, defs, ink, heavy, inner_ink, hatching = [], [], [], [], [], [], []
+    tones = {}
+    detail_ink, out_ink, construct = [], [], []
+    for gid, polys in regions:
+        group_d = []
+        for side in ('L', 'R'):
+            polys_xy = [dedupe([to_xy(q, side) for q in poly]) for poly in polys]
+            for p in polys_xy:
+                group_d.append(smooth(p, closed=True))
+                w = wobble(p, rng)
+                ink.append(smooth(w, closed=True))
+                for run in shadow_side(dense(w), rng):
+                    heavy.append(smooth(run))
+                if gid in fibers:
+                    c, size = centroid(p)
+                    pairs = [(to_xy(a, side), to_xy(b, side)) for a, b in fibers[gid]]
+                    for ln in hatch(pairs, rng, c, size, per_gap=5):
+                        hatching.append((gid, polyline(ln)))
+            parts, inner = cut_parts(view, gid, polys_xy, side)
+            for ln in inner:
+                inner_ink.append(smooth(wobble(ln[::max(1, len(ln) // 12)] + [ln[-1]], rng, 0.4)))
+            for k, (part, pc) in enumerate(parts):
+                # Shapes never overlap: each half stops at the midline, and a
+                # piece gives up anything a neighbour drawn earlier already has.
+                pc = pc.intersection(half[side]).difference(taken[side]).buffer(0)
+                taken[side] = unary_union([taken[side], pc])
+                d = poly_d(pc)
+                grp = PART_GROUP.get(part, gid)
+                fills.append('<path class="mm-muscle" data-group="%s" data-part="%s" d="%s"/>'
+                             % (grp, part, d))
+                gloss.append('<path data-part="%s" d="%s"/>' % (part, d))
+                # Tone: each muscle turns away from the light; clear on the lit
+                # side, darker toward the shadow side and along its shadow edge.
+                minx, miny, maxx, maxy = pc.bounds
+                cx, cy = (minx + maxx) / 2, (miny + maxy) / 2
+                h = max(maxx - minx, maxy - miny) * 0.55
+                tid = 'mm-%s-%s-%s%d' % (view, part, side, k)
+                defs.append('<linearGradient id="%s" gradientUnits="userSpaceOnUse" '
+                            'x1="%.0f" y1="%.0f" x2="%.0f" y2="%.0f">'
+                            '<stop offset=".22" stop-color="var(--map-shade,#1A2766)" stop-opacity="0"/>'
+                            '<stop offset=".62" stop-color="var(--map-shade,#1A2766)" stop-opacity=".16"/>'
+                            '<stop offset=".9" stop-color="var(--map-shade,#1A2766)" stop-opacity=".36"/>'
+                            '<stop offset="1" stop-color="var(--map-shade,#1A2766)" stop-opacity=".46"/>'
+                            '</linearGradient>'
+                            % (tid, cx + LIGHT[0] * h, cy + LIGHT[1] * h,
+                               cx - LIGHT[0] * h, cy - LIGHT[1] * h))
+                tones.setdefault(gid, []).append(('<path fill="url(#%s)" d="%s"/>' % (tid, d),
+                                                  '<path stroke="url(#%s)" d="%s"/>' % (tid, d)))
+        rid = 'mm-%s-%s' % (view, gid)
+        defs.append('<clipPath id="%s-c"><path d="%s"/></clipPath>' % (rid, ''.join(group_d)))
+
+    by_group = {}
+    for gid, d in hatching:
+        by_group.setdefault(gid, []).append(d)
+    hatch_svg = ''.join('<path clip-path="url(#mm-%s-%s-c)" d="%s"/>' % (view, g, ''.join(ds))
+                        for g, ds in by_group.items())
+    # The wash fills each muscle; the edge shading is the same gradient drawn
+    # as a wide stroke and softened, like graphite smudged along the form.
+    tone_svg = ''.join('<g clip-path="url(#mm-%s-%s-c)">%s<g class="mm-edge">%s</g></g>'
+                       % (view, g, ''.join(f for f, _ in ts), ''.join(e for _, e in ts))
+                       for g, ts in tones.items())
+
+    for line in details:
+        for side in ('L', 'R'):
+            detail_ink.append(smooth(wobble([to_xy(q, side) for q in line], rng, 0.4)))
+    for key, bucket, amount in (('out', out_ink, 0.5), ('detail', detail_ink, 0.35),
+                                ('construct', construct, 0.3)):
+        for line, closed, mirror in extras.get(key, []):
+            line = resample(line, closed)
+            for side in (('L', 'R') if mirror else ('L',)):
+                bucket.append(smooth(wobble([to_xy(q, side) for q in line], rng, amount), closed))
+
+    css = ('.mm-muscle{fill:var(--mm-fill,transparent)}'
+           '.mm-ink{fill:none;stroke:var(--map-ink,#1A2766);stroke-linecap:round;stroke-linejoin:round}'
+           '.mm-ink,.mm-tone,.mm-gloss{pointer-events:none}'
+           '.mm-edge{filter:url(#mm-%s-soft)}.mm-edge path{fill:none;stroke-width:9}'
+           '.mm-gloss path{fill:url(#mm-%s-gl);opacity:0}'
+           '.mm-line{stroke-width:1.5}.mm-inner{stroke-width:1.15}.mm-heavy{stroke-width:1.2}'
+           '.mm-out{stroke-width:2}.mm-detail{stroke-width:.95;opacity:.85}'
+           '.mm-construct{stroke-width:.8;opacity:.55}'
+           '.mm-hatch{stroke-width:.72;opacity:.8}') % (view, view)
+    gl = ('<radialGradient id="mm-%s-gl" cx=".34" cy=".3" r=".62">'
+          '<stop offset="0" stop-color="#fff" stop-opacity=".75"/>'
+          '<stop offset=".18" stop-color="#fff" stop-opacity=".42"/>'
+          '<stop offset=".5" stop-color="#fff" stop-opacity=".1"/>'
+          '<stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>'
+          '<filter id="mm-%s-soft" x="-5%%" y="-5%%" width="110%%" height="110%%">'
+          '<feGaussianBlur stdDeviation="2.4"/></filter>') % (view, view)
+    return ''.join([
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" class="mm mm-%s">' % (W, H, view),
+        '<style>%s</style>' % css,
+        '<defs>%s%s</defs>' % (gl, ''.join(defs)),
+        '<g class="mm-regions">%s</g>' % ''.join(fills),
+        '<g class="mm-tone">%s</g>' % tone_svg,
+        '<g class="mm-ink mm-hatch">%s</g>' % hatch_svg,
+        '<g class="mm-gloss">%s</g>' % ''.join(gloss),
+        '<g class="mm-ink mm-construct"><path d="%s"/></g>' % ''.join(construct),
+        '<g class="mm-ink mm-detail"><path d="%s"/></g>' % ''.join(detail_ink),
+        '<g class="mm-ink mm-inner"><path d="%s"/></g>' % ''.join(inner_ink),
+        '<g class="mm-ink mm-line"><path d="%s"/></g>' % ''.join(ink),
+        '<g class="mm-ink mm-heavy"><path d="%s"/></g>' % ''.join(heavy),
+        '<g class="mm-ink mm-out"><path d="%s"/></g>' % ''.join(out_ink),
+        '</svg>',
+    ])
+
+
+# ---------------------------------------------------------------------------
+# Head, hands and feet
+# ---------------------------------------------------------------------------
+# The head is the classic construction sketch a drawing starts from: the
+# ball of the cranium, the center line, the brow line, the curve of the eye
+# line, marks for the nose, mouth and chin, the jaw and the ears. Thirds:
+# brow at the middle of the ball, nose at its bottom, chin the same distance
+# again below.
+
+HEAD_C, HEAD_R = (0, 50), 33
+BROW, NOSE, CHIN = 50, 83, 116
+
+
+def circle_pts(c, r, a0=0, a1=360, step=6):
+    return [(c[0] + r * math.cos(math.radians(a)), c[1] - r * math.sin(math.radians(a)))
+            for a in range(a0, a1 + 1, step)]
+
+
+def hand_shape():
+    """The hand as one outline: palm, four fingers and the thumb, in the
+    hand's own frame (u down the hand, v toward the thumb), then placed."""
+    from shapely.geometry import Polygon, LineString
+    from shapely.ops import unary_union
+    palm = Polygon([(0, -13), (0, 13), (10, 16), (24, 16), (38, 13.5), (41, 7), (41, -4),
+                    (39, -13.5), (24, -15.5), (10, -15)])
+    # knuckle to fingertip, and half the finger's width; the tips fan out a
+    # little, as in a relaxed hand, so each finger reads on its own
+    fingers = [((39, 9.0), (70, 13.2), 3.1), ((40, 2.2), (76, 3.2), 3.3),
+               ((39, -4.6), (72, -7.4), 3.1), ((36, -10.6), (62, -16.4), 2.6)]
+    parts = [palm] + [LineString([a, b]).buffer(r, quad_segs=6) for a, b, r in fingers]
+    parts.append(LineString([(6, 10), (22, 15.5)]).buffer(5.8, quad_segs=6))    # thumb metacarpal
+    parts.append(LineString([(22, 15.5), (38, 18)]).buffer(3.9, quad_segs=6))   # thumb
+    shape = unary_union(parts).buffer(0.3).buffer(-0.3)
+    outline = [HAND(u, v) for u, v in list(shape.simplify(0.25).exterior.coords)]
+    # finger joints: two creases on each finger, and the thumb's
+    joints = []
+    for (a, b, r) in fingers:
+        for t in (0.36, 0.66):
+            m = (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+            joints.append([HAND(m[0], m[1] - r * 0.7), HAND(m[0] + 0.6, m[1] + r * 0.7)])
+    joints.append([HAND(29, 13.6), HAND(30, 20.6)])
+    return outline, joints, fingers
+
+
+def hand_extras(view):
+    outline, joints, fingers = hand_shape()
+    out = [(outline, True, True)]
+    detail = [(j, False, True) for j in joints]
+    # the cleft between fingers: a short line where they part
+    for a, b in ((2.6, 9.6), (-4.6, 2.6), (-11, -4.6)):
+        pass
+    if view == 'front':
+        # palm side: the life line round the thumb's pad, the head line and
+        # the heart line, and the creases where the fingers meet the palm
+        detail += [([HAND(6, 9), HAND(16, 6), HAND(26, 7), HAND(33, 11)], False, True),
+                   ([HAND(16, 13), HAND(22, 2), HAND(26, -8)], False, True),
+                   ([HAND(27, 12), HAND(30, 2), HAND(33, -8), HAND(32, -14)], False, True)]
+    else:
+        # back of the hand: knuckles, the tendons that fan to the fingers,
+        # and the nails
+        for (a, b, r) in fingers:
+            detail.append(([HAND(a[0] - 1.5, a[1] - r * 0.6), HAND(a[0] + 0.8, a[1]),
+                            HAND(a[0] - 1.5, a[1] + r * 0.6)], False, True))
+            detail.append(([HAND(6, 0.25 * a[1]), HAND(a[0] - 5, a[1] * 0.95)], False, True))
+            tip = b
+            detail.append(([HAND(tip[0] - 6, tip[1] - r * 0.55), HAND(tip[0] - 1.2, tip[1] - r * 0.5),
+                            HAND(tip[0] - 1.2, tip[1] + r * 0.5), HAND(tip[0] - 6, tip[1] + r * 0.55)],
+                           False, True))
+    return out, detail
+
+
+def foot_front():
+    """The foot seen from the front: ankle, instep, five toes."""
+    from shapely.geometry import Polygon, LineString
+    from shapely.ops import unary_union
+    instep = Polygon([(28, 772), (51, 762), (50, 778), (52, 790), (55, 800), (58, 810), (60, 818),
+                      (54, 821), (24, 821), (22, 812), (25, 800), (27, 790), (28, 780)])
+    toes = [((27, 815), (26.6, 828), 4.3), ((34.6, 817), (34.8, 829), 3.0),
+            ((41.2, 817), (41.6, 828.4), 2.9), ((47.4, 816.5), (48.2, 827.2), 2.7),
+            ((53.4, 815), (55, 825), 2.5)]
+    shape = unary_union([instep] + [LineString([a, b]).buffer(r, quad_segs=6) for a, b, r in toes])
+    shape = shape.buffer(0.4).buffer(-0.4)
+    ext = list(shape.simplify(0.25).exterior.coords)
+    # leave out the edge across the top of the ankle: the leg's own lines
+    # meet the foot there
+    k = min(range(len(ext)), key=lambda i: ext[i][1] + ext[i][0] * 0.01)
+    ext = ext[k:-1] + ext[:k]
+    runs, run = [], []
+    for q in ext:
+        if q[1] > 768:
+            run.append(q)
+        elif run:
+            runs.append(run)
+            run = []
+    if run:
+        runs.append(run)
+    return max(runs, key=len), toes
+
+
+def extras_front():
+    out, detail, construct = [], [], []
+    # head: the ball, the jaw to the chin, the ears
+    out.append((circle_pts(HEAD_C, HEAD_R, -50, 230), False, False))
+    jaw = [(31, 62), (29, 80), (24, 97), (15, 110), (6, 115), (0, 116)]
+    out.append((jaw, False, True))
+    construct += [([(0, 12), (0, 126)], False, False),
+                  ([(-36, BROW), (36, BROW)], False, False),
+                  ([(-31, 64), (-16, 68), (0, 69), (16, 68), (31, 64)], False, False),
+                  ([(-5, NOSE), (5, NOSE)], False, False),
+                  ([(-4, 94), (4, 94)], False, False),
+                  ([(-3, CHIN), (3, CHIN)], False, False),
+                  ([(25, 84), (29, 86)], False, True)]
+    out.append(([(32, 53), (37, 54), (39.5, 63), (38, 75), (34, 82)], False, True))
+    out.append(([(26, 100), (29, 108), (31, 116)], False, True))
+    detail += [([(30, 94), (24, 112), (14, 132), (5, 149)], False, True),
+               ([(27, 104), (22, 122), (16, 140), (15, 150)], False, True),
+               ([(-2, 318), (0, 324), (2, 318)], False, False),
+               ([(-4, 146), (0, 150), (4, 146)], False, False)]
+    # knee: the kneecap and its tendon, and the leg outline where no muscle is
+    out += [([(66, 603), (63, 612), (61, 626), (63, 638)], False, True),
+            ([(24, 614), (26, 624), (23, 638), (25, 636)], False, True),
+            ([(56, 728), (53, 742), (51, 754), (51, 762)], False, True),
+            ([(22, 740), (26, 756), (28, 772)], False, True)]
+    detail += [([(40, 607), (48, 611), (51, 622), (46, 633), (40, 636), (34, 633), (30, 622),
+                 (32, 611), (40, 607)], True, True),
+               ([(36, 636), (37, 648)], False, True), ([(44, 636), (43, 648)], False, True),
+               # the fibular muscles and the long toe extensor beside the shin
+               ([(60, 650), (61, 690), (56, 730), (50, 770)], False, True)]
+    o, d = hand_extras('front')
+    out += o
+    detail += d
+    foot, toes = foot_front()
+    out.append((foot, False, True))
+    for a, b, r in toes:
+        detail.append(([(b[0] - r * 0.6, b[1] - 2.5), (b[0], b[1] - 3.6), (b[0] + r * 0.6, b[1] - 2.5)],
+                       False, True))
+    detail += [([(36, 772), (32, 786), (29, 798)], False, True),      # tibialis anterior tendon
+               ([(41, 782), (35, 798), (29, 810)], False, True),      # big toe extensor
+               ([(45, 786), (42, 800), (40, 812)], False, True),      # long toe extensor
+               ([(27, 786), (24.5, 791), (26, 797)], False, True),    # inner ankle bone
+               ([(52, 788), (55, 795), (53, 801)], False, True)]      # outer ankle bone
+    for x in (31.2, 38.0, 44.4, 50.6):                                 # between the toes
+        detail.append(([(x, 818), (x + 0.3, 825)], False, True))
+    return {'out': out, 'detail': detail, 'construct': construct}
+
+
+def extras_back():
+    out, detail, construct = [], [], []
+    out.append((circle_pts(HEAD_C, HEAD_R, -55, 235), False, False))
+    out.append(([(31, 74), (30.5, 92), (30.5, 102), (30, 108)], False, True))
+    construct += [([(0, 12), (0, 98)], False, False),
+                  ([(-36, BROW), (36, BROW)], False, False),
+                  ([(-31, 64), (-16, 61), (0, 60), (16, 61), (31, 64)], False, False)]
+    out.append(([(32, 53), (37, 54), (39.5, 63), (38, 75), (34, 82)], False, True))
+    for y in range(140, 360, 13):
+        detail.append(([(0, y), (1.2, y + 3), (0, y + 6)], False, False))
+    o, d = hand_extras('back')
+    out += o
+    detail += d
+    # heel and the back of the ankle
+    out.append(([(51, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
+                 (32, 820), (28, 806), (30, 792), (29, 782), (28, 772)], False, True))
+    detail += [([(49, 784), (53, 790), (51, 797)], False, True),
+               ([(30, 786), (27, 792), (29, 798)], False, True),
+               ([(34, 812), (40, 815), (46, 812)], False, True),
+               ([(37, 790), (38, 808)], False, True), ([(43, 790), (42, 808)], False, True),
+               # the forefoot showing either side of the heel
+               ([(52, 806), (56, 812), (58, 820), (54, 824)], False, True),
+               ([(28, 806), (24, 814), (24, 822), (29, 824)], False, True)]
+    return {'out': out, 'detail': detail, 'construct': construct}
+
+
 def svg_back():
-    return build('back', back_regions(), back_details(), back_outline(), back_fibers(), 409)
+    return build2('back', back_regions(), back_details(), extras_back(), back_fibers(), 409)
 
 
 def svg_front():
-    return build('front', front_regions(), front_details(), front_outline(), front_fibers(), 434)
+    return build2('front', front_regions(), front_details(), extras_front(), front_fibers(), 434)
 
 
 if __name__ == '__main__':
