@@ -53,6 +53,7 @@ with sync_playwright() as p:
         tab(page, 'today'); fits('start')
         page.click('.repeat'); page.wait_for_selector('.title-input'); fits('writing')
         page.click('text=+ Add a lift'); settle(page, 'add'); fits('add')
+        page.click('.browse > .btn'); page.click('text=+ Add helper muscles'); fits('add-new-lift')
         go(page, 'today')
         for i in range(3): page.click(f'.check >> nth={i}')
         page.click('.rest-btn'); page.wait_for_timeout(250); fits('resting'); page.click('.rest-stop')
@@ -158,11 +159,32 @@ with sync_playwright() as p:
     check('write-in button picks up the search', page.text_content('.browse > .btn') == '+ Write in a new lift: Papa press')
     page.click('.browse > .btn')
     check('form opens with the name filled in', page.input_value('.panel .write-in') == 'Papa press' and page.locator('.browse').is_hidden())
-    page.click('.panel .chip:text-is("Chest")'); page.click('.panel .chip:text-is("Dumbbell")')
+    page.click('.panel .chips:not(.muscle-chips) .chip:text-is("Chest")'); page.click('.panel .chip:text-is("Dumbbell")')
+    works = '.muscle-chips[data-kind=works]'; helps = '.muscle-chips[data-kind=helps]'
+    check('muscles it works: helpers are tucked away at first', page.locator(helps).is_hidden() and page.locator('text=+ Add helper muscles').is_visible())
+    page.click(f'{works} .chip:text-is("Chest")'); page.click(f'{works} .chip:text-is("Triceps")')
+    page.click('text=+ Add helper muscles')
+    page.click(f'{helps} .chip:text-is("Front delts")'); page.click(f'{helps} .chip:text-is("Triceps")')
+    check('a muscle is main or a helper, never both', page.get_attribute(f'{works} .chip:text-is("Triceps")', 'aria-pressed') == 'false' and page.get_attribute(f'{helps} .chip:text-is("Triceps")', 'aria-pressed') == 'true')
+    page.click(f'{works} .chip:text-is("Triceps")')
+    check('and tapping it as main takes it off the helpers', page.get_attribute(f'{helps} .chip:text-is("Triceps")', 'aria-pressed') == 'false')
     page.click('text=Add it to the page'); settle(page, 'today')
     d = saved(page)
-    check('own lift is saved with its body part and gear, and added', d['customLifts'][0] == {'id': 'my-papa-press', 'name': 'Papa press', 'group': 'Chest', 'gear': 'Dumbbell'} and d['draft']['lifts'][1]['liftId'] == 'my-papa-press', str(d['customLifts']))
+    check('own lift is saved with its body part, gear and muscles, and added', d['customLifts'][0] == {'id': 'my-papa-press', 'name': 'Papa press', 'group': 'Chest', 'gear': 'Dumbbell', 'works': 'chest, triceps', 'helps': 'front delts'} and d['draft']['lifts'][1]['liftId'] == 'my-papa-press', str(d['customLifts']))
     check('new lift scrolls into view', page.evaluate("document.querySelector('.page').scrollTop") > 50 or page.evaluate("document.querySelector('.page').scrollHeight <= document.querySelector('.page').clientHeight + 60"))
+    go(page, 'library'); page.fill('.search', 'Papa press'); page.click('.pick >> nth=0'); settle(page, 'lift')
+    check('its lift page shows the muscles it works, ready to change', page.locator('.lift-muscles').count() == 1 and page.get_attribute(f'{works} .chip:text-is("Chest")', 'aria-pressed') == 'true' and 'chest, triceps' in page.inner_text('.head-block'))
+    page.click(f'{works} .chip:text-is("Triceps")'); page.click(f'{works} .chip:text-is("Upper chest")')
+    d = saved(page)['customLifts'][0]
+    check('changing them saves at once, in the list order', d.get('works') == 'chest, upper chest' and 'chest, upper chest' in page.inner_text('.head-block'), str(d))
+    for name in ['Chest', 'Upper chest']: page.click(f'{works} .chip:text-is("{name}")')
+    page.click(f'{helps} .chip:text-is("Front delts")')
+    d = saved(page)['customLifts'][0]
+    check('clearing them all leaves the lift as it was', 'works' not in d and 'helps' not in d, str(d))
+    page.click(f'{works} .chip:text-is("Chest")'); page.click(f'{works} .chip:text-is("Triceps")')
+    go(page, 'library'); page.fill('.search', 'Bench Press'); page.click('.pick >> nth=0'); settle(page, 'lift')
+    check('built-in lifts have no muscle chooser', page.locator('.lift-muscles').count() == 0)
+    go(page, 'today')
     # draft survives a reload and shows on the cover
     page.reload(); page.wait_for_selector('.page')
     go(page, 'cover'); check('cover knows a page is in progress', page.text_content('.cover-card-title') == 'Push day' and '2 lifts so far' in page.inner_text('.cover-card'))
@@ -771,6 +793,51 @@ with sync_playwright() as p:
         ctx.close()
     missing = [pt for pt in part_group if pt not in seen]
     check('muscle map: all 19 groups and every part are drawn', not missing and len(MAP_PARTS) == 19, str(missing))
+
+    # ---------- muscle map content ----------
+    import subprocess as _sp
+    probe = r'''
+      const M = await import(process.argv[1] + '/app/muscles.js');
+      const { LIFTS } = await import(process.argv[1] + '/content/lifts.js');
+      const by = id => LIFTS.find(l => l.id === id);
+      const fs = await import('node:fs');
+      const out = {
+        groups: M.GROUPS.map(g => g.id), parts: M.PARTS.map(p => [p.id, p.group, p.view]),
+        empty: M.PARTS.filter(p => !p.name || !p.does || !p.fact).map(p => p.id),
+        long: M.PARTS.filter(p => [p.does, p.fact].some(t => (t.match(/[.!?](\s|$)/g) || []).length > 2)).map(p => p.id),
+        unknown: M.unknownNames(LIFTS),
+        pickUnknown: M.PICK.filter(n => !M.knowsName(n)),
+        // No lift in the library trains the shins yet; a tibialis raise would.
+        untrained: M.PARTS.filter(p => p.id !== 'tibialis-anterior').filter(p => { const r = M.liftsFor(p.id, LIFTS); return !r.main.length && !r.help.length; }).map(p => p.id),
+        bench: M.partsFor(by('bench-press')), incline: M.partsFor(by('incline-bench-press')),
+        curl: M.partsFor(by('barbell-curl')), squat: M.partsFor(by('squat')),
+        hammer: M.liftsFor('brachialis', LIFTS).main.map(l => l.id),
+        dashes: /[\u2014\u2013]/.test(fs.readFileSync(process.argv[1] + '/content/muscles.js', 'utf8')),
+      };
+      console.log(JSON.stringify(out));
+    '''
+    r = _sp.run(['node', '--input-type=module', '-e', probe, REPO], capture_output=True, text=True)
+    mc = json.loads(r.stdout) if r.returncode == 0 else None
+    check('muscle content: the list loads', mc is not None, r.stderr[-300:])
+    if mc:
+        check('muscle content: 19 groups and 46 parts, each in a known group', len(mc['groups']) == 19 and len(mc['parts']) == 46 and len({p[0] for p in mc['parts']}) == 46 and all(p[1] in mc['groups'] for p in mc['parts']) and {p[1] for p in mc['parts']} == set(mc['groups']))
+        drawn = {}
+        for view in ('front', 'back'):
+            for g, pt in _re.findall(r'<path class="mm-muscle" data-group="([^"]+)" data-part="([^"]+)"', open(os.path.join(REPO, 'art', f'muscle-{view}.svg')).read()):
+                drawn.setdefault(pt, [g, set()])[1].add(view)
+        off = [p for p in mc['parts'] if p[0] not in drawn or drawn[p[0]][0] != p[1] or drawn[p[0]][1] != ({'front', 'back'} if p[2] == 'both' else {p[2]})]
+        check('muscle content: every part matches the drawings, group and view', not off and set(drawn) == {p[0] for p in mc['parts']}, str(off[:4]))
+        check('muscle content: every part has a name, what it does and a fun fact', not mc['empty'], str(mc['empty']))
+        check('muscle content: each line is one or two sentences', not mc['long'], str(mc['long']))
+        check('muscle content: no em or en dashes', not mc['dashes'])
+        check('muscle content: every muscle name in the lift list counts toward the map', not mc['unknown'], str(mc['unknown']))
+        check('muscle content: every muscle you can pick for your own lift counts too', not mc['pickUnknown'], str(mc['pickUnknown']))
+        check('muscle content: every part is trained by some lift in the library', not mc['untrained'], str(mc['untrained']))
+        check('folding: bench works all of the chest, helped by front delts and triceps', sorted(mc['bench']['works']) == ['chest-lower', 'chest-middle', 'chest-upper'] and sorted(mc['bench']['helps']) == ['front-delts', 'triceps-lateral', 'triceps-long', 'triceps-medial'], str(mc['bench']))
+        check('folding: incline bench works the upper chest only', mc['incline']['works'] == ['chest-upper'], str(mc['incline']))
+        check('folding: "biceps" is the two heads, brachialis on its own', mc['curl'] == {'works': ['biceps-long', 'biceps-short'], 'helps': ['brachialis', 'brachioradialis', 'wrist-flexors', 'wrist-extensors']}, str(mc['curl']))
+        check('folding: "quads" is the big three, not the hip flexors', set(mc['squat']['works']) == {'rectus-femoris', 'vastus-lateralis', 'vastus-medialis', 'glute-max', 'glute-med'}, str(mc['squat']))
+        check('folding: hammer curls train the brachialis as a main muscle', 'hammer-curl' in mc['hammer'], str(mc['hammer']))
 
     # ---------- reduced motion and keyboard ----------
     ctx, page, errors = open_app(browser, reduced_motion='reduce')

@@ -8,6 +8,7 @@ import { unitOf, fromLb, show } from '../units.js';
 import { maxLogger } from '../maxlog.js';
 import { chart } from '../chart.js';
 import * as log from '../log.js';
+import { musclePicker } from '../musclepick.js';
 
 export function render(el, ctx) {
   const { words, store } = ctx;
@@ -87,12 +88,28 @@ export function render(el, ctx) {
     h('p', { class: 'label' }, label),
   );
 
+  // A lift of your own can have its muscles changed here.
+  const own = (data.customLifts || []).some(l => l.id === lift.id);
+  const about = h('p', { class: 'quiet' }, [lift.gear, lift.works, lift.helps].filter(Boolean).join(' · '));
+  const musclesBox = own && h('div', { class: 'panel lift-muscles' }, musclePicker({
+    words,
+    works: lift.works,
+    helps: lift.helps,
+    onChange(m) {
+      store.update(d => {
+        const mine = d.customLifts.find(l => l.id === lift.id);
+        if (mine) log.setLiftMuscles(mine, m);
+      });
+      about.textContent = [lift.gear, m.works, m.helps].filter(Boolean).join(' · ');
+    },
+  }).el);
+
   put(el,
     h('div', { class: 'head-block', style: 'padding-right:0;min-height:0;gap:4px' },
       h('p', { class: 'kicker' }, w.kicker),
       h('h1', { class: 'heading' }, lift.name),
       sessions.length > 0 && h('p', { class: 'hand' }, `${count(sessions.length, words.library.pages)} ${w.inNotebook}`),
-      h('p', { class: 'quiet' }, [lift.gear, lift.works, lift.helps].filter(Boolean).join(' · ')),
+      about,
       h('a', { class: 'btn btn-line btn-small', href: `#${from}`, style: 'align-self:flex-start;margin-top:6px' }, `← ${w.backTo[from]}`),
     ),
     h('div', { class: 'panel lift-notes' },
@@ -109,6 +126,7 @@ export function render(el, ctx) {
         label: `${lift.name}: ${words.today.noteLabel}`,
       }),
     ),
+    musclesBox,
     big && b.max > 0 && h('div', { class: 'totals' },
       total(show(b.isTested ? b.max : Math.round(b.max), unit), b.isTested ? w.testedMax : w.estMax),
       total(show(heaviest, unit), w.heaviest),

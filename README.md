@@ -9,7 +9,7 @@ no build step. Put the folder on any web host and it runs.
 
 | Folder | What is in it | Safe to edit by hand? |
 | --- | --- | --- |
-| `content/` | Colors, wording, the lift list, the cardio list and the daily verses | Yes. See `HOW-TO-EDIT.md` |
+| `content/` | Colors, wording, the lift list, the cardio list, the muscle map's words and the daily verses | Yes. See `HOW-TO-EDIT.md` |
 | `art/` | Stickers, sketches, paper texture | Yes, swap a picture for one with the same name |
 | `styles/` | How things look: layout, type, the page flip | With care |
 | `app/` | How things work: pages, saving, sound | With care |
@@ -30,6 +30,9 @@ no build step. Put the folder on any web host and it runs.
 - `app/strength.js` is the Stats arithmetic: weigh-ins, best lifts, Wilks,
   DOTS and strength levels. `app/chart.js` draws the hand-plotted charts.
 - `app/rest.js` is the rest timer above the tabs.
+- `app/muscles.js` is the muscle map's lookups: which parts a lift trains
+  and which lifts train a part. `app/musclepick.js` is the "Muscles it works"
+  chooser for lifts you write in yourself.
 - `app/units.js` turns pounds into kilograms and back; everything is worked
   out in pounds.
 - `app/store.js` saves to the device and makes backups.
@@ -46,7 +49,7 @@ One object, kept in the browser on the device (see `app/store.js`):
 - `settings`: sound, units, default rest length
 - `draft`: the page being written today, or nothing
 - `pages`: every filed page, oldest first
-- `customLifts`: lifts the person added themselves
+- `customLifts`: lifts the person added themselves, with the muscles they work
 - `earned`: which stickers have been earned, and when
 - `stickers`: where each sticker sits on the cover
 - `weighins`: bodyweight in pounds by day

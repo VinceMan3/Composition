@@ -82,14 +82,23 @@ export function doneCardio(page) {
   return (page.cardio || []).filter(c => c.done);
 }
 
-export function addCustomLift(data, name, group = 'Yours', gear = '') {
+// muscles is optional: { works: 'chest, triceps', helps: 'front delts' }
+export function addCustomLift(data, name, group = 'Yours', gear = '', muscles = {}) {
   const clean = name.trim().replace(/\s+/g, ' ');
   const base = 'my-' + (clean.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'lift');
   let id = base;
   for (let i = 2; allLifts(data).some(l => l.id === id); i++) id = `${base}-${i}`;
   const lift = { id, name: clean, group, gear };
   if (gear === 'Bodyweight') lift.kind = 'bodyweight';
+  setLiftMuscles(lift, muscles);
   data.customLifts = [...(data.customLifts || []), lift];
+  return lift;
+}
+
+// Change the muscles a lift of your own works. Empty lists are left off.
+export function setLiftMuscles(lift, { works = '', helps = '' } = {}) {
+  if (works) lift.works = works; else delete lift.works;
+  if (helps) lift.helps = helps; else delete lift.helps;
   return lift;
 }
 

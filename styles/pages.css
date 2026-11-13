@@ -215,6 +215,15 @@
 }
 .chip[aria-pressed="true"] { background: var(--green); color: var(--on-color); border-color: var(--green); }
 
+/* "Muscles it works" on a lift of your own: smaller chips so the whole list fits */
+.muscle-pick { display: flex; flex-direction: column; gap: 8px; }
+.muscle-hint { margin-top: -4px; }
+.muscle-chips { gap: 6px; }
+.muscle-chips .chip { min-height: 36px; padding: 0 11px; font-size: 13px; }
+/* helpers are marked lighter than main muscles: a green ring, not a fill */
+.muscle-chips[data-kind="helps"] .chip[aria-pressed="true"] { background: var(--card); color: var(--green-ink); border-color: var(--green-ink); border-style: dashed; }
+.muscle-pick .link-btn { align-self: flex-start; }
+
 /* ---------- today: writing the page ---------- */
 .title-input {
   display: block;
