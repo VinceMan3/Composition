@@ -1,6 +1,6 @@
 """
-Draws the muscle map: a front and a back view of a lifter, in navy ballpoint,
-with every muscle group as its own shape so the app can light it up.
+Draws the muscle map: a front and a back view of a lifter, in graphite pencil,
+with every muscle split into its parts so the app can light each one up.
 
 Run from the repository root:
 
@@ -29,6 +29,12 @@ How the figure is laid out
   build; where muscles start and end does not move.
 - Hatching follows each muscle's real fiber direction: every hatch line runs
   from where the muscle starts toward where it ends.
+- Style (Vince's guide): graphite on paper, edges found by the light rather
+  than outlined, soft creases between the parts of a muscle, limbs shaded as
+  cylinders, red glossy highlights added by the app.
+- Each group is cut into its parts along the lines in SPLITS; the pieces
+  never overlap. The checks in tools/test/run.py confirm every part is drawn,
+  tappable and separate.
 """
 
 import math
@@ -258,30 +264,6 @@ def back_details():
     ]
 
 
-def back_outline():
-    """Lines that are not muscle groups: head, ears, hands, ankles and heels."""
-    head = [(34 * math.cos(math.radians(a)), 62 - 46 * math.sin(math.radians(a)))
-            for a in range(-40, 221, 6)]
-    head = [p for p in head if not (p[1] > 94 and abs(p[0]) < 32)]
-    return {
-        'head': head,
-        'neck': [[(31, 92), (30.5, 102), (30, 108)]],
-        # the spinous processes, C7 down to L5, as small marks on the midline
-        'spine': [[(0, y), (1.2, y + 3), (0, y + 6)] for y in range(140, 360, 13)],
-        'ear': [(32, 56), (38, 58), (40, 68), (38, 81), (33, 87)],
-        'hand': [HAND(0, 13), HAND(10, 17), HAND(24, 23), HAND(37, 24), HAND(39, 18),
-                 HAND(31, 13), HAND(42, 14), HAND(58, 13), HAND(70, 10), HAND(73, 5),
-                 HAND(75, 0), HAND(72, -5), HAND(69, -8), HAND(64, -12), HAND(56, -14),
-                 HAND(40, -15), HAND(18, -15), HAND(0, -13)],
-        'fingers': [[HAND(46, 6), HAND(68, 6)], [HAND(46, -1), HAND(71, -2)],
-                    [HAND(44, -8), HAND(66, -9)]],
-        'feet': [[(51, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
-                  (32, 820), (28, 806), (30, 792), (29, 782), (28, 772)],
-                 [(49, 784), (53, 790), (51, 797)], [(30, 786), (27, 792), (29, 798)],
-                 [(34, 812), (40, 815), (46, 812)]],
-    }
-
-
 def back_fibers():
     """Fiber direction for hatching: (start, end) pairs, neighbours interpolated."""
     return {
@@ -452,42 +434,6 @@ def front_details():
         # The shin bone's front edge and the kneecap's tendon.
         # Lower leg: the shin (tibialis anterior and the long toe extensor).
     ]
-
-
-def front_outline():
-    head = []
-    for a in range(0, 361, 8):
-        t = math.radians(a)
-        x = 34 * math.cos(t)
-        if math.sin(t) >= 0:
-            y = 62 - 46 * math.sin(t)
-        else:
-            k = -math.sin(t)
-            x *= 1 - 0.32 * k ** 2           # the jaw narrows to the chin
-            y = 62 + 52 * k
-        head.append((x, y))
-    return {
-        'head_full': head,
-        'neck': [[(26, 100), (29, 108), (31, 116)]],
-        'ear': [(33, 58), (38, 60), (40, 70), (38, 82), (33, 88)],
-        'hand': back_outline()['hand'],
-        'fingers': [[HAND(40, 12), HAND(44, 5), HAND(42, -4), HAND(40, -13)],
-                    [HAND(20, -12), HAND(30, -2), HAND(36, 10)]],
-        'feet': [[(51, 762), (50, 776), (52, 790), (57, 804), (60, 816), (58, 824), (46, 828),
-                  (34, 828), (24, 826), (22, 816), (25, 800), (28, 786), (28, 772)],
-                 [(48, 818), (49, 826)], [(41, 819), (41, 827)], [(33, 818), (32, 827)],
-                 [(52, 786), (54, 792)], [(27, 786), (25, 792)]],
-        # kneecap and its tendon, the shin bone's front edge, the navel,
-        # the notch at the top of the sternum
-        'extra': [[(40, 607), (48, 611), (51, 622), (46, 633), (40, 636), (34, 633), (30, 622),
-                   (32, 611), (40, 607)],
-                  # outline of the knee and lower leg where no muscle group is
-                  [(66, 603), (63, 612), (61, 626), (63, 638)],
-                  [(24, 614), (26, 624), (23, 638), (25, 636)],
-                  [(56, 728), (53, 742), (51, 754), (51, 762)],
-                  [(22, 740), (26, 756), (28, 772)]],
-        'mid': [[(-2, 318), (0, 324), (2, 318)], [(-4, 146), (0, 150), (4, 146)]],
-    }
 
 
 def front_fibers():
@@ -697,33 +643,6 @@ def hatch(pairs, rng, centre, size, per_gap=4, axis=None):
     return out
 
 
-def shadow_side(poly, rng, offset=0.7):
-    """Pieces of a closed outline that face away from the light, nudged
-    outward: a second pass of the pen that makes the shadow edges heavier."""
-    area = sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1]
-               for i in range(len(poly)))
-    sign = 1 if area > 0 else -1
-    runs, run = [], []
-    n = len(poly)
-    for i in range(n):
-        a, b = poly[i], poly[(i + 1) % n]
-        dx, dy = b[0] - a[0], b[1] - a[1]
-        L = math.hypot(dx, dy) or 1
-        # outward normal
-        ox, oy = sign * dy / L, -sign * dx / L
-        facing = ox * -LIGHT[0] + oy * -LIGHT[1]
-        if facing > 0.35:
-            if not run:
-                run.append((a[0] + ox * offset, a[1] + oy * offset))
-            run.append((b[0] + ox * offset, b[1] + oy * offset))
-        elif run:
-            runs.append(run)
-            run = []
-    if run:
-        runs.append(run)
-    return [r for r in runs if len(r) > 1]
-
-
 def dense(poly, step=4):
     """The same closed outline with extra points, for finding shadow edges."""
     out = []
@@ -738,96 +657,6 @@ def dense(poly, step=4):
 
 def polyline(p):
     return 'M' + ' '.join('%.1f %.1f' % q for q in p)
-
-
-def build(view, regions, details, outline, fibers, seed):
-    rng = random.Random(seed)
-    defs, fills, ink, hatching, detail_ink, out_ink, heavy, tones = [], [], [], [], [], [], [], []
-
-    for gid, polys in regions:
-        ds = []
-        for side in ('L', 'R'):
-            for poly in polys:
-                p = dedupe([to_xy(q, side) for q in poly])
-                ds.append(smooth(p, closed=True))
-                # Each shape's outline is inked on its own, so a border two
-                # muscles share gets two slightly different strokes: darker
-                # where muscles meet, like a pen going over a line twice.
-                w = wobble(p, rng)
-                ink.append(smooth(w, closed=True))
-                for run in shadow_side(dense(w), rng):
-                    heavy.append(smooth(run))
-                if gid in fibers:
-                    c, size = centroid(p)
-                    pairs = [(to_xy(s, side), to_xy(e, side)) for s, e in fibers[gid]]
-                    for ln in hatch(pairs, rng, c, size):
-                        hatching.append((gid, polyline(ln)))
-        rid = 'mm-%s-%s' % (view, gid)
-        # Tone: a soft wash, clear on the lit side of each muscle and
-        # darkening toward its shadow side, like graphite rubbed in under
-        # the pen lines.
-        for side in ('L', 'R'):
-            for k, poly in enumerate(polys):
-                p = dedupe([to_xy(q, side) for q in poly])
-                (cx, cy), size = centroid(p)
-                gid_t = '%s-t%s%d' % (rid, side, k)
-                h = size * 0.55
-                defs.append('<linearGradient id="%s" gradientUnits="userSpaceOnUse" '
-                            'x1="%.0f" y1="%.0f" x2="%.0f" y2="%.0f">'
-                            '<stop offset=".35" stop-color="var(--pen,#22347F)" stop-opacity="0"/>'
-                            '<stop offset="1" stop-color="var(--pen,#22347F)" stop-opacity=".2"/>'
-                            '</linearGradient>'
-                            % (gid_t, cx + LIGHT[0] * h, cy + LIGHT[1] * h,
-                               cx - LIGHT[0] * h, cy - LIGHT[1] * h))
-                tones.append('<path fill="url(#%s)" d="%s"/>' % (gid_t, smooth(p, closed=True)))
-        fills.append('<path id="%s" class="mm-muscle" data-group="%s" d="%s"/>'
-                     % (rid, gid, ''.join(ds)))
-        defs.append('<clipPath id="%s-c"><use href="#%s"/></clipPath>' % (rid, rid))
-
-    by_group = {}
-    for gid, d in hatching:
-        by_group.setdefault(gid, []).append(d)
-    hatch_svg = ''.join('<path clip-path="url(#mm-%s-%s-c)" d="%s"/>' % (view, g, ''.join(ds))
-                        for g, ds in by_group.items())
-
-    for line in details:
-        for side in ('L', 'R'):
-            detail_ink.append(smooth(wobble([to_xy(q, side) for q in line], rng, 0.4)))
-
-    def ink_line(points, closed=False):
-        for side in ('L', 'R'):
-            out_ink.append(smooth(wobble([to_xy(q, side) for q in points], rng), closed))
-
-    if 'head' in outline:
-        out_ink.append(smooth(wobble([to_xy(q, 'L') for q in outline['head']], rng)))
-    if 'head_full' in outline:
-        out_ink.append(smooth(wobble([to_xy(q, 'L') for q in outline['head_full']], rng), True))
-    for key in ('neck', 'fingers', 'feet', 'extra'):
-        for line in outline.get(key, []):
-            ink_line(line)
-    for line in outline.get('spine', []) + outline.get('mid', []):
-        detail_ink.append(smooth(wobble([to_xy(q, 'L') for q in line], rng, 0.3)))
-    ink_line(outline['ear'])
-    ink_line(outline['hand'])
-
-    css = ('.mm-muscle{fill:var(--mm-fill,transparent)}'
-           '.mm-ink{fill:none;stroke:var(--pen,#22347F);stroke-linecap:round;stroke-linejoin:round}'
-           '.mm-ink,.mm-tone{pointer-events:none}'
-           '.mm-line{stroke-width:1.5}.mm-heavy{stroke-width:1.2}.mm-out{stroke-width:2}'
-           '.mm-detail{stroke-width:1;opacity:.85}.mm-hatch{stroke-width:.7;opacity:.7}')
-    return ''.join([
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %d %d" class="mm mm-%s">' % (W, H, view),
-        '<style>%s</style>' % css,
-        '<g class="mm-regions">%s</g>' % ''.join(fills),
-        '<defs>%s</defs>' % ''.join(defs),
-        '<g class="mm-tone">%s</g>' % ''.join(tones),
-        '<g class="mm-ink mm-hatch">%s</g>' % hatch_svg,
-        '<g class="mm-ink mm-detail"><path d="%s"/></g>' % ''.join(detail_ink),
-        '<g class="mm-ink mm-line"><path d="%s"/></g>' % ''.join(ink),
-        '<g class="mm-ink mm-heavy"><path d="%s"/></g>' % ''.join(heavy),
-        '<g class="mm-ink mm-out"><path d="%s"/></g>' % ''.join(out_ink),
-        '</svg>',
-    ])
 
 
 # ---------------------------------------------------------------------------
@@ -1121,7 +950,7 @@ def build2(view, regions, details, extras, fibers, seed):
     tones, skin_tones = {}, []
     edges = {'dark': [], 'mid': [], 'light': [], 'search': []}
     creases, crease_lines = [], []
-    detail_ink, out_ink, construct = [], [], []
+    detail_ink, construct = [], []
 
     def tone_gradient(tid, pc, strength=1.0):
         cx, cy, dirx, diry, h = shade_axis(pc)
