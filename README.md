@@ -60,6 +60,11 @@ GitHub hosts the app for free from the `main` branch. Once hosting is on
 it lives at https://vinceman3.github.io/Composition/ and updates a minute or
 two after each merge. On a phone, open it and choose "Add to Home Screen".
 
+It works offline: `sw.js` keeps a copy of the app on the phone and refreshes
+it in the background, so a new version shows on the launch after it is
+merged. Every file in `art/` must be listed in `ART` at the top of `sw.js`
+(a test checks this).
+
 ## Running it on your own computer
 
 Browsers will not load the app by double-clicking `index.html`; it needs a
@@ -81,8 +86,8 @@ Then visit http://localhost:8000 in a browser.
 5. Stats: the Big Three with strength levels, total, Wilks and DOTS, a score
    calculator, charts, weigh-ins, the training calendar, records. (done)
 6. Polish: lb and kg, the dim garage look, logging maxes directly, the Big Three
-   redesign, a home-screen icon. (done) Still to come: working offline.
-7. New sections: programs, food log, muscle map, lessons, meet day.
+   redesign, a home-screen icon, working offline. (done)
+7. New sections: muscle map first, then programs, food log, lessons, meet day.
 8. Launch: accounts and sync, privacy page, app stores.
 
 ## Ideas for later

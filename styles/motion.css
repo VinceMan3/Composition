@@ -110,6 +110,9 @@
   inset: 0;
   z-index: 2;
   background: linear-gradient(180deg, #2A1C0C, #17120B);
+}
+:root[data-look="garage"] .shade {
+  background: #000;
   pointer-events: none;
 }
 .shade.is-clearing { animation: shade-clear var(--flip) ease-out forwards; }

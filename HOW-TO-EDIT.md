@@ -19,7 +19,9 @@ new code, search the web for "color picker".
 
 Below the main colors in `content/colors.css` is a second block,
 `:root[data-look="garage"]`. Those are the same names with the colors used
-when the dim garage look is switched on under More.
+when the dim garage look is switched on under More. In that look the names
+keep their jobs, not their colors: `--blue` is the cover, which is maroon
+there, and `--paper` is the page, which is gunmetal grey.
 
 ## Change wording
 
@@ -85,6 +87,9 @@ In `content/wording.js`, find `titleIdeas` and edit the list:
 The pictures are in `art/`. To replace one, upload a new picture with exactly
 the same file name (for example `sticker-gloves.png`). Files with a
 see-through background look best.
+
+Adding a brand new drawing (not a swap)? Also add its name to the `ART`
+list at the top of `sw.js`, so it is saved for offline use.
 
 ## Change the strength levels
 

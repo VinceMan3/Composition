@@ -88,7 +88,7 @@ button { cursor: pointer; }
   font-family: var(--f-mast);
   font-size: 26px;
   line-height: 1.2;
-  color: var(--maroon);
+  color: var(--maroon-ink);
   text-shadow: 2px 2px 0 var(--mustard);
   text-decoration: none;
   transition: opacity .2s;
@@ -182,7 +182,7 @@ button { cursor: pointer; }
   font-weight: 400;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--maroon);
+  color: var(--maroon-ink);
 }
 .heading {
   font-family: var(--f-head);
@@ -200,9 +200,9 @@ button { cursor: pointer; }
   text-transform: uppercase;
 }
 .quiet { font-size: 14px; color: var(--ink-soft); }
-.warn { color: var(--maroon); font-weight: 700; }
+.warn { color: var(--maroon-ink); font-weight: 700; }
 .up { color: var(--green-ink); }
-.down { color: var(--maroon); }
+.down { color: var(--maroon-ink); }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -247,7 +247,7 @@ button { cursor: pointer; }
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.link-btn[data-armed="yes"] { color: var(--maroon); font-weight: 700; }
+.link-btn[data-armed="yes"] { color: var(--maroon-ink); font-weight: 700; }
 
 .seg { display: inline-flex; flex: none; box-shadow: var(--lift); border-radius: 5px; }
 .seg button {
@@ -402,7 +402,7 @@ button { cursor: pointer; }
   transition: transform .12s;
 }
 .tab:active svg { transform: scale(.84) rotate(-6deg); }
-.tab[aria-current="page"] { color: var(--maroon); }
+.tab[aria-current="page"] { color: var(--maroon-ink); }
 
 /* ---------- pop-up messages ---------- */
 .toast {
@@ -429,3 +429,24 @@ button { cursor: pointer; }
 .rest.is-rounds .rest-controls .rest-stop { color: var(--on-color); }
 .rest.is-rounds .rest-fill { background: var(--mustard); }
 .rest.is-rounds.is-break .rest-fill { background: var(--maroon); }
+
+/* ---------- the dim garage: one bulb overhead, cool and dark ---------- */
+:root[data-look="garage"] body {
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(140, 42, 58, .14), transparent 60%),
+    url(../art/desk.webp) 0 0 / 512px 512px,
+    var(--desk);
+}
+:root[data-look="garage"] .stack::after {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .45), rgba(0, 0, 0, .12) 14px, transparent 34px),
+    linear-gradient(90deg, rgba(0, 0, 0, .25), transparent 8px, transparent calc(100% - 8px), rgba(0, 0, 0, .3)),
+    radial-gradient(90% 55% at 50% 0%, rgba(196, 178, 234, .08), transparent 70%),
+    radial-gradient(130% 100% at 30% 10%, transparent 50%, rgba(0, 0, 0, .35) 100%);
+}
+:root[data-look="garage"] .wordmark { color: var(--ink); text-shadow: 2px 2px 0 #050506; }
+:root[data-look="garage"] .tabs {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), transparent 40%, rgba(0, 0, 0, .25)), url(../art/paper.webp) 40px 200px / 420px 420px, var(--paper-warm);
+  background-blend-mode: normal, multiply, normal;
+  border-top-color: #050506;
+}

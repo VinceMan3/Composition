@@ -60,7 +60,7 @@ function reading(el, ctx) {
             class: 'lift-head lift-link',
             type: 'button',
             'aria-label': `${lift.name}: ${w.history}`,
-            onClick() { ctx.state.openLift = lift.id; ctx.go('lift'); },
+            onClick() { ctx.state.openLift = lift.id; ctx.state.liftFrom = 'page'; ctx.go('lift'); },
           },
             h('div', null,
               h('h2', { class: 'lift-name' }, lift.name),

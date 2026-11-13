@@ -179,6 +179,7 @@ export const WORDS = {
     best: 'best',
     never: 'Not in the notebook yet. Add it to a page and its story starts here.',
     back: 'Back to the library',
+    backTo: { stats: 'Back to Stats', page: 'Back to the page', library: 'Back to the library' },
   },
 
   stickers: {
@@ -264,6 +265,7 @@ export const WORDS = {
     wilks: 'Wilks',
     dots: 'DOTS',
     calcButton: 'Try any numbers',
+    tapToLog: 'Tap a lift to see its history or log a tested max.',
     chartLabel: 'Estimated max over time',
     chartEmpty: 'Two pages with a lift and its line starts.',
     bodyLabel: 'Bodyweight',
@@ -342,7 +344,7 @@ export const WORDS = {
     restoreConfirm: 'Tap again to replace everything',
     restorePlaceholder: 'Paste a backup here',
     notSaving: 'This browser is blocking saved data, so changes last only until you close the page.',
-    version: 'Step 6 · units, the dim garage, tested maxes',
+    version: 'Step 6 · the dim garage, offline',
   },
 
   // Short messages that pop up at the bottom

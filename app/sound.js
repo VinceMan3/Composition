@@ -51,7 +51,9 @@ function audio() {
 
 function buzz(pattern) {
   try {
-    if (navigator.vibrate) navigator.vibrate(pattern);
+    // Phones refuse to buzz before the first tap on the page.
+    const touched = !navigator.userActivation || navigator.userActivation.hasBeenActive;
+    if (navigator.vibrate && touched) navigator.vibrate(pattern);
   } catch {
     // Not every phone can vibrate; that's fine.
   }
