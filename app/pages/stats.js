@@ -46,7 +46,7 @@ export function render(el, ctx) {
       class: `b3-row${record ? ' is-record' : ''}`,
       type: 'button',
       'data-sound': 'none',
-      onClick() { ctx.state.openLift = id; ctx.go('lift'); },
+      onClick() { ctx.state.openLift = id; ctx.state.liftFrom = 'stats'; ctx.go('lift'); },
     },
       h('span', { class: 'b3-n' }, b.max ? show(b.isTested ? b.max : Math.round(b.max), unit) : '–', b.max ? unitTag() : null),
       h('span', { class: 'b3-info' },
@@ -71,63 +71,6 @@ export function render(el, ctx) {
     h('span', { class: 'b3-total-n' }, show(total, unit), h('span', { class: 'total-unit' }, ` ${unit}`)),
     h('span', { class: 'b3-scores' }, sc ? `${w.wilks} ${sc.wilks} · ${w.dots} ${sc.dots}` : w.scoresNeed),
   );
-
-  // ----- logging a max straight in -----
-  let logLift = 'bench-press';
-  const logChips = BIG_THREE.map(id => {
-    const chip = h('button', {
-      class: 'chip',
-      type: 'button',
-      'aria-pressed': String(id === logLift),
-      onClick() {
-        logLift = id;
-        for (const c of logChips) c.setAttribute('aria-pressed', String(c === chip));
-      },
-    }, w.names[id]);
-    return chip;
-  });
-  const logWeight = h('input', { class: 'calc-in', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': w.logWeight });
-  const logDay = h('input', { class: 'calc-in log-day', type: 'date', value: dateKey(), max: dateKey(), 'aria-label': w.logDate });
-  const logForm = h('div', { class: 'panel log-max', hidden: true },
-    h('p', { class: 'label' }, w.logTitle),
-    h('p', { class: 'quiet' }, w.logNote),
-    h('div', { class: 'chips' }, logChips),
-    h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, w.logWeight), logWeight, h('span', { class: 'label' }, unit)),
-    h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, w.logDate), logDay, h('span')),
-    h('div', { class: 'wrap' },
-      h('button', {
-        class: 'btn btn-small',
-        type: 'button',
-        'data-sound': 'none',
-        onClick() {
-          const value = num(logWeight.value.replace(',', '.'));
-          if (!(value > 0)) { sound.play('tap'); toast(w.logNeedWeight); logWeight.focus(); return; }
-          const before = bests(store.get(), logLift).max;
-          const lb = toLbFrom(value, unit);
-          let fresh = [];
-          store.update(d => {
-            d.maxes = d.maxes || [];
-            d.maxes.push({ id: Date.now().toString(36), liftId: logLift, w: value, unit, date: logDay.value || dateKey() });
-            fresh = collect(d);
-          });
-          sound.play('stamp');
-          const parts = [lb > before + 0.01 ? `${w.logRecord} ${w.names[logLift]} ${tidy(value)} ${unit}` : w.logSaved];
-          if (fresh.length) {
-            ctx.state.newStickers = [...(ctx.state.newStickers || []), ...fresh];
-            parts.push(`${w.newSticker} ${fresh.map(id => findSticker(id).name).join(', ')}`);
-          }
-          toast(parts.join(' '));
-          ctx.refresh();
-        },
-      }, w.logSave),
-      h('button', { class: 'btn btn-line btn-small', type: 'button', onClick() { logForm.hidden = true; logOpen.hidden = false; } }, w.logCancel),
-    ),
-  );
-  const logOpen = h('button', {
-    class: 'btn btn-line btn-small',
-    type: 'button',
-    onClick() { logForm.hidden = false; logOpen.hidden = true; logWeight.focus(); },
-  }, w.logMax);
 
   // ---------- one lift over time ----------
   let shownLift = BIG_THREE.find(id => history(data, id).length >= 2) || 'squat';
@@ -277,11 +220,10 @@ export function render(el, ctx) {
     ),
     h('div', { class: 'b3' }, BIG_THREE.map(liftRow)),
     banner,
+    h('p', { class: 'quiet' }, w.tapToLog),
     h('div', { class: 'wrap' },
-      logOpen,
       h('a', { class: 'btn btn-line btn-small', href: '#calc' }, w.calcButton),
     ),
-    logForm,
 
     h('section', { class: 'stats-part' },
       h('h2', { class: 'part-title' }, w.chartLabel),

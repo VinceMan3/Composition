@@ -1,0 +1,13 @@
+{
+  "name": "composition-tools",
+  "private": true,
+  "description": "Checks, preview builder and art scripts for Composition. The app itself needs no build step.",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "@fontsource/archivo-narrow": "^5.0.0",
+    "@fontsource/bowlby-one": "^5.0.0",
+    "@fontsource/handlee": "^5.0.0",
+    "@fontsource/shrikhand": "^5.0.0",
+    "@fontsource/special-elite": "^5.0.0"
+  }
+}

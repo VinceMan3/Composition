@@ -42,7 +42,7 @@ export function render(el, ctx) {
   }
   const unitsRow = choice(w.unitsLabel, w.unitsNote, 'units', [['lb', 'lb'], ['kg', 'kg']]);
   const lookRow = choice(w.lookLabel, w.lookNote, 'look', [['paper', w.lookPaper], ['garage', w.lookGarage]], value => {
-    document.documentElement.dataset.look = value;
+    ctx.applyLook(value);
   });
 
   // ---- how long a rest runs ----
@@ -136,7 +136,7 @@ export function render(el, ctx) {
         return;
       }
       store.importText(text);
-      document.documentElement.dataset.look = store.get().settings.look;
+      ctx.applyLook(store.get().settings.look);
       sound.setMuted(!store.get().settings.sound);
       sound.play('stamp');
       toast(words.toasts.restored);

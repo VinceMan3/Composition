@@ -35,7 +35,7 @@ export function render(el, ctx) {
         class: 'pick',
         type: 'button',
         'data-sound': 'none',
-        onClick() { ctx.state.openLift = l.id; ctx.go('lift'); },
+        onClick() { ctx.state.openLift = l.id; ctx.state.liftFrom = 'library'; ctx.go('lift'); },
       },
         h('span', { class: 'pick-name' }, l.name),
         h('span', { class: 'pick-last' }, s ? count(s.pages, w.pages) : ''),

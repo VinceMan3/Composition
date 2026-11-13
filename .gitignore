@@ -1,0 +1,5 @@
+tools/node_modules/
+tools/preview/
+tools/test/shots*/
+tools/test/*.png
+__pycache__/

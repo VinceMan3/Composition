@@ -5,6 +5,7 @@
 import { h, put, count, noteField, twoTap } from '../ui.js';
 import { bests } from '../strength.js';
 import { unitOf, fromLb, show } from '../units.js';
+import { maxLogger } from '../maxlog.js';
 import { chart } from '../chart.js';
 import * as log from '../log.js';
 
@@ -14,6 +15,8 @@ export function render(el, ctx) {
   const data = store.get();
   const lift = log.findLift(data, ctx.state.openLift);
   const big = log.isBigThree(lift.id);
+  // Back goes wherever the lift was opened from.
+  const from = ['stats', 'page', 'library'].includes(ctx.state.liftFrom) ? ctx.state.liftFrom : 'library';
   const unit = unitOf(data);
 
   // Oldest first, one entry per page the lift is on.
@@ -90,7 +93,7 @@ export function render(el, ctx) {
       h('h1', { class: 'heading' }, lift.name),
       sessions.length > 0 && h('p', { class: 'hand' }, `${count(sessions.length, words.library.pages)} ${w.inNotebook}`),
       h('p', { class: 'quiet' }, [lift.gear, lift.works, lift.helps].filter(Boolean).join(' · ')),
-      h('a', { class: 'btn btn-line btn-small', href: '#library', style: 'align-self:flex-start;margin-top:6px' }, `← ${w.back}`),
+      h('a', { class: 'btn btn-line btn-small', href: `#${from}`, style: 'align-self:flex-start;margin-top:6px' }, `← ${w.backTo[from]}`),
     ),
     h('div', { class: 'panel lift-notes' },
       h('p', { class: 'label' }, w.notesLabel),
@@ -110,6 +113,7 @@ export function render(el, ctx) {
       total(show(b.isTested ? b.max : Math.round(b.max), unit), b.isTested ? w.testedMax : w.estMax),
       total(show(heaviest, unit), w.heaviest),
     ),
+    big && maxLogger(ctx, lift.id, lift.name),
     !big && heaviest > 0 && h('div', { class: 'totals' },
       total(show(heaviest, unit), w.heaviest),
       h('div', { class: 'total' },

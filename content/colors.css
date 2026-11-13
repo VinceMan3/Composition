@@ -27,6 +27,7 @@
   /* Accents */
   --maroon: #7A2233;        /* main buttons, the masthead */
   --maroon-dark: #5A1826;
+  --maroon-ink: #7A2233;    /* maroon writing: kickers, labels, records */
   --mustard: #E9B42C;       /* highlights and the shadow behind headings */
   --mustard-light: #F0C64E;
   --green: #2F5D3A;         /* done, up, selected */
@@ -42,38 +43,45 @@
 
 /*
   THE DIM GARAGE LOOK
-  Switched on under More. The same notebook under one warm bulb: brown paper,
-  pale ink, never black. Change these the same way as the colors above.
+  Switched on under More. The whole notebook after dark: gunmetal paper,
+  a maroon cover, dark greys and black, with hints of deep purple. Change
+  these the same way as the colors above.
 */
 :root[data-look="garage"] {
-  --blue: #6E8FA5;
-  --blue-ray: #7A9BB0;
-  --blue-deep: #587A90;
-  --navy: #14100C;
+  /* The cover: maroon where the paper look is baby blue */
+  --blue: #5C1A27;
+  --blue-ray: #6A2231;
+  --blue-deep: #42121C;
+  --navy: #050506;
 
-  --paper: #4B3F32;
-  --paper-warm: #43372B;
-  --paper-edge: #362B21;
-  --card: #554737;
-  --rule: #7F95A3;
-  --margin-line: #B4544C;
+  /* Gunmetal paper */
+  --paper: #33363B;
+  --paper-warm: #2C2F34;
+  --paper-edge: #222428;
+  --card: #3E4147;
+  --rule: #4F4560;
+  --margin-line: #8C2A3A;
 
-  --ink: #F0E4C6;
-  --ink-soft: #CDBB98;
-  --pen: #A9C2F0;
-  --pencil: #A0927B;
+  /* Pale ink, with a purple pen */
+  --ink: #ECE8E1;
+  --ink-soft: #ABA7B0;
+  --pen: #C4B2EA;
+  --pencil: #827E89;
 
-  --maroon: #B04A5B;
-  --maroon-dark: #E39AA6;
-  --on-color: #FBF3DE;
-  --mustard: #C99620;
-  --mustard-light: #E2B23A;
-  --green: #4E8A5D;
-  --green-ink: #93CDA0;
-  --purple: #B79AD8;
-  --tomato: #EE7A62;
+  /* Accents */
+  --maroon: #A8293F;
+  --maroon-dark: #E7A3AE;
+  --maroon-ink: #EBA2AE;
+  --on-color: #F5F0E8;
+  --mustard: #9C2236;
+  --mustard-light: #B8384C;
+  --green: #3D7553;
+  --green-ink: #8CCB9D;
+  --purple: #8A68C2;
+  --tomato: #EF6A5A;
 
-  --desk: #2A1D14;
-  --tape: #B9A867;
+  /* Around the notebook */
+  --desk: #0C0C0E;
+  --tape: #6E6A74;
   color-scheme: dark;
 }

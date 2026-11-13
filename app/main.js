@@ -7,6 +7,7 @@ import * as store from './store.js';
 import * as sound from './sound.js';
 import * as rest from './rest.js';
 import { collect } from './awards.js';
+import { startOffline } from './offline.js';
 import { toast, shortDate } from './ui.js';
 import { startRouter } from './router.js';
 import * as cover from './pages/cover.js';
@@ -35,7 +36,13 @@ for (const tab of document.querySelectorAll('.tab')) {
 }
 
 sound.setMuted(!store.get().settings.sound);
-document.documentElement.dataset.look = store.get().settings.look;
+// The look: the page colors, and the phone's own bar to match.
+export function applyLook(look) {
+  document.documentElement.dataset.look = look;
+  const bar = document.querySelector('meta[name="theme-color"]');
+  if (bar) bar.content = look === 'garage' ? '#5C1A27' : '#A9CBE0';
+}
+applyLook(store.get().settings.look);
 
 // What every page is handed when it draws itself.
 const ctx = {
@@ -44,6 +51,7 @@ const ctx = {
   sound,
   rest,
   toast,
+  applyLook,
   state: {}, // short-lived notes passed from one page to the next
   go(name) { location.hash = name; },
   refresh() { router.refresh(); },
@@ -91,3 +99,6 @@ document.addEventListener('click', event => {
   if (href && href.startsWith('#') && href.slice(1) !== router.current()) return;
   sound.play('tap');
 });
+
+// Keep a copy on the phone so it works with no signal.
+startOffline();
