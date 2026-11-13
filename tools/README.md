@@ -5,7 +5,7 @@ app itself still needs no build step.
 
 | File | What it does |
 | --- | --- |
-| `test/run.py` | The full set of checks (305 at last count), run in a real browser |
+| `test/run.py` | The full set of checks (316 at last count), run in a real browser |
 | `test/common.py` | Shared setup for the checks: fonts, error capture, screenshots |
 | `build-preview.py` | Packs the app into one page for a Claude preview, in `tools/preview/` |
 | `serve.sh` | Starts the two local servers the checks use |
@@ -13,11 +13,12 @@ app itself still needs no build step.
 | `art/badges.py` | Draws the earned stickers |
 | `art/textures.py` | Makes the paper and cover textures |
 | `art/icon.py` | Draws the home-screen icon |
+| `art/musclemap.py` | Draws the muscle map, front and back, in graphite, with every muscle split into its parts (needs `shapely`) |
 
 ## Setup, once
 
     cd tools && npm install && cd ..
-    pip install playwright numpy pillow --break-system-packages   # if missing
+    pip install playwright numpy pillow shapely --break-system-packages   # if missing
 
 ## Running the checks
 
