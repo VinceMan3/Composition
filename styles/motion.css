@@ -2,7 +2,7 @@
    --flip sets how long the cover takes to turn, --flip-quick how long the
    inner pages take. Bigger is slower. */
 
-:root { --flip: 290ms; --flip-quick: 150ms; }
+:root { --flip: 300ms; --flip-quick: 180ms; }
 .sheet.is-quick, .shade.is-quick { --flip: var(--flip-quick); }
 
 /* ---------- the bending page (built in app/flip.js) ---------- */
@@ -83,6 +83,24 @@
 .sheet-down > .sheet-strip { animation: sheet-fall var(--flip) linear both; }
 .sheet-down .sheet-hinge { animation: sheet-trail var(--flip) linear both; }
 .sheet-down .sheet-face::after { animation: face-light var(--flip) ease-out both; }
+
+/* ---------- the quick turn between inner pages (app/router.js) ---------- */
+@keyframes turn-up { to { transform: rotateX(97deg); } }
+@keyframes turn-down {
+  from { transform: rotateX(97deg); }
+  to { transform: rotateX(0deg); }
+}
+.page.turn-up, .page.turn-down {
+  z-index: 3;
+  transform-origin: 50% 0;
+  will-change: transform;
+  pointer-events: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  box-shadow: 0 26px 34px rgba(20, 30, 40, .32);
+}
+.page.turn-up { animation: turn-up var(--flip-quick) cubic-bezier(.45, 0, .75, .5) forwards; }
+.page.turn-down { animation: turn-down var(--flip-quick) cubic-bezier(.25, .55, .35, 1) both; }
 
 /* The shadow a turning page throws on the one beneath it. */
 @keyframes shade-clear { from { opacity: .34; } to { opacity: 0; } }

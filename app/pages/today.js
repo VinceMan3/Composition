@@ -1,7 +1,7 @@
 // Today's page. Before a page is started it offers to repeat a past page or
 // start a fresh one; after that it is the page you write your sets on.
 
-import { h, put, count, icon, art, shortDate, pageHead, twoTap, noteField } from '../ui.js';
+import { h, put, titleBox, count, icon, art, shortDate, pageHead, twoTap, noteField } from '../ui.js';
 import * as log from '../log.js';
 import { clock } from '../rest.js';
 import { poseSketch } from '../poses.js';
@@ -25,7 +25,7 @@ function starting(el, ctx) {
     ctx.refresh();
   }
 
-  const titleBox = h('input', {
+  const nameBox = h('input', {
     class: 'write-in',
     type: 'text',
     maxlength: '40',
@@ -35,7 +35,8 @@ function starting(el, ctx) {
     autocomplete: 'off',
     onKeydown(e) { if (e.key === 'Enter') startBlank(); },
   });
-  const startBlank = () => begin(log.newPage(titleBox.value.trim() || w.untitled));
+  const units = store.get().settings.units;
+  const startBlank = () => begin(log.newPage(nameBox.value.trim() || w.untitled, units));
 
   put(el,
     art('sketch-front.webp', 'sketch sketch-front', 640, 587),
@@ -58,9 +59,9 @@ function starting(el, ctx) {
 
     h('div', { class: 'start' },
       h('p', { class: 'label' }, past.length ? w.blankLabel : w.startLabel),
-      titleBox,
+      nameBox,
       h('div', { class: 'chips' }, w.titleIdeas.map(idea =>
-        h('button', { class: 'chip', type: 'button', 'data-sound': 'none', onClick: () => begin(log.newPage(idea)) }, idea))),
+        h('button', { class: 'chip', type: 'button', 'data-sound': 'none', onClick: () => begin(log.newPage(idea, units)) }, idea))),
       h('button', { class: 'btn', type: 'button', 'data-sound': 'none', onClick: startBlank }, w.blankButton),
     ),
   );
@@ -89,7 +90,7 @@ function writing(el, ctx) {
   }
 
   const liftOf = li => log.findLift(data, page.lifts[li].liftId);
-  const prevOf = li => log.lastTime(data, page.lifts[li].liftId);
+  const prevOf = li => log.lastTime(data, page.lifts[li].liftId, page.unit);
   const cleanNumber = text => text.replace(',', '.').replace(/[^0-9.]/g, '');
 
   // ----- the tools under the set you are on -----
@@ -477,9 +478,7 @@ function writing(el, ctx) {
 
   // ----- the page around the lifts -----
 
-  const title = h('input', {
-    class: 'title-input',
-    type: 'text',
+  const title = titleBox({
     maxlength: '40',
     value: page.title,
     'aria-label': w.titleLabel,

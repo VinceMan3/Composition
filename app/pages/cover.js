@@ -135,12 +135,20 @@ export function render(el, ctx) {
       const H = layer.clientHeight;
       const x = Math.min(Math.max(grip.left + dx, -node.offsetWidth * 0.3), W - node.offsetWidth * 0.7);
       const y = Math.min(Math.max(grip.top + dy, 0), H - node.offsetHeight * 0.6);
-      node.style.left = `${x}px`;
-      node.style.top = `${y}px`;
+      // Slide it as its own layer while held (no repainting, so phones leave
+      // no smears behind); its real position is set once it is let go.
+      grip.x2 = x;
+      grip.y2 = y;
+      node.style.translate = `${x - grip.left}px ${y - grip.top}px`;
     });
     const drop = () => {
       if (!grip) return;
       const moved = grip.moved;
+      if (moved) {
+        node.style.left = `${grip.x2}px`;
+        node.style.top = `${grip.y2}px`;
+      }
+      node.style.translate = '';
       grip = null;
       node.classList.remove('is-held');
       const top = Math.max(0, ...Object.values(store.get().stickers).map(s => s.z || 0)) + 1;

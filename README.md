@@ -30,6 +30,8 @@ no build step. Put the folder on any web host and it runs.
 - `app/strength.js` is the Stats arithmetic: weigh-ins, best lifts, Wilks,
   DOTS and strength levels. `app/chart.js` draws the hand-plotted charts.
 - `app/rest.js` is the rest timer above the tabs.
+- `app/units.js` turns pounds into kilograms and back; everything is worked
+  out in pounds.
 - `app/store.js` saves to the device and makes backups.
 - `app/sound.js` builds every sound from scratch; there are no sound files.
 - `app/ui.js` has small helpers the pages share.
@@ -48,6 +50,7 @@ One object, kept in the browser on the device (see `app/store.js`):
 - `earned`: which stickers have been earned, and when
 - `stickers`: where each sticker sits on the cover
 - `weighins`: bodyweight in pounds by day
+- `maxes`: one-rep maxes logged straight in, with their unit and day
 - `liftNotes`: a standing note for each lift
 
 ## The live app
@@ -77,7 +80,8 @@ Then visit http://localhost:8000 in a browser.
 4. Art: a pen sketch pose for every muscle group, for the corners of the pages.
 5. Stats: the Big Three with strength levels, total, Wilks and DOTS, a score
    calculator, charts, weigh-ins, the training calendar, records. (done)
-6. Polish: settings, lb and kg, the dim garage look, desktop layout, install, offline.
+6. Polish: lb and kg, the dim garage look, logging maxes directly, the Big Three
+   redesign, a home-screen icon. (done) Still to come: working offline.
 7. New sections: programs, food log, muscle map, lessons, meet day.
 8. Launch: accounts and sync, privacy page, app stores.
 

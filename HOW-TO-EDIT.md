@@ -15,6 +15,12 @@ is used:
 Change the code after the colon (keep the `#` and the semicolon). To find a
 new code, search the web for "color picker".
 
+## Change the dim garage colors
+
+Below the main colors in `content/colors.css` is a second block,
+`:root[data-look="garage"]`. Those are the same names with the colors used
+when the dim garage look is switched on under More.
+
 ## Change wording
 
 Open `content/wording.js`. Change only the text between the quotes:

@@ -19,6 +19,10 @@ function heaviest(data, liftId) {
       for (const s of doneSets(entry)) if (num(s.r) >= 1) best = Math.max(best, num(s.w) * IN_POUNDS[page.unit || 'lb']);
     }
   }
+  // A one-rep max logged straight in counts as a real lift.
+  for (const m of data.maxes || []) {
+    if (m.liftId === liftId) best = Math.max(best, num(m.w) * IN_POUNDS[m.unit || 'lb']);
+  }
   return best;
 }
 

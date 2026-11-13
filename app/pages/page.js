@@ -2,7 +2,7 @@
 // the stamp, the totals, every set in ink. From here you can repeat it, fix a
 // wrong number, or tear it out for good.
 
-import { h, put, icon, twoTap } from '../ui.js';
+import { h, put, titleBox, icon, twoTap } from '../ui.js';
 import * as log from '../log.js';
 import { poseSketch } from '../poses.js';
 
@@ -117,9 +117,7 @@ function fixing(el, ctx) {
   const unit = copy.unit;
   const cleanNumber = text => text.replace(',', '.').replace(/[^0-9.]/g, '');
 
-  const title = h('input', {
-    class: 'title-input',
-    type: 'text',
+  const title = titleBox({
     maxlength: '40',
     value: copy.title,
     'aria-label': tw.titleLabel,

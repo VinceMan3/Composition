@@ -1,7 +1,10 @@
-// One lift's story: its estimated max plotted by hand, page by page, and
-// every session it appears on.
+// One lift's story, plotted by hand page by page, and every session it
+// appears on. The Big Three are tracked by their max (tested, or estimated
+// from the best set); every other lift by the heaviest weight lifted.
 
-import { h, put, count, noteField } from '../ui.js';
+import { h, put, count, noteField, twoTap } from '../ui.js';
+import { bests } from '../strength.js';
+import { unitOf, fromLb, show } from '../units.js';
 import { chart } from '../chart.js';
 import * as log from '../log.js';
 
@@ -10,6 +13,8 @@ export function render(el, ctx) {
   const w = words.lift;
   const data = store.get();
   const lift = log.findLift(data, ctx.state.openLift);
+  const big = log.isBigThree(lift.id);
+  const unit = unitOf(data);
 
   // Oldest first, one entry per page the lift is on.
   const sessions = [];
@@ -18,31 +23,43 @@ export function render(el, ctx) {
       if (entry.liftId !== lift.id) continue;
       const best = log.bestSet(entry);
       sessions.push({
+        bestText: best ? log.setText(best, lift) : '',
         pageId: page.id,
         note: entry.note || '',
         date: page.date,
         text: log.setsText(entry.sets, lift),
-        est: best ? Math.round(log.estMax(best.w, best.r)) : 0,
-        top: Math.max(0, ...entry.sets.filter(x => log.num(x.r) > 0).map(x => log.num(x.w))),
+        // In pounds, whatever unit the page was written in.
+        est: best ? log.toLb(log.estMax(best.w, best.r), page.unit) : 0,
+        top: log.toLb(Math.max(0, ...entry.sets.filter(x => log.num(x.r) > 0).map(x => log.num(x.w))), page.unit),
         unit: page.unit,
       });
     }
   });
-  const plotted = sessions.filter(s => s.est > 0);
-  const bestEver = plotted.length ? Math.max(...plotted.map(s => s.est)) : 0;
-  const heaviest = plotted.length ? Math.max(...plotted.map(s => s.top)) : 0;
+  // Maxes logged straight in, for the Big Three, plot alongside the pages.
+  const logged = big ? (data.maxes || []).filter(m => m.liftId === lift.id) : [];
+  const points = [...sessions, ...logged.map(m => ({ date: m.date, est: log.toLb(m.w, m.unit), top: log.toLb(m.w, m.unit) }))]
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const plotted = points.filter(s => (big ? s.est : s.top) > 0);
+  const b = big ? bests(data, lift.id) : null;
+  const heaviest = big ? b.top : (sessions.length ? Math.max(...sessions.map(s => s.top)) : 0);
+  const bestSetEver = log.bestSet({
+    sets: data.pages.flatMap(page => page.lifts.filter(e => e.liftId === lift.id).flatMap(e => e.sets)),
+  });
 
-  // Two ways to look at it: estimated max, or the heaviest weight that day.
-  const views = [
-    { key: 'est', name: w.viewEst, label: w.chartLabel },
-    { key: 'top', name: w.viewTop, label: w.chartTopLabel },
-  ];
+  // The Big Three can be seen as their max or the heaviest weight that day;
+  // other lifts just as the heaviest weight.
+  const views = big
+    ? [
+      { key: 'est', name: w.viewEst, label: w.chartLabel },
+      { key: 'top', name: w.viewTop, label: w.chartTopLabel },
+    ]
+    : [{ key: 'top', name: w.viewTop, label: w.chartTopLabel }];
   let view = views[0];
   const chartArt = h('div', { class: 'chart-art' });
   const chartTitle = h('p', { class: 'kicker' });
   function drawChart() {
     chartTitle.textContent = view.label;
-    chartArt.innerHTML = chart(plotted.map(s => ({ date: s.date, value: s[view.key] })), 'lb', { chartLabel: view.label });
+    chartArt.innerHTML = chart(plotted.map(s => ({ date: s.date, value: fromLb(view.key === 'est' ? Math.round(s.est) : s.top, unit) })), unit, { chartLabel: view.label });
   }
   const viewButtons = views.map(v => {
     const b = h('button', {
@@ -58,12 +75,12 @@ export function render(el, ctx) {
     return b;
   });
   const chartBox = plotted.length >= 2
-    ? h('div', { class: 'chart panel' }, chartTitle, chartArt, h('div', { class: 'chips' }, viewButtons))
+    ? h('div', { class: 'chart panel' }, chartTitle, chartArt, views.length > 1 && h('div', { class: 'chips' }, viewButtons))
     : null;
   if (chartBox) drawChart();
 
   const total = (n, label) => h('div', { class: 'total' },
-    h('p', { class: 'total-n' }, n, h('span', { class: 'total-unit' }, ' lb')),
+    h('p', { class: 'total-n' }, n, h('span', { class: 'total-unit' }, ` ${unit}`)),
     h('p', { class: 'label' }, label),
   );
 
@@ -89,9 +106,27 @@ export function render(el, ctx) {
         label: `${lift.name}: ${words.today.noteLabel}`,
       }),
     ),
-    bestEver > 0 && h('div', { class: 'totals' },
-      total(`${bestEver}`, w.estMax),
-      total(`${heaviest}`, w.heaviest),
+    big && b.max > 0 && h('div', { class: 'totals' },
+      total(show(b.isTested ? b.max : Math.round(b.max), unit), b.isTested ? w.testedMax : w.estMax),
+      total(show(heaviest, unit), w.heaviest),
+    ),
+    !big && heaviest > 0 && h('div', { class: 'totals' },
+      total(show(heaviest, unit), w.heaviest),
+      h('div', { class: 'total' },
+        h('p', { class: 'total-n' }, bestSetEver ? log.setText(bestSetEver, lift) : '–'),
+        h('p', { class: 'label' }, w.bestSet),
+      ),
+    ),
+    logged.length > 0 && h('div', null,
+      h('p', { class: 'label', style: 'line-height:32px' }, w.loggedLabel),
+      h('div', { class: 'compare' }, [...logged].sort((x, y) => (x.date < y.date ? 1 : -1)).map(m => h('div', { class: 'compare-row' },
+        h('span', { class: 'kicker' }, log.niceDate(m.date)),
+        h('span', { class: 'compare-best' }, `${log.tidy(log.num(m.w))} ${m.unit || 'lb'}`),
+        twoTap(h('button', { class: 'lift-remove', type: 'button', style: 'grid-column:1 / -1;justify-self:start' }, w.remove), w.removeConfirm, () => {
+          store.update(d => { d.maxes = d.maxes.filter(x => x.id !== m.id); });
+          ctx.refresh();
+        }),
+      ))),
     ),
     plotted.length === 1 && h('p', { class: 'hand', style: 'font-size:18px' }, w.oneMore),
     chartBox,
@@ -105,7 +140,7 @@ export function render(el, ctx) {
           onClick() { ctx.state.openPage = s.pageId; ctx.state.fixing = false; ctx.go('page'); },
         },
           h('span', { class: 'kicker' }, log.niceDate(s.date)),
-          h('span', { class: 'compare-best' }, s.est ? `${w.best} ${s.est} ${s.unit}` : ''),
+          h('span', { class: 'compare-best' }, big ? (s.est ? `${w.best} ${show(Math.round(s.est), unit)} ${unit}` : '') : s.bestText),
           h('span', { class: 'compare-change hand' }, s.text),
           s.note && h('span', { class: 'compare-change day-note-text' }, s.note),
         ))),

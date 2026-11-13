@@ -72,6 +72,28 @@ export function noteField({ get, set, placeholder, addLabel, doneLabel, label, o
   return wrap;
 }
 
+// A page title you can write in. It wraps onto a second line instead of
+// cutting off, and Enter finishes it.
+export function titleBox(attrs) {
+  const { value = '', ...rest } = attrs;
+  const box = h('textarea', { ...rest, rows: '1', class: `title-input ${attrs.class || ''}`.trim(), spellcheck: 'false' });
+  box.value = value;
+  const grow = () => {
+    box.style.height = 'auto';
+    box.style.height = `${box.scrollHeight}px`;
+  };
+  box.addEventListener('input', () => {
+    if (/\n/.test(box.value)) box.value = box.value.replace(/\n/g, ' ');
+    grow();
+  });
+  box.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); box.blur(); } });
+  box.grow = grow;
+  // Size it once it is on the page and the fonts are in.
+  requestAnimationFrame(grow);
+  if (document.fonts) document.fonts.ready.then(grow);
+  return box;
+}
+
 // A small line drawing: icon('M5 13l4 4L19 7')
 export function icon(path, viewBox = '0 0 24 24') {
   const NS = 'http://www.w3.org/2000/svg';

@@ -1,23 +1,30 @@
 // Progress: the Big Three with their levels, the total with Wilks and DOTS,
 // a chart of each lift, bodyweight, the training calendar, and records.
+// Everything is worked out in pounds and shown in the unit picked under More.
 
-import { h, put, art, pageHead, twoTap } from '../ui.js';
+import { h, put, art, twoTap } from '../ui.js';
 import { chart } from '../chart.js';
 import { mark } from '../week.js';
 import { levelStrip } from '../levels.js';
 import { collect, findSticker } from '../awards.js';
 import { dateKey, niceDate, findCardio, num, tidy } from '../log.js';
-import { BIG_THREE, bests, history, weighins, bodyweight, scores, level } from '../strength.js';
+import { BIG_THREE, bests, history, weighins, bodyweight, scores, level, monthChange } from '../strength.js';
+import { unitOf, fromLb, toLbFrom, show } from '../units.js';
 
 export function render(el, ctx) {
   const { words, store, sound, toast } = ctx;
   const w = words.stats;
   const data = store.get();
+  const unit = unitOf(data);
   const bw = bodyweight(data);
   const sex = data.settings.sex;
+  const unitTag = () => h('span', { class: 'total-unit' }, ` ${unit}`);
+  const monthAgo = dateKey(new Date(Date.now() - 30 * 86400000));
 
   // ---------- the Big Three ----------
   const best = Object.fromEntries(BIG_THREE.map(id => [id, bests(data, id)]));
+  const recentRecord = id => data.pages.some(p => p.date >= monthAgo &&
+    ((p.summary && p.summary.records) || []).some(r => r.name === w.names[id] && r.kind !== 'top'));
 
   const sexButtons = ['men', 'women'].map(choice => h('button', {
     class: 'chip',
@@ -29,51 +36,105 @@ export function render(el, ctx) {
     },
   }, w[choice]));
 
-  const liftCard = id => {
+  // One row: the max big on the left; name, the month's change and the level.
+  const liftRow = id => {
     const b = best[id];
-    const lv = level(id, b.est, bw, sex);
-    const open = () => { ctx.state.openLift = id; ctx.go('lift'); };
-    return h('button', { class: 'big panel', type: 'button', 'data-sound': 'none', onClick: open },
-      h('span', { class: 'big-name' }, w.names[id]),
-      b.est
-        ? [
-          h('span', { class: 'big-row' },
-            h('span', { class: 'big-n' }, String(b.est), h('span', { class: 'total-unit' }, ' lb')),
-            h('span', { class: 'big-side' },
-              h('span', { class: 'label' }, w.estMax),
-              h('span', { class: 'hand' }, `${tidy(b.top)} lb ${w.heaviest}`),
-            ),
-          ),
-          lv ? levelStrip(lv, w) : h('span', { class: 'quiet' }, sex ? w.needBody : w.needSex),
-        ]
-        : h('span', { class: 'hand' }, w.notYet),
+    const lv = level(id, b.max, bw, sex);
+    const change = monthChange(data, id);
+    const record = recentRecord(id);
+    return h('button', {
+      class: `b3-row${record ? ' is-record' : ''}`,
+      type: 'button',
+      'data-sound': 'none',
+      onClick() { ctx.state.openLift = id; ctx.go('lift'); },
+    },
+      h('span', { class: 'b3-n' }, b.max ? show(b.isTested ? b.max : Math.round(b.max), unit) : '–', b.max ? unitTag() : null),
+      h('span', { class: 'b3-info' },
+        h('span', { class: 'b3-name' }, w.names[id]),
+        b.max
+          ? h('span', { class: `b3-change${change > 0 ? ' up' : ''}` },
+            change > 0 ? `▲ +${show(Math.round(change), unit)} ${unit} ${w.thisMonth}` : w.steady)
+          : h('span', { class: 'b3-change' }, w.notYet),
+        b.max ? h('span', { class: 'b3-source' }, b.isTested ? w.tested : w.estimated) : null,
+      ),
+      record && art('ribbon-record.png', 'b3-ribbon', 240, 326),
+      b.max
+        ? h('span', { class: 'b3-level' }, lv ? levelStrip(lv, w, unit) : h('span', { class: 'quiet' }, sex ? w.needBody : w.needSex))
+        : null,
     );
   };
 
   const total = BIG_THREE.reduce((sum, id) => sum + best[id].top, 0);
   const sc = scores(total, bw, sex);
-  const totalCard = h('div', { class: 'big-total panel' },
-    h('div', { class: 'row' },
-      h('div', null,
-        h('p', { class: 'label' }, w.totalLabel),
-        h('p', { class: 'big-n' }, tidy(total), h('span', { class: 'total-unit' }, ' lb')),
-      ),
-      h('div', { class: 'scores' },
-        h('p', null, h('span', { class: 'label' }, w.wilks), h('span', { class: 'score-n' }, sc ? String(sc.wilks) : '–')),
-        h('p', null, h('span', { class: 'label' }, w.dots), h('span', { class: 'score-n' }, sc ? String(sc.dots) : '–')),
-      ),
-    ),
-    h('p', { class: 'quiet' }, w.totalNote),
-    !sc && h('p', { class: 'quiet warn' }, !sex ? w.needSex : w.needBody),
-    h('a', { class: 'btn btn-line btn-small', href: '#calc', style: 'align-self:flex-start' }, w.calcButton),
+  const banner = h('div', { class: 'b3-total' },
+    h('span', { class: 'b3-total-label' }, w.totalLabel),
+    h('span', { class: 'b3-total-n' }, show(total, unit), h('span', { class: 'total-unit' }, ` ${unit}`)),
+    h('span', { class: 'b3-scores' }, sc ? `${w.wilks} ${sc.wilks} · ${w.dots} ${sc.dots}` : w.scoresNeed),
   );
+
+  // ----- logging a max straight in -----
+  let logLift = 'bench-press';
+  const logChips = BIG_THREE.map(id => {
+    const chip = h('button', {
+      class: 'chip',
+      type: 'button',
+      'aria-pressed': String(id === logLift),
+      onClick() {
+        logLift = id;
+        for (const c of logChips) c.setAttribute('aria-pressed', String(c === chip));
+      },
+    }, w.names[id]);
+    return chip;
+  });
+  const logWeight = h('input', { class: 'calc-in', type: 'text', inputmode: 'decimal', autocomplete: 'off', 'aria-label': w.logWeight });
+  const logDay = h('input', { class: 'calc-in log-day', type: 'date', value: dateKey(), max: dateKey(), 'aria-label': w.logDate });
+  const logForm = h('div', { class: 'panel log-max', hidden: true },
+    h('p', { class: 'label' }, w.logTitle),
+    h('p', { class: 'quiet' }, w.logNote),
+    h('div', { class: 'chips' }, logChips),
+    h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, w.logWeight), logWeight, h('span', { class: 'label' }, unit)),
+    h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, w.logDate), logDay, h('span')),
+    h('div', { class: 'wrap' },
+      h('button', {
+        class: 'btn btn-small',
+        type: 'button',
+        'data-sound': 'none',
+        onClick() {
+          const value = num(logWeight.value.replace(',', '.'));
+          if (!(value > 0)) { sound.play('tap'); toast(w.logNeedWeight); logWeight.focus(); return; }
+          const before = bests(store.get(), logLift).max;
+          const lb = toLbFrom(value, unit);
+          let fresh = [];
+          store.update(d => {
+            d.maxes = d.maxes || [];
+            d.maxes.push({ id: Date.now().toString(36), liftId: logLift, w: value, unit, date: logDay.value || dateKey() });
+            fresh = collect(d);
+          });
+          sound.play('stamp');
+          const parts = [lb > before + 0.01 ? `${w.logRecord} ${w.names[logLift]} ${tidy(value)} ${unit}` : w.logSaved];
+          if (fresh.length) {
+            ctx.state.newStickers = [...(ctx.state.newStickers || []), ...fresh];
+            parts.push(`${w.newSticker} ${fresh.map(id => findSticker(id).name).join(', ')}`);
+          }
+          toast(parts.join(' '));
+          ctx.refresh();
+        },
+      }, w.logSave),
+      h('button', { class: 'btn btn-line btn-small', type: 'button', onClick() { logForm.hidden = true; logOpen.hidden = false; } }, w.logCancel),
+    ),
+  );
+  const logOpen = h('button', {
+    class: 'btn btn-line btn-small',
+    type: 'button',
+    onClick() { logForm.hidden = false; logOpen.hidden = true; logWeight.focus(); },
+  }, w.logMax);
 
   // ---------- one lift over time ----------
   let shownLift = BIG_THREE.find(id => history(data, id).length >= 2) || 'squat';
   const chartArt = h('div', { class: 'chart-art' });
   function drawChart() {
-    const points = history(data, shownLift);
-    if (points.length >= 2) chartArt.innerHTML = chart(points, 'lb', { chartLabel: `${w.names[shownLift]}: ${w.chartLabel}` }, 'big');
+    const points = history(data, shownLift).map(p => ({ date: p.date, value: fromLb(p.value, unit) }));
+    if (points.length >= 2) chartArt.innerHTML = chart(points, unit, { chartLabel: `${w.names[shownLift]}: ${w.chartLabel}` }, 'big');
     else chartArt.replaceChildren(h('p', { class: 'hand chart-empty' }, w.chartEmpty));
   }
   const liftChips = BIG_THREE.map(id => {
@@ -94,7 +155,6 @@ export function render(el, ctx) {
   // ---------- bodyweight ----------
   const list = weighins(data);
   const latest = list[list.length - 1];
-  const monthAgo = dateKey(new Date(Date.now() - 30 * 86400000));
   const before = [...list].reverse().find(x => x.date <= monthAgo) || list[0];
   const change = latest && before && before !== latest ? num(latest.w) - num(before.w) : null;
   const weighBox = h('input', {
@@ -102,19 +162,20 @@ export function render(el, ctx) {
     type: 'text',
     inputmode: 'decimal',
     autocomplete: 'off',
-    placeholder: w.weighPlaceholder,
+    placeholder: unit,
     'aria-label': w.bodyLabel,
     enterkeyhint: 'done',
     onKeydown(e) { if (e.key === 'Enter') weighIn(); },
   });
   function weighIn() {
     const value = num(weighBox.value.replace(',', '.'));
-    if (!(value > 40 && value < 1000)) { sound.play('tap'); toast(w.weighNeed); weighBox.focus(); return; }
+    const lb = toLbFrom(value, unit);
+    if (!(lb > 40 && lb < 1000)) { sound.play('tap'); toast(w.weighNeed); weighBox.focus(); return; }
     let fresh = [];
     store.update(d => {
       const today = dateKey();
       d.weighins = (d.weighins || []).filter(x => x.date !== today);
-      d.weighins.push({ date: today, w: Math.round(value * 10) / 10 });
+      d.weighins.push({ date: today, w: Math.round(lb * 10) / 10 });
       fresh = collect(d);
     });
     sound.play('pencil');
@@ -127,13 +188,11 @@ export function render(el, ctx) {
     }
     ctx.refresh();
   }
-  const bodyChart = list.length >= 2
-    ? h('div', { class: 'chart-art' })
-    : null;
-  if (bodyChart) bodyChart.innerHTML = chart(list.map(x => ({ date: x.date, value: Math.round(num(x.w) * 10) / 10 })), 'lb', { chartLabel: w.bodyChart }, 'bw');
+  const bodyChart = list.length >= 2 ? h('div', { class: 'chart-art' }) : null;
+  if (bodyChart) bodyChart.innerHTML = chart(list.map(x => ({ date: x.date, value: fromLb(x.w, unit) })), unit, { chartLabel: w.bodyChart }, 'bw');
   const recent = [...list].reverse().slice(0, 4).map(x => h('div', { class: 'compare-row' },
     h('span', { class: 'compare-name' }, niceDate(x.date)),
-    h('span', { class: 'compare-best' }, `${tidy(num(x.w))} lb`),
+    h('span', { class: 'compare-best' }, `${show(x.w, unit)} ${unit}`),
     twoTap(h('button', { class: 'lift-remove', type: 'button', style: 'grid-column:1 / -1;justify-self:start' }, w.remove), w.removeConfirm, () => {
       store.update(d => { d.weighins = d.weighins.filter(y => !(y.date === x.date && y.w === x.w)); });
       ctx.refresh();
@@ -198,21 +257,31 @@ export function render(el, ctx) {
   }
   records.reverse();
 
-  put(el,
-    art('sketch-back.webp', 'sketch sketch-back', 640, 587),
-    pageHead(words.tabs.stats, w.title, w.note),
+  const monthName = new Date().toLocaleDateString('en-US', { month: 'long' });
 
-    h('section', { class: 'stats-part' },
-      h('div', { class: 'row' },
-        h('h2', { class: 'part-title' }, w.bigThree),
+  put(el,
+    h('div', { class: 'b3-head' },
+      h('div', { class: 'b3-title' },
+        h('p', { class: 'kicker' }, `${w.chartNo} · ${monthName}`),
+        h('h1', { class: 'b3-heading' }, w.bigThree),
+        h('p', { class: 'b3-sub' }, w.bigNote),
       ),
-      h('div', { class: 'row standards-row' },
-        h('span', { class: 'label' }, w.standardsFor),
-        h('div', { class: 'chips' }, sexButtons),
+      h('figure', { class: 'b3-fig' },
+        h('span', { class: 'b3-frame' }, art('sketch-back-hand.webp', '', 550, 720)),
+        h('figcaption', null, w.figure),
       ),
-      BIG_THREE.map(liftCard),
-      totalCard,
     ),
+    h('div', { class: 'row standards-row' },
+      h('span', { class: 'label' }, w.standardsFor),
+      h('div', { class: 'chips' }, sexButtons),
+    ),
+    h('div', { class: 'b3' }, BIG_THREE.map(liftRow)),
+    banner,
+    h('div', { class: 'wrap' },
+      logOpen,
+      h('a', { class: 'btn btn-line btn-small', href: '#calc' }, w.calcButton),
+    ),
+    logForm,
 
     h('section', { class: 'stats-part' },
       h('h2', { class: 'part-title' }, w.chartLabel),
@@ -224,8 +293,8 @@ export function render(el, ctx) {
       h('div', { class: 'panel' },
         latest
           ? h('div', { class: 'row' },
-            h('p', { class: 'big-n' }, tidy(num(latest.w)), h('span', { class: 'total-unit' }, ' lb')),
-            change != null && h('p', { class: `hand ${change < 0 ? 'down-weight' : 'up-weight'}` }, `${change > 0 ? '+' : change < 0 ? '−' : ''}${tidy(Math.abs(change))} lb ${w.inDays}`),
+            h('p', { class: 'big-n' }, show(latest.w, unit), unitTag()),
+            change != null && h('p', { class: `hand ${change < 0 ? 'down-weight' : 'up-weight'}` }, `${change > 0 ? '+' : change < 0 ? '−' : ''}${show(Math.abs(change), unit)} ${unit} ${w.inDays}`),
           )
           : h('p', { class: 'hand' }, w.bodyNone),
         h('div', { class: 'weigh-row' },
@@ -251,7 +320,7 @@ export function render(el, ctx) {
           onClick() { ctx.state.openPage = r.id; ctx.state.fixing = false; ctx.go('page'); },
         },
           h('span', { class: 'compare-name' }, art('ribbon-record.png', 'record-ribbon', 240, 326), r.name),
-          h('span', { class: 'compare-best' }, `${r.now} lb`),
+          h('span', { class: 'compare-best' }, `${r.now} ${r.unit || 'lb'}`),
           h('span', { class: 'compare-change hand' }, `${niceDate(r.date)} · ${w.was} ${r.was}`),
         )))
         : h('p', { class: 'hand', style: 'font-size:18px' }, w.recordsNone),

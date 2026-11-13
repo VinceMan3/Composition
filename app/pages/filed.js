@@ -56,7 +56,7 @@ export function render(el, ctx) {
       h('div', null,
         h('p', { class: 'label' }, w.recordLabel),
         h('p', { class: 'record-name' }, r.name),
-        h('p', { class: 'hand' }, `${w.estMax} ${r.now} ${unit} · ${w.was} ${r.was}`),
+        h('p', { class: 'hand' }, `${r.kind === 'top' ? w.heaviest : w.estMax} ${r.now} ${r.unit || unit} · ${w.was} ${r.was}`),
       ),
     )),
     (sum.stickers || []).map(findSticker).filter(Boolean).map(def => h('div', { class: 'record is-sticker' },

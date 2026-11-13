@@ -8,12 +8,12 @@
 */
 export const POSES = {
   Chest: 'sketch-front.webp',     // to draw: most muscular
-  Back: 'sketch-back.webp',       // back double biceps
+  Back: 'sketch-back-hand.webp',  // back double biceps, drawn by hand in ballpoint
   Shoulders: 'sketch-front.webp', // to draw: front lat spread
   Arms: 'sketch-arm.webp',        // flexed arm
   Legs: 'sketch-front.webp',      // to draw: quad stomp
   Core: 'sketch-front.webp',      // to draw: abdominal and thigh
-  Power: 'sketch-back.webp',      // to draw: side chest
+  Power: 'sketch-back-hand.webp', // to draw: side chest
 };
 
 // The sketch for a page with no lifts on it yet.

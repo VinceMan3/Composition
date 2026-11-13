@@ -11,6 +11,7 @@ const SIZES = {
   'sketch-front.webp': [640, 587],
   'sketch-back.webp': [640, 587],
   'sketch-arm.webp': [540, 605],
+  'sketch-back-hand.webp': [550, 720],
 };
 
 // Words in a title that point to a body part.

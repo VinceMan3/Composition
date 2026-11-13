@@ -38,7 +38,37 @@ export function bests(data, liftId) {
       }
     }
   }
-  return { est: Math.round(est), top: Math.round(top * 10) / 10, estDate, topDate };
+  // One-rep maxes logged straight in: tested, so they count as lifted.
+  let tested = 0, testedDate = '';
+  for (const m of data.maxes || []) {
+    if (m.liftId !== liftId) continue;
+    const w = num(m.w) * IN_POUNDS[m.unit || 'lb'];
+    if (w > tested) { tested = w; testedDate = m.date; }
+  }
+  if (tested > top) { top = tested; topDate = testedDate; }
+  // The max shown is whichever is higher: a tested max or the estimate.
+  const max = Math.max(est, tested);
+  return {
+    est: Math.round(est),
+    top: Math.round(top * 10) / 10,
+    tested: Math.round(tested * 10) / 10,
+    max: Math.round(max * 10) / 10,
+    isTested: tested > 0 && tested >= est,
+    estDate,
+    topDate,
+    maxDate: tested > 0 && tested >= est ? testedDate : estDate,
+  };
+}
+
+// How much a lift's max has moved in the last 30 days, in pounds.
+export function monthChange(data, liftId) {
+  const points = history(data, liftId);
+  if (!points.length) return 0;
+  const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const before = points.filter(p => p.date < cutoff);
+  const was = before.length ? Math.max(...before.map(p => p.value)) : null;
+  const now = Math.max(...points.map(p => p.value));
+  return was == null ? 0 : Math.round((now - was) * 10) / 10;
 }
 
 // Best estimated max on each page a lift appears, for the charts.
@@ -53,7 +83,13 @@ export function history(data, liftId) {
     }
     if (best > 0) points.push({ date: page.date, value: Math.round(best) });
   }
-  return points.sort((a, b) => (a.date < b.date ? -1 : 1));
+  for (const m of data.maxes || []) {
+    if (m.liftId === liftId) points.push({ date: m.date, value: Math.round(num(m.w) * IN_POUNDS[m.unit || 'lb']) });
+  }
+  // One point a day: the best of that day.
+  const byDay = new Map();
+  for (const p of points) byDay.set(p.date, Math.max(byDay.get(p.date) || 0, p.value));
+  return [...byDay].map(([date, value]) => ({ date, value })).sort((a, b) => (a.date < b.date ? -1 : 1));
 }
 
 // ---- scores ----

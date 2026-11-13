@@ -85,10 +85,14 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
       return;
     }
 
-    // Forward: a copy of the old page curls away, showing the new one beneath.
-    // Backward: a copy of the new page falls onto the old one.
     stack.append(next);
     if (next.onAttached) next.onAttached();
+    onFlip(forward, quick);
+    if (quick) return turnQuick(prev, next, forward);
+
+    // The cover: a copy of the page, cut into strips, curls over the rings.
+    // Forward: a copy of the old page curls away, showing the new one beneath.
+    // Backward: a copy of the new page falls onto the old one.
     const shade = h('div', { class: `shade ${forward ? 'is-clearing' : 'is-falling'}${quick ? ' is-quick' : ''}` });
     const sheet = makeSheet(forward ? prev : next, forward ? 'up' : 'down');
     if (quick) sheet.el.classList.add('is-quick');
@@ -96,7 +100,6 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
     sheet.settle();
     if (forward) discard(prev);
     else next.classList.add('is-waiting');
-    onFlip(forward, quick);
 
     let done = false;
     const finish = () => {
@@ -113,6 +116,32 @@ export function startRouter({ stack, render, resolve, onShow, onFlip }) {
     };
     sheet.top.addEventListener('animationend', e => { if (e.target === sheet.top) finish(); });
     const timer = setTimeout(finish, 800); // in case the animation never reports back
+    finishFlip = finish;
+  }
+
+  // Between inner pages: the real page turns, in one piece, with nothing
+  // copied, so the phone's graphics chip can do all of the moving.
+  function turnQuick(prev, next, forward) {
+    const mover = forward ? prev : next;
+    const under = forward ? next : prev;
+    const shade = h('div', { class: `shade is-quick ${forward ? 'is-clearing' : 'is-falling'}` });
+    under.after(shade);
+    // The turning page sits above the other (z-index in motion.css); it is not
+    // moved in the page, which would lose its scroll position.
+    mover.classList.add(forward ? 'turn-up' : 'turn-down');
+
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      shade.remove();
+      next.classList.remove('turn-down');
+      discard(prev);
+      if (finishFlip === finish) finishFlip = null;
+    };
+    mover.addEventListener('animationend', e => { if (e.target === mover) finish(); });
+    const timer = setTimeout(finish, 600);
     finishFlip = finish;
   }
 

@@ -23,6 +23,28 @@ export function render(el, ctx) {
   const onBtn = h('button', { type: 'button', 'aria-pressed': String(soundOn), 'data-sound': 'none', onClick: () => setSound(true) }, w.on);
   const offBtn = h('button', { type: 'button', 'aria-pressed': String(!soundOn), 'data-sound': 'none', onClick: () => setSound(false) }, w.off);
 
+  // ---- two-way choices: units, and the look ----
+  // choice(label, note, key, [[value, word], [value, word]], after)
+  function choice(label, note, key, options, after) {
+    const buttons = options.map(([value, word]) => h('button', {
+      type: 'button',
+      'aria-pressed': String(store.get().settings[key] === value),
+      onClick() {
+        store.update(d => { d.settings[key] = value; });
+        buttons.forEach((b, i) => b.setAttribute('aria-pressed', String(options[i][0] === value)));
+        if (after) after(value);
+      },
+    }, word));
+    return h('div', { class: 'row' },
+      h('div', null, h('p', { class: 'label' }, label), h('p', { class: 'quiet' }, note)),
+      h('div', { class: 'seg', role: 'group', 'aria-label': label }, buttons),
+    );
+  }
+  const unitsRow = choice(w.unitsLabel, w.unitsNote, 'units', [['lb', 'lb'], ['kg', 'kg']]);
+  const lookRow = choice(w.lookLabel, w.lookNote, 'look', [['paper', w.lookPaper], ['garage', w.lookGarage]], value => {
+    document.documentElement.dataset.look = value;
+  });
+
   // ---- how long a rest runs ----
   const restValue = h('span', { class: 'stepper-value' }, clock(store.get().settings.restSeconds));
   function setRest(change) {
@@ -114,6 +136,7 @@ export function render(el, ctx) {
         return;
       }
       store.importText(text);
+      document.documentElement.dataset.look = store.get().settings.look;
       sound.setMuted(!store.get().settings.sound);
       sound.play('stamp');
       toast(words.toasts.restored);
@@ -133,6 +156,8 @@ export function render(el, ctx) {
         h('a', { class: 'btn btn-small', href: '#stickers' }, w.stickersButton),
       ),
     ),
+
+    h('div', { class: 'panel' }, unitsRow, lookRow),
 
     h('div', { class: 'panel' },
       h('div', { class: 'row' },

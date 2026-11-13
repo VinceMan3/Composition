@@ -5,18 +5,20 @@ import { h, put } from '../ui.js';
 import { levelStrip } from '../levels.js';
 import { num, tidy } from '../log.js';
 import { BIG_THREE, bests, bodyweight, scores, level } from '../strength.js';
+import { unitOf, fromLb, toLbFrom } from '../units.js';
 
 export function render(el, ctx) {
   const { words, store } = ctx;
   const w = words.calc;
   const sw = words.stats;
   const data = store.get();
+  const unit = unitOf(data);
 
   // Starts from your own numbers: latest weigh-in, heaviest lifts.
   const mine = () => ({
     sex: data.settings.sex || 'men',
-    bw: bodyweight(data) || '',
-    lifts: Object.fromEntries(BIG_THREE.map(id => [id, bests(data, id).top || ''])),
+    bw: bodyweight(data) ? fromLb(bodyweight(data), unit) : '',
+    lifts: Object.fromEntries(BIG_THREE.map(id => [id, bests(data, id).top ? fromLb(bests(data, id).top, unit) : ''])),
   });
   let now = mine();
 
@@ -35,7 +37,7 @@ export function render(el, ctx) {
         show();
       },
     });
-    return { input, row: h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, label), input, h('span', { class: 'label' }, 'lb')) };
+    return { input, row: h('label', { class: 'calc-row' }, h('span', { class: 'setting-name' }, label), input, h('span', { class: 'label' }, unit)) };
   };
 
   const sexButtons = ['men', 'women'].map(choice => {
@@ -57,14 +59,15 @@ export function render(el, ctx) {
 
   const out = h('div', { class: 'calc-out' });
   function show() {
-    const bw = num(now.bw);
+    // Worked out in pounds, shown in the picked unit.
+    const bw = toLbFrom(now.bw, unit);
     const total = BIG_THREE.reduce((sum, id) => sum + num(now.lifts[id]), 0);
-    const sc = scores(total, bw, now.sex);
+    const sc = scores(toLbFrom(total, unit), bw, now.sex);
     out.replaceChildren(
       h('div', { class: 'row' },
         h('div', null,
           h('p', { class: 'label' }, sw.totalLabel),
-          h('p', { class: 'big-n' }, tidy(total), h('span', { class: 'total-unit' }, ' lb')),
+          h('p', { class: 'big-n' }, tidy(total), h('span', { class: 'total-unit' }, ` ${unit}`)),
         ),
         h('div', { class: 'scores' },
           h('p', null, h('span', { class: 'label' }, sw.wilks), h('span', { class: 'score-n' }, sc ? String(sc.wilks) : '–')),
@@ -72,10 +75,10 @@ export function render(el, ctx) {
         ),
       ),
       ...BIG_THREE.map(id => {
-        const lv = level(id, num(now.lifts[id]), bw, now.sex);
+        const lv = level(id, toLbFrom(now.lifts[id], unit), bw, now.sex);
         return h('div', { class: 'calc-level' },
           h('p', { class: 'label' }, sw.names[id]),
-          lv ? levelStrip(lv, sw) : h('p', { class: 'quiet' }, '–'),
+          lv ? levelStrip(lv, sw, unit) : h('p', { class: 'quiet' }, '–'),
         );
       }),
     );

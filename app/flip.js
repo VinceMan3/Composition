@@ -5,7 +5,7 @@
 
 import { h } from './ui.js';
 
-const STRIPS = 7;
+const STRIPS = 5;
 
 export function makeSheet(page, direction) {
   const height = page.clientHeight;

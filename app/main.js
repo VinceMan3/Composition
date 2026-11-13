@@ -35,6 +35,7 @@ for (const tab of document.querySelectorAll('.tab')) {
 }
 
 sound.setMuted(!store.get().settings.sound);
+document.documentElement.dataset.look = store.get().settings.look;
 
 // What every page is handed when it draws itself.
 const ctx = {
