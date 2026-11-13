@@ -55,9 +55,9 @@ def frame(ox, oy, deg):
     return f
 
 
-ARM = frame(92, 170, 28)        # from the head of the humerus
-FORE = frame(160, 298, 34)      # from the elbow
-HAND = frame(226, 396, 30)      # from the wrist
+ARM = frame(84, 166, 30)        # from the head of the humerus
+FORE = frame(157, 292.4, 36)    # from the elbow
+HAND = frame(228.7, 391.1, 32)  # from the wrist
 
 
 def P(*items):
@@ -73,96 +73,105 @@ def R(p):
 
 
 # ---------------------------------------------------------------------------
+# The build: Classic Physique proportions, measured in head heights (100)
+# ---------------------------------------------------------------------------
+# Neck about 0.62 wide, shoulders (across the delts, arms down) about 2.35,
+# waist about 1.2, hips about 1.5, with the quad sweep reaching out past the
+# hips so the outline makes an X. Measured from Vince's reference photos of
+# a Classic Physique competitor and checked against the eight-heads canon.
+
+# ---------------------------------------------------------------------------
 # BACK VIEW: borders shared between muscles (figure's left half)
 # ---------------------------------------------------------------------------
 
-AX = (94, 226)                  # the armpit, seen from behind
-ACR = (102, 154)                # tip of the acromion
-ACR_ANGLE = (97, 159)           # angle of the acromion, where the rear delt starts
-SPINE_ROOT = (43, 196)          # root of the scapular spine
+ACR = (92, 152)                 # tip of the acromion
+ACR_ANGLE = (88, 157)           # angle of the acromion, where the rear delt starts
+SPINE_ROOT = (40, 193)          # root of the scapular spine
 T12 = (0, 302)                  # lowest point of the trapezius
-DELT_TIP = ARM(90, 13)          # deltoid tuberosity on the humerus
-ELB_OUT = ARM(124, 27)          # lateral supracondylar ridge
-EPI_IN = ARM(141, -25)          # medial epicondyle
-PSIS = (18, 364)                # the dimple over the back of the hip bone
+AX = (84.5, 219)                # the armpit, seen from behind
+DELT_TIP = ARM(94, 21)          # deltoid tuberosity on the humerus
+ELB_OUT = ARM(126, 27)          # lateral supracondylar ridge
+EPI_IN = ARM(144, -25)          # medial epicondyle
+PSIS = (15, 365)                # the dimple over the back of the hip bone
 
 B = {
     # Trapezius: from the back of the skull, down the side of the neck, out
     # over the shoulder to the acromion.
-    'trap_top': [(0, 99), (11, 99.5), (21, 102), (27, 110), (32, 120), (41, 129),
-                 (56, 137), (74, 143), (90, 148), ACR],
+    'trap_top': [(0, 99), (11, 99.5), (21, 102), (28, 108), (31, 116), (38, 124),
+                 (50, 132), (64, 138), (78, 144), ACR],
     # Spine of the scapula. The trapezius ends on its upper lip, the rear
     # delt starts from its lower lip.
-    'spine': [ACR, ACR_ANGLE, (84, 167), (70, 175), (57, 184), (48, 190), SPINE_ROOT],
+    'spine': [ACR, ACR_ANGLE, (77, 164), (65, 172), (54, 180), (46, 187), SPINE_ROOT],
     # Lower trapezius, from the root of the spine to its point at T12.
-    'trap_low': [SPINE_ROOT, (42, 210), (37, 230), (29, 252), (19, 274), (9, 291), T12],
+    'trap_low': [SPINE_ROOT, (39, 208), (35, 228), (28, 250), (19, 272), (9, 290), T12],
 
     # Deltoid, over the cap of the shoulder down to its tuberosity.
-    'delt_out': [ACR, ARM(-9, 20), ARM(2, 33), ARM(20, 39), ARM(42, 38), ARM(62, 31),
-                 ARM(77, 22), DELT_TIP],
+    'delt_out': [ACR, ARM(-9, 20), ARM(2, 33), ARM(20, 39), ARM(42, 38), ARM(62, 32),
+                 ARM(78, 27), DELT_TIP],
     # Line between the rear delt and the side delt.
-    'delt_split': [ACR_ANGLE, ARM(8, 24), ARM(34, 28), ARM(62, 22), DELT_TIP],
+    'delt_split': [ACR_ANGLE, ARM(8, 24), ARM(34, 28), ARM(64, 25), DELT_TIP],
     # Lower edge of the rear delt.
-    'rdelt_low': [(57, 184), (65, 197), (78, 207), (94, 213), ARM(40, -6), ARM(56, 2),
-                  ARM(74, 8), DELT_TIP],
+    'rdelt_low': [(54, 180), (62, 193), (73, 203), (85, 209), ARM(44, -10), ARM(60, -2),
+                  ARM(76, 8), DELT_TIP],
 
     # Upper arm: inside and outside edges.
-    'arm_in': [AX, ARM(58, -28), ARM(82, -31), ARM(106, -29), ARM(126, -26), EPI_IN],
-    'arm_out': [DELT_TIP, ARM(80, 28), ARM(98, 31), ARM(114, 29), ELB_OUT],
+    'arm_in': [AX, ARM(58, -28), ARM(82, -31), ARM(106, -29), ARM(128, -26), EPI_IN],
+    'arm_out': [DELT_TIP, ARM(102, 28), ARM(114, 29), ELB_OUT],
     # Bottom of the triceps, around the olecranon, then up the outside of
     # the arm where brachioradialis starts on the supracondylar ridge.
-    'tri_low': [EPI_IN, FORE(-6, -16), FORE(2, -6), FORE(1, 8), ARM(136, 18), ELB_OUT],
+    'tri_low': [EPI_IN, FORE(-6, -16), FORE(2, -6), FORE(1, 8), ARM(138, 18), ELB_OUT],
 
     # Forearm, seen from behind with the palm forward: the extensors.
     'fore_out': [ELB_OUT, FORE(2, 31), FORE(18, 35), FORE(40, 32), FORE(68, 23),
-                 FORE(96, 16), FORE(118, 14)],
+                 FORE(96, 16), FORE(120, 14)],
     'fore_in': [EPI_IN, FORE(8, -26), FORE(28, -29), FORE(56, -24), FORE(88, -16),
-                FORE(118, -13)],
-    'wrist': [FORE(118, 14), FORE(120, 0), FORE(118, -13)],
+                FORE(120, -13)],
+    'wrist': [FORE(120, 14), FORE(122, 0), FORE(120, -13)],
 
     # Lats: top edge, from under the lower trapezius over the bottom corner
     # of the scapula to the armpit.
-    'lat_top': [(29, 252), (42, 250), (56, 247), (70, 242), (84, 234), AX],
-    # Side of the torso.
-    'side_hi': [AX, (99, 240), (101, 256), (99, 272), (95, 288)],
-    'side_lo': [(95, 288), (90, 304), (87, 320), (86, 334), (87, 346)],
+    'lat_top': [(28, 250), (40, 248), (52, 245), (64, 239), (76, 230), AX],
+    # Side of the torso: the lats sweep out, then in hard to a small waist.
+    'side_hi': [AX, (90, 234), (91, 250), (89, 266), (84, 281), (77, 295)],
+    'side_lo': [(77, 295), (69, 308), (63, 320), (60, 332), (61, 344), (64, 352)],
     # Front edge of the lat, where the external oblique shows at the flank.
-    'lat_front': [(95, 288), (88, 306), (82, 326), (78, 346)],
+    'lat_front': [(77, 295), (65, 311), (57, 327), (53, 342), (55, 352)],
     # Iliac crest, outer part.
-    'crest': [(87, 346), (82, 349), (78, 346), (66, 347), (54, 348)],
+    'crest': [(64, 352), (60, 355), (55, 352), (48, 353), (42, 354)],
     # Where the lat's muscle turns into the flat sheet over the lower back.
-    'lat_med': [(54, 348), (46, 334), (36, 314), (26, 292), (19, 274)],
+    'lat_med': [(42, 354), (36, 338), (29, 318), (23, 296), (19, 272)],
     # Back of the hip bone and top of the sacrum.
-    'sacrum': [(54, 348), (40, 356), (28, 361), PSIS, (8, 367), (0, 368)],
+    'sacrum': [(42, 354), (32, 359), (22, 362), PSIS, (7, 367), (0, 368)],
 
     # Hip and glutes.
-    'hip': [(87, 346), (90, 358), (92, 372), (93, 388), (93, 398)],
-    'gmax_top': [PSIS, (34, 368), (52, 374), (68, 381), (82, 389), (93, 398)],
-    'gmax_out': [(93, 398), (94, 410), (92, 424), (86, 436), (76, 445)],
-    'gfold': [(76, 445), (62, 452), (46, 455), (30, 453), (20, 449), (12, 444), (6, 438)],
-    'cleft': [(6, 438), (4, 420), (3, 400), (2, 380), (0, 368)],
+    'hip': [(64, 352), (69, 364), (73, 378), (76, 392), (77, 404)],
+    'gmax_top': [PSIS, (28, 370), (42, 376), (56, 383), (68, 392), (77, 404)],
+    'gmax_out': [(77, 404), (78, 416), (77, 428), (71, 439), (62, 447)],
+    'gfold': [(62, 447), (56, 450), (50, 452), (38, 454), (26, 452), (17, 448), (10, 444),
+              (5, 440)],
+    'cleft': [(5, 440), (3, 420), (2, 400), (1, 380), (0, 368)],
 
-    # Thigh.
-    'thigh_out': [(92, 424), (93, 440), (93, 460), (92, 484), (90, 510), (86, 538),
-                  (80, 565), (73, 590), (66, 610), (62, 624)],
-    'thigh_in': [(6, 438), (8, 450), (9, 470), (10, 496), (12, 526), (15, 556),
-                 (19, 585), (23, 607), (26, 624)],
+    # Thigh: the outer quad sweeps out past the hip.
+    'thigh_out': [(77, 428), (82, 444), (87, 462), (89, 482), (88, 504), (85, 528),
+                  (80, 552), (74, 576), (68, 596), (63, 612), (61, 626)],
+    'thigh_in': [(5, 440), (7, 452), (9, 470), (11, 494), (13, 520), (16, 548),
+                 (19, 576), (22, 600), (24, 614), (26, 624)],
     # Hamstrings: outer edge (biceps femoris against vastus lateralis and the
     # iliotibial band), inner edge (semitendinosus against adductor magnus
     # and gracilis).
-    'ham_top': [(20, 449), (30, 453), (46, 455), (62, 452)],
-    'ham_out': [(62, 452), (69, 476), (73, 504), (73, 534), (70, 564), (64, 592), (57, 624)],
-    'ham_in': [(20, 449), (25, 476), (28, 506), (29, 538), (28, 568), (27, 595), (26, 624)],
+    'ham_top': [(17, 448), (26, 452), (38, 454), (50, 452), (56, 450)],
+    'ham_out': [(56, 450), (64, 474), (69, 502), (70, 532), (67, 562), (62, 592), (57, 624)],
+    'ham_in': [(17, 448), (22, 476), (26, 506), (28, 538), (27, 568), (26, 596), (26, 624)],
     # Behind the knee: hamstring tendons above, the two calf heads below.
     'fossa_hi': [(57, 624), (51, 614), (43, 606), (35, 613), (26, 624)],
     'fossa_lo': [(57, 624), (48, 630), (41, 636), (34, 630), (26, 624)],
 
     # Lower leg.
-    'calf_out': [(62, 624), (64, 640), (68, 660), (70, 678), (69, 696), (65, 716),
-                 (59, 738), (55, 752), (52, 762)],
-    'calf_in': [(26, 624), (24, 636), (18, 652), (13, 670), (11, 690), (13, 708), (18, 728),
-                (24, 748), (27, 762), (28, 772)],
-    'calf_low': [(52, 762), (47, 758), (41, 756), (35, 760), (28, 772)],
+    'calf_out': [(61, 626), (63, 638), (67, 654), (70, 670), (69, 688), (64, 706),
+                 (58, 724), (54, 740), (51, 754), (51, 762)],
+    'calf_in': [(26, 624), (22, 638), (16, 654), (12, 672), (11, 690), (13, 708), (17, 724),
+                (22, 740), (26, 756), (28, 772)],
+    'calf_low': [(51, 762), (47, 758), (41, 756), (35, 760), (28, 772)],
 }
 
 
@@ -172,23 +181,26 @@ def back_regions():
     trap = P(b['trap_top'], b['spine'][1:], b['trap_low'][1:])
     rdelt = P(R(b['spine'][1:5]), b['delt_split'][1:], R(b['rdelt_low'])[1:-1])
     sdelt = P(b['delt_out'][:-1], R(b['delt_split']))
-    upper = P((57, 184), (48, 190), b['trap_low'][:4], b['lat_top'][1:], (94, 218),
+    upper = P(b['spine'][4:6], b['trap_low'][:4], b['lat_top'][1:], (85, 214),
               R(b['rdelt_low'][:4]))
-    tri = P(R(b['rdelt_low'])[:5], (94, 218), b['arm_in'], b['tri_low'][1:-1],
+    tri = P(R(b['rdelt_low'])[:5], (85, 214), b['arm_in'], b['tri_low'][1:-1],
             R(b['arm_out'])[:-1])
     fore = P(b['tri_low'], b['fore_out'][1:], b['wrist'][1:], R(b['fore_in'])[1:-1])
     lats = P(b['lat_top'], b['side_hi'][1:], b['lat_front'][1:], b['crest'][3:],
-             b['lat_med'][1:], (24, 262))
+             b['lat_med'][1:], (23.5, 261))
     obl = P(b['side_lo'], b['crest'][1:3], R(b['lat_front'])[1:-1])
-    lower = P(T12, (9, 291), R(b['lat_med']), b['sacrum'][1:-1], (0, 368))
-    gmed = P((54, 348), (66, 347), (78, 346), (82, 349), b['hip'], R(b['gmax_top'])[1:-1],
-             PSIS, (28, 361), (40, 356))
+    lower = P(T12, (9, 290), R(b['lat_med']), b['sacrum'][1:-1], (0, 368))
+    gmed = P(R(b['crest'])[:-1], b['hip'], R(b['gmax_top'])[1:-1], PSIS,
+             R(b['sacrum'][1:3]))
     gmax = P(R(b['sacrum'][3:]), b['gmax_top'][1:], b['gmax_out'][1:], b['gfold'][1:],
              b['cleft'][1:-1])
     ham = P(b['ham_top'], b['ham_out'][1:], b['fossa_hi'][1:], R(b['ham_in'])[1:-1])
     add = P(R(b['gfold'][-3:]), b['ham_in'][1:], R(b['thigh_in'])[1:-1])
-    quad = P((62, 452), (76, 445), (86, 436), b['thigh_out'], R(b['ham_out'])[:-1])
-    calf = P(b['thigh_out'][-1:], b['fossa_lo'], b['calf_in'][1:], R(b['calf_low'])[1:],
+    quad = P((56, 450), R(b['gmax_out'])[:2], b['thigh_out'], R(b['ham_out'])[:-1])
+    # The hollow behind the knee belongs to the calf shape, so the only hard
+    # line across the knee is the hamstring tendons; the tops of the two calf
+    # heads are drawn as lighter lines.
+    calf = P(b['thigh_out'][-1:], b['fossa_hi'], b['calf_in'][1:], R(b['calf_low'])[1:],
              R(b['calf_out'])[1:-1])
     return [
         ('traps', [trap]),
@@ -214,43 +226,44 @@ def back_details():
         # Trapezius: the flat tendon diamond over C7 to T3, and the tendon
         # where the lower fibers turn onto the root of the scapular spine.
         [(0, 134), (6, 142), (9, 154), (6, 166), (0, 174)],
-        [(43, 199), (47, 204), (52, 207)],
+        [(40, 196), (44, 201), (49, 204)],
         # Upper back: infraspinatus over teres minor over teres major, and
         # rhomboid major's lower edge in the triangle of auscultation.
-        [(45, 214), (60, 214), (76, 214), (92, 214)],
-        [(44, 236), (60, 233), (76, 229), (93, 222)],
-        [(30, 246), (35, 252), (40, 255)],
+        [(42, 212), (56, 212), (70, 212), (84, 212)],
+        [(42, 234), (56, 231), (70, 226), (83, 218)],
+        [(29, 244), (34, 250), (39, 253)],
         # Rear delt and side delt: the middle bundles.
-        [(76, 172), ARM(30, 4), ARM(60, 10)],
-        [ARM(0, 28), ARM(36, 31), ARM(70, 20)],
+        [(70, 168), ARM(30, 0), ARM(62, 8)],
+        [ARM(0, 28), ARM(36, 32), ARM(70, 20)],
         # Triceps: long head and lateral head meeting the common tendon.
-        [ARM(62, -8), ARM(86, -6), ARM(104, -4)],
-        [ARM(104, -16), ARM(97, -5), ARM(104, 12), ARM(124, 14)],
-        [ARM(104, -16), ARM(122, -15), ARM(137, -9)],
+        [ARM(56, -6), ARM(76, -2), ARM(96, 2)],
+        [ARM(84, 26), ARM(100, 17), ARM(113, 9), ARM(126, 5)],
+        [ARM(94, -26), ARM(107, -15), ARM(118, -7), ARM(128, -2)],
         # Forearm: olecranon, the back edge of the ulna (flexor carpi
         # ulnaris on one side, extensor carpi ulnaris on the other),
         # brachioradialis and the radial wrist extensors, extensor digitorum,
         # and the two thumb muscles that cross the lower third.
         [FORE(-4, -10), FORE(6, -11), FORE(10, -4)],
-        [FORE(10, -7), FORE(40, -11), FORE(80, -10), FORE(116, -8)],
-        [FORE(4, 19), FORE(40, 18), FORE(76, 13), FORE(108, 9)],
-        [FORE(6, 7), FORE(40, 5), FORE(80, 2), FORE(114, 0)],
-        [FORE(62, 5), FORE(84, 11), FORE(104, 14)],
-        [FORE(68, -2), FORE(90, 5), FORE(110, 10)],
+        [FORE(10, -7), FORE(40, -11), FORE(80, -10), FORE(118, -8)],
+        [FORE(4, 19), FORE(40, 18), FORE(76, 13), FORE(110, 9)],
+        [FORE(6, 7), FORE(40, 5), FORE(80, 2), FORE(116, 0)],
+        [FORE(64, 5), FORE(86, 11), FORE(106, 14)],
+        [FORE(70, -2), FORE(92, 5), FORE(112, 10)],
         # Lower back: the long column of the spinal erectors beside the spine.
-        [(9, 296), (13, 314), (19, 334), (22, 350), (19, 360)],
+        [(9, 296), (13, 314), (18, 334), (20, 350), (17, 362)],
         # Iliotibial band down the outside of the thigh.
-        [(93, 436), (86, 470), (79, 515), (71, 565), (63, 614)],
-        # Hamstrings: biceps femoris against semitendinosus, and
-        # semimembranosus showing on the inner side lower down.
-        [(38, 460), (40, 500), (42, 540), (43, 575), (44, 598)],
-        [(29, 540), (32, 566), (34, 590), (35, 606)],
-        [(54, 520), (56, 560), (56, 592)],
+        [(76, 432), (82, 470), (79, 515), (71, 565), (63, 612)],
+        # Hamstrings: biceps femoris against semitendinosus, the long and
+        # short heads of biceps femoris, and semimembranosus on the inner side.
+        [(36, 456), (39, 500), (41, 540), (42, 575), (43, 606)],
+        [(27, 540), (30, 566), (32, 590), (34, 610)],
+        [(52, 520), (55, 560), (55, 592)],
         # Calves: the split between the two heads of gastrocnemius, the
         # lower edges of both heads, and the Achilles tendon.
-        [(41, 636), (40, 662), (41, 690), (42, 704)],
-        [(15, 714), (26, 727), (38, 731)],
-        [(66, 700), (56, 712), (45, 718)],
+        [(55, 628), (48, 632), (41, 637)], [(28, 627), (34, 632), (41, 637)],
+        [(41, 637), (40, 662), (41, 690), (42, 704)],
+        [(12, 712), (24, 726), (38, 731)],
+        [(66, 694), (57, 708), (45, 716)],
         [(38, 731), (39, 755)],
         [(45, 718), (44, 754)],
     ]
@@ -258,22 +271,22 @@ def back_details():
 
 def back_outline():
     """Lines that are not muscle groups: head, ears, hands, ankles and heels."""
-    head = [(37 * math.cos(math.radians(a)), 62 - 46 * math.sin(math.radians(a)))
+    head = [(34 * math.cos(math.radians(a)), 62 - 46 * math.sin(math.radians(a)))
             for a in range(-40, 221, 6)]
-    head = [p for p in head if not (p[1] > 96 and abs(p[0]) < 30)]
+    head = [p for p in head if not (p[1] > 94 and abs(p[0]) < 32)]
     return {
         'head': head,
-        'neck': [[(29, 92), (27.5, 102), (27, 110)]],
+        'neck': [[(31, 92), (30.5, 102), (30, 108)]],
         # the spinous processes, C7 down to L5, as small marks on the midline
         'spine': [[(0, y), (1.2, y + 3), (0, y + 6)] for y in range(140, 360, 13)],
-        'ear': [(35, 56), (41, 58), (43, 68), (41, 81), (36, 87)],
+        'ear': [(32, 56), (38, 58), (40, 68), (38, 81), (33, 87)],
         'hand': [HAND(0, 13), HAND(10, 17), HAND(24, 23), HAND(37, 24), HAND(39, 18),
                  HAND(31, 13), HAND(42, 14), HAND(58, 13), HAND(70, 10), HAND(73, 5),
                  HAND(75, 0), HAND(72, -5), HAND(69, -8), HAND(64, -12), HAND(56, -14),
                  HAND(40, -15), HAND(18, -15), HAND(0, -13)],
         'fingers': [[HAND(46, 6), HAND(68, 6)], [HAND(46, -1), HAND(71, -2)],
                     [HAND(44, -8), HAND(66, -9)]],
-        'feet': [[(52, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
+        'feet': [[(51, 762), (50, 775), (49, 786), (51, 795), (52, 806), (48, 818), (40, 824),
                   (32, 820), (28, 806), (30, 792), (29, 782), (28, 772)],
                  [(49, 784), (53, 790), (51, 797)], [(30, 786), (27, 792), (29, 798)],
                  [(34, 812), (40, 815), (46, 812)]],
@@ -283,32 +296,250 @@ def back_outline():
 def back_fibers():
     """Fiber direction for hatching: (start, end) pairs, neighbours interpolated."""
     return {
-        'traps': [((0, 100), (20, 104)), ((0, 112), (32, 122)), ((0, 126), (56, 138)),
-                  ((0, 142), (88, 150)), ((0, 158), (100, 157)), ((0, 178), (88, 167)),
-                  ((0, 205), (64, 180)), ((0, 235), (48, 191)), ((0, 265), (44, 196)),
-                  ((0, 298), (42, 200))],
-        'rear-delts': [((58, 184), ARM(84, 6)), ((72, 177), ARM(84, 9)),
-                       ((86, 167), ARM(86, 12)), ((96, 160), ARM(88, 14))],
-        'side-delts': [((99, 157), ARM(88, 14)), (ARM(-6, 20), ARM(88, 15)),
-                       (ARM(4, 31), ARM(88, 16)), (ARM(22, 36), ARM(88, 17))],
-        'upper-back': [((44, 200), (92, 212)), ((41, 214), (93, 218)),
-                       ((38, 228), (93, 222)), ((32, 244), (94, 225))],
-        'triceps': [(ARM(45, -24), ARM(124, -12)), (ARM(60, -14), ARM(126, -5)),
-                    (ARM(80, 18), ARM(126, 5)), (ARM(92, 27), ARM(126, 12))],
-        'forearms': [(FORE(0, 28), FORE(118, 12)), (FORE(0, 15), FORE(116, 4)),
-                     (FORE(0, 2), FORE(116, -4)), (FORE(6, -24), FORE(116, -12))],
-        'lats': [((28, 254), (94, 226)), ((22, 268), (95, 230)), ((30, 300), (97, 238)),
-                 ((44, 334), (99, 248)), ((58, 348), (99, 258)), ((76, 346), (97, 272))],
-        'obliques': [((86, 296), (80, 344)), ((92, 300), (84, 346))],
-        'lower-back': [((4, 364), (6, 300)), ((14, 364), (16, 290)), ((28, 360), (28, 300))],
-        'glutes': [((24, 366), (90, 428)), ((8, 376), (84, 438)), ((4, 404), (74, 447)),
-                   ((5, 426), (56, 453)), ((58, 350), (92, 394)), ((82, 349), (93, 388))],
-        'hamstrings': [((22, 456), (26, 620)), ((36, 459), (44, 598)), ((52, 459), (54, 604)),
-                       ((64, 457), (57, 622))],
-        'adductors': [((8, 448), (22, 604)), ((18, 452), (26, 600))],
-        'quads': [((70, 450), (62, 616)), ((90, 436), (64, 610))],
-        'calves': [((26, 628), (30, 730)), ((36, 636), (40, 732)), ((46, 636), (45, 720)),
-                   ((58, 628), (48, 716)), ((18, 690), (34, 760)), ((65, 690), (48, 760))],
+        'traps': [((0, 100), (20, 103)), ((0, 112), (31, 117)), ((0, 126), (50, 133)),
+                  ((0, 142), (78, 145)), ((0, 158), (90, 155)), ((0, 178), (77, 165)),
+                  ((0, 205), (58, 178)), ((0, 235), (45, 190)), ((0, 265), (41, 194)),
+                  ((0, 298), (39, 197))],
+        'rear-delts': [((54, 181), ARM(86, 4)), ((66, 172), ARM(88, 8)),
+                       ((78, 164), ARM(90, 11)), ((87, 158), ARM(92, 13))],
+        'side-delts': [((90, 154), ARM(92, 13)), (ARM(-6, 20), ARM(92, 14)),
+                       (ARM(4, 31), ARM(92, 15)), (ARM(22, 37), ARM(92, 16))],
+        'upper-back': [((41, 198), (84, 208)), ((39, 212), (84, 213)),
+                       ((36, 226), (84, 217)), ((30, 244), (84.5, 219))],
+        'triceps': [(ARM(46, -24), ARM(126, -12)), (ARM(62, -14), ARM(128, -5)),
+                    (ARM(82, 18), ARM(128, 5)), (ARM(94, 27), ARM(128, 12))],
+        'forearms': [(FORE(0, 28), FORE(120, 12)), (FORE(0, 15), FORE(118, 4)),
+                     (FORE(0, 2), FORE(118, -4)), (FORE(6, -24), FORE(118, -12))],
+        'lats': [((27, 253), (84.5, 219)), ((21, 267), (86, 224)), ((27, 300), (89, 232)),
+                 ((38, 334), (90, 244)), ((46, 353), (89, 256)), ((58, 352), (85, 270))],
+        'obliques': [((72, 302), (60, 348)), ((68, 306), (57, 350))],
+        'lower-back': [((4, 364), (6, 300)), ((14, 364), (15, 288)), ((26, 360), (26, 300))],
+        'glutes': [((22, 368), (76, 430)), ((8, 376), (70, 440)), ((4, 404), (60, 448)),
+                   ((4, 426), (44, 453)), ((46, 355), (76, 398)), ((62, 354), (77, 392))],
+        'hamstrings': [((19, 452), (26, 620)), ((34, 455), (43, 602)), ((48, 454), (54, 606)),
+                       ((56, 452), (57, 622))],
+        'adductors': [((7, 446), (22, 604)), ((15, 450), (25, 600))],
+        'quads': [((60, 450), (62, 616)), ((76, 432), (64, 610))],
+        'calves': [((26, 628), (30, 730)), ((36, 634), (40, 732)), ((46, 634), (45, 720)),
+                   ((58, 628), (48, 716)), ((15, 690), (34, 760)), ((66, 690), (48, 760))],
+    }
+
+
+# ---------------------------------------------------------------------------
+# FRONT VIEW: the same outline as the back, so the figure matches when the
+# page turns. Figure's left half again; the left half of the figure is drawn
+# on the viewer's right in a front view, but the shapes are mirrored anyway.
+# ---------------------------------------------------------------------------
+
+STERNAL_NOTCH = (0, 148)
+ASIS = (60, 368)                # the point of the hip bone at the front
+PUBIC = (12, 416)               # pubic tubercle
+PEC_INS = ARM(38, -12)          # where the pec's tendon goes under the delt
+
+F = {
+    'trap_top': B['trap_top'][4:],                 # the slope of the trapezius
+    # Collarbone, sternal end to the acromion: an S curve.
+    'clav': [(6, 150), (20, 152), (34, 150), (48, 146), (58, 147), (72, 147), (84, 149), ACR],
+    # Front edge of the trapezius, down to the outer third of the collarbone.
+    'trap_front': [(31, 116), (35, 130), (45, 142), (58, 147)],
+    # Deltoid: outline as from behind; the line between front and side delt;
+    # and the front delt's lower edge, from the deltopectoral groove to the
+    # deltoid tuberosity.
+    'delt_out': B['delt_out'],
+    'delt_split': [(86, 150), ARM(6, 22), ARM(32, 25), ARM(64, 24), DELT_TIP],
+    'dp_groove': [(58, 147), (62, 168), (71, 186), (81, 199), PEC_INS],
+    'fdelt_low': [PEC_INS, ARM(52, -6), ARM(60, -2), ARM(76, 8), DELT_TIP],
+    # Pec major: lower edge, from the armpit fold down and in to the sternum.
+    'pec_low': [AX, (78, 230), (68, 242), (54, 250), (40, 253), (30, 252), (22, 250),
+                (10, 243), (3, 236), (0, 236)],
+    # Lat at the side, seen from the front, and the torso outline.
+    'lat_front': [(77, 295), (80, 280), (83, 262), (84, 244), (82, 230), AX],
+    'side_hi': B['side_hi'],
+    'side_lo': B['side_lo'],
+    # Rectus abdominis: the outer edge (linea semilunaris).
+    'semilunar': [(30, 252), (31, 280), (30, 310), (27, 340), (22, 368), (17, 392),
+                  (13, 408), PUBIC],
+    # Inguinal line, the point of the hip down to the pubis.
+    'inguinal': [ASIS, (50, 380), (40, 391), (30, 400), (20, 408), PUBIC],
+    'hip': [(64, 352), (69, 364), (73, 378), (76, 392), (77, 404), (77, 428)],
+    # Sartorius, the long strap from the point of the hip to the inside of
+    # the knee. Its inner edge is where the adductors stop.
+    'sart_in': [ASIS, (48, 394), (38, 424), (29, 456), (21, 488), (15, 512), (13, 520)],
+    'sart_out': [ASIS, (53, 396), (45, 428), (37, 462), (29, 496), (23, 528), (20, 556),
+                 (19, 576)],
+    'thigh_out': B['thigh_out'][:9] + [(66, 603)],
+    'thigh_in': B['thigh_in'],
+    # Bottom of the quads around the kneecap.
+    'quad_low': [(66, 603), (56, 601), (47, 603), (40, 606), (33, 608), (27, 614), (24, 614)],
+    # Lower leg.
+    'calf_out': B['calf_out'],
+    'calf_in': B['calf_in'],
+    # Inner edge of the tibia: the calf shows inside it.
+    'tibia_in': [(25, 636), (31, 652), (30, 680), (29, 710), (28, 740), (24, 750)],
+    # Outer calf, behind the fibular muscles.
+    'calf_out_in': [(63, 638), (61, 650), (64, 666), (65, 682), (63, 700), (58, 718), (56, 728)],
+
+    # Arms, palms forward: the biceps' inner edge (medial bicipital groove)
+    # and the V at the front of the elbow, brachioradialis on the outside
+    # and pronator teres on the inside, with the biceps tendon dipping in.
+    'bi_med': [ARM(52, -6), ARM(70, -15), ARM(90, -19), ARM(110, -18), ARM(128, -14)],
+    'arm_in': B['arm_in'],
+    'arm_out': B['arm_out'],
+    'elbow_v': [ELB_OUT, FORE(0, 14), FORE(12, 6), FORE(18, 0), FORE(10, -8), FORE(0, -16), EPI_IN],
+    'fore_out': B['fore_out'],
+    'fore_in': B['fore_in'],
+    'wrist': B['wrist'],
+}
+
+
+def front_regions():
+    f = F
+    trap = P(f['trap_top'], R(f['clav'])[:4], R(f['trap_front'])[1:-1])
+    fdelt = P(f['clav'][4:7], f['delt_split'], R(f['fdelt_low'])[1:], R(f['dp_groove'])[1:-1])
+    sdelt = P(f['delt_out'][:-1], R(f['delt_split']))
+    chest = P(f['clav'][:5], f['dp_groove'][1:], f['pec_low'], STERNAL_NOTCH)
+    lats = P(f['side_hi'], f['lat_front'][1:-1])
+    # obliques and serratus: under the pec, in front of the lat, beside the abs
+    obl = P((30, 252), (40, 253), (54, 250), (68, 242), (78, 230), AX,
+            R(f['lat_front'])[1:], f['side_lo'][1:], ASIS, f['inguinal'][1:],
+            R(f['semilunar'])[1:-1])
+    abs_ = P((0, 236), (3, 236), (10, 243), (22, 250), f['semilunar'], (6, 419), (0, 420))
+    bi = P(f['fdelt_low'][1:], f['arm_out'][1:], f['elbow_v'][1:], ARM(128, -26),
+           R(f['bi_med'])[:-1])
+    tri = P(f['arm_in'][:5], R(f['bi_med']), PEC_INS)
+    fore = P(f['elbow_v'], f['fore_in'][1:], R(f['wrist'])[1:], R(f['fore_out'])[1:-1])
+    quad = P((64, 352), f['hip'][1:], f['thigh_out'][1:], f['quad_low'][1:],
+             (22, 600), (19, 576), (16, 548), R(f['sart_in']))
+    add = P(f['inguinal'], (5, 440), f['thigh_in'][1:5], R(f['sart_in'])[1:-1])
+    calf_in = P(f['tibia_in'][:1], f['calf_in'][2:8], R(f['tibia_in'])[:-1])
+    calf_out = P(f['calf_out'][1:7], R(f['calf_out_in']))
+    return [
+        ('traps', [trap]),
+        ('front-delts', [fdelt]),
+        ('side-delts', [sdelt]),
+        ('chest', [chest]),
+        ('lats', [lats]),
+        ('obliques', [obl]),
+        ('abs', [abs_]),
+        ('biceps', [bi]),
+        ('triceps', [tri]),
+        ('forearms', [fore]),
+        ('quads', [quad]),
+        ('adductors', [add]),
+        ('calves', [calf_in, calf_out]),
+    ]
+
+
+def front_details():
+    return [
+        # Neck: sternocleidomastoid, its sternal and collarbone heads.
+        [(30, 94), (24, 112), (14, 132), (5, 149)],
+        [(27, 104), (22, 122), (16, 140), (15, 150)],
+        # Pec: the line between the collarbone head and the sternal head.
+        [(14, 166), (38, 172), (62, 182), (84, 197)],
+        # Delts: the middle bundles.
+        [ARM(0, 27), ARM(34, 31), ARM(70, 24)],
+        [(74, 152), ARM(30, 6), ARM(60, 10)],
+        # Serratus: the fingers on the ribs between the lat and the oblique.
+        [(84, 248), (76, 250), (68, 254)],
+        [(83, 262), (74, 264), (64, 269)],
+        [(81, 276), (72, 279), (62, 285)],
+        [(78, 289), (70, 293), (60, 299)],
+        # External oblique: where its muscle turns into flat tendon.
+        [ASIS, (48, 358), (36, 348), (28, 340)],
+        # Abs: the three tendinous lines across the rectus.
+        [(0, 268), (14, 266), (30.5, 270)],
+        [(0, 295), (14, 294), (31, 298)],
+        [(0, 321), (14, 320), (28.5, 323)],
+        # Biceps: its outer edge against brachialis, and the two heads.
+        [ARM(80, 13), ARM(100, 18), ARM(118, 15), ARM(134, 8), FORE(10, 3)],
+        [ARM(62, -2), ARM(86, 0), ARM(106, 0)],
+        # Forearm: brachioradialis, flexor carpi radialis, the long finger
+        # flexors and flexor carpi ulnaris, and pronator teres crossing.
+        [FORE(18, 0), FORE(44, 16), FORE(80, 12), FORE(116, 8)],
+        [FORE(20, -2), FORE(60, 2), FORE(116, 2)],
+        [FORE(12, -8), FORE(60, -7), FORE(116, -4)],
+        [FORE(4, -20), FORE(60, -17), FORE(116, -10)],
+        [FORE(0, -16), FORE(26, -2), FORE(48, 10)],
+        # Quads: rectus femoris down the middle, vastus lateralis outside,
+        # the vastus medialis teardrop, tensor fasciae latae at the hip, and
+        # the sartorius' outer edge.
+        [(60, 396), (64, 440), (63, 490), (58, 540), (51, 580), (46, 601)],
+        [(52, 396), (48, 440), (44, 490), (40, 540), (37, 590), (37, 604)],
+        [(21, 548), (29, 562), (35, 582), (37, 600)],
+        [(60, 372), (64, 394), (70, 420), (78, 446)],
+        F['sart_out'],
+        # Adductors: adductor longus, and pectineus beside it.
+        [(19, 412), (22, 444), (21, 476), (17, 506)],
+        [(34, 397), (30, 420), (25, 442)],
+        # The shin bone's front edge and the kneecap's tendon.
+        [(40, 650), (39, 690), (37, 730), (34, 768)],
+        [(36, 636), (37, 648)], [(44, 636), (43, 648)],
+        # Lower leg: the shin (tibialis anterior and the long toe extensor).
+        [(52, 646), (56, 680), (53, 720), (45, 760), (40, 778)],
+        [(60, 650), (61, 690), (56, 730), (50, 770)],
+    ]
+
+
+def front_outline():
+    head = []
+    for a in range(0, 361, 8):
+        t = math.radians(a)
+        x = 34 * math.cos(t)
+        if math.sin(t) >= 0:
+            y = 62 - 46 * math.sin(t)
+        else:
+            k = -math.sin(t)
+            x *= 1 - 0.32 * k ** 2           # the jaw narrows to the chin
+            y = 62 + 52 * k
+        head.append((x, y))
+    return {
+        'head_full': head,
+        'neck': [[(26, 100), (29, 108), (31, 116)]],
+        'ear': [(33, 58), (38, 60), (40, 70), (38, 82), (33, 88)],
+        'hand': back_outline()['hand'],
+        'fingers': [[HAND(40, 12), HAND(44, 5), HAND(42, -4), HAND(40, -13)],
+                    [HAND(20, -12), HAND(30, -2), HAND(36, 10)]],
+        'feet': [[(51, 762), (50, 776), (52, 790), (57, 804), (60, 816), (58, 824), (46, 828),
+                  (34, 828), (24, 826), (22, 816), (25, 800), (28, 786), (28, 772)],
+                 [(48, 818), (49, 826)], [(41, 819), (41, 827)], [(33, 818), (32, 827)],
+                 [(52, 786), (54, 792)], [(27, 786), (25, 792)]],
+        # kneecap and its tendon, the shin bone's front edge, the navel,
+        # the notch at the top of the sternum
+        'extra': [[(40, 607), (48, 611), (51, 622), (46, 633), (40, 636), (34, 633), (30, 622),
+                   (32, 611), (40, 607)],
+                  # outline of the knee and lower leg where no muscle group is
+                  [(66, 603), (63, 612), (61, 626), (63, 638)],
+                  [(24, 614), (26, 624), (23, 638), (25, 636)],
+                  [(56, 728), (53, 742), (51, 754), (51, 762)],
+                  [(22, 740), (26, 756), (28, 772)]],
+        'mid': [[(-2, 318), (0, 324), (2, 318)], [(-4, 146), (0, 150), (4, 146)]],
+    }
+
+
+def front_fibers():
+    return {
+        'traps': [((31, 118), (58, 147)), ((38, 124), (76, 148)), ((52, 134), (90, 152))],
+        'front-delts': [((62, 148), ARM(90, 14)), ((72, 148), ARM(92, 17)),
+                        ((84, 150), ARM(94, 20))],
+        'side-delts': [((90, 154), ARM(94, 21)), (ARM(-6, 20), ARM(94, 22)),
+                       (ARM(4, 31), ARM(94, 23)), (ARM(22, 37), ARM(94, 24))],
+        'chest': [((56, 148), (86, 197)), ((36, 151), (88, 199)), ((14, 151), (90, 201)),
+                  ((2, 165), (91, 203)), ((2, 190), (91, 206)), ((2, 215), (89, 210)),
+                  ((6, 238), (87, 214)), ((24, 250), (85, 218)), ((48, 251), (84.5, 219))],
+        'lats': [((78, 295), (85, 224)), ((84, 290), (91, 240))],
+        'obliques': [((84, 240), (34, 282)), ((84, 270), (31, 320)), ((76, 300), (28, 350)),
+                     ((64, 330), (24, 384)), ((62, 360), (16, 414))],
+        'abs': [((2, 238), (2, 430)), ((14, 245), (7, 430)), ((28, 252), (12, 426))],
+        'biceps': [(ARM(54, -6), ARM(144, -4)), (ARM(70, -14), ARM(142, -6)),
+                   (ARM(70, 8), ARM(144, 2)), (ARM(96, 26), ARM(140, 12))],
+        'triceps': [(ARM(48, -22), ARM(126, -24)), (ARM(56, -29), ARM(126, -27))],
+        'forearms': [(FORE(0, 26), FORE(120, 12)), (FORE(12, 6), FORE(118, 2)),
+                     (FORE(0, -16), FORE(118, -6)), (FORE(6, -24), FORE(118, -12))],
+        'quads': [((80, 430), (64, 600)), ((70, 400), (54, 600)), ((54, 380), (42, 604)),
+                  ((40, 440), (32, 608)), ((20, 540), (26, 612))],
+        'adductors': [((14, 418), (14, 520)), ((26, 404), (18, 500)), ((42, 390), (24, 480))],
+        'calves': [((20, 650), (22, 740)), ((66, 660), (60, 720))],
     }
 
 
@@ -423,6 +654,13 @@ def hatch(pairs, rng, centre, size, per_gap=4):
                     b = bow * math.sin(math.pi * t) + (0.6 if j == 1 else 0) * rng.uniform(-1, 1)
                     p.append((q[0] + nx * b, q[1] + ny * b))
                 out.append(p)
+            if shade > 0.28 and rng.random() < 0.55:
+                # deepest shadow: a short cross stroke over the fiber stroke
+                c = lerp(s, e, (t0 + t1) / 2)
+                a = math.atan2(uy, ux) + math.radians(rng.uniform(50, 70))
+                l2 = rng.uniform(4, 8)
+                out.append([(c[0] - math.cos(a) * l2, c[1] - math.sin(a) * l2), c,
+                            (c[0] + math.cos(a) * l2, c[1] + math.sin(a) * l2)])
             pos += seg + rng.uniform(1.5, 5) * (1.6 - min(1.0, max(0.0, shade + 0.5)))
     return out
 
@@ -472,7 +710,7 @@ def polyline(p):
 
 def build(view, regions, details, outline, fibers, seed):
     rng = random.Random(seed)
-    defs, fills, ink, hatching, detail_ink, out_ink, heavy = [], [], [], [], [], [], []
+    defs, fills, ink, hatching, detail_ink, out_ink, heavy, tones = [], [], [], [], [], [], [], []
 
     for gid, polys in regions:
         ds = []
@@ -493,6 +731,23 @@ def build(view, regions, details, outline, fibers, seed):
                     for ln in hatch(pairs, rng, c, size):
                         hatching.append((gid, polyline(ln)))
         rid = 'mm-%s-%s' % (view, gid)
+        # Tone: a soft wash, clear on the lit side of each muscle and
+        # darkening toward its shadow side, like graphite rubbed in under
+        # the pen lines.
+        for side in ('L', 'R'):
+            for k, poly in enumerate(polys):
+                p = dedupe([to_xy(q, side) for q in poly])
+                (cx, cy), size = centroid(p)
+                gid_t = '%s-t%s%d' % (rid, side, k)
+                h = size * 0.55
+                defs.append('<linearGradient id="%s" gradientUnits="userSpaceOnUse" '
+                            'x1="%.0f" y1="%.0f" x2="%.0f" y2="%.0f">'
+                            '<stop offset=".35" stop-color="var(--pen,#22347F)" stop-opacity="0"/>'
+                            '<stop offset="1" stop-color="var(--pen,#22347F)" stop-opacity=".2"/>'
+                            '</linearGradient>'
+                            % (gid_t, cx + LIGHT[0] * h, cy + LIGHT[1] * h,
+                               cx - LIGHT[0] * h, cy - LIGHT[1] * h))
+                tones.append('<path fill="url(#%s)" d="%s"/>' % (gid_t, smooth(p, closed=True)))
         fills.append('<path id="%s" class="mm-muscle" data-group="%s" d="%s"/>'
                      % (rid, gid, ''.join(ds)))
         defs.append('<clipPath id="%s-c"><use href="#%s"/></clipPath>' % (rid, rid))
@@ -511,17 +766,21 @@ def build(view, regions, details, outline, fibers, seed):
         for side in ('L', 'R'):
             out_ink.append(smooth(wobble([to_xy(q, side) for q in points], rng), closed))
 
-    out_ink.append(smooth(wobble([to_xy(q, 'L') for q in outline['head']], rng)))
-    for key in ('neck', 'fingers', 'feet'):
-        for line in outline[key]:
+    if 'head' in outline:
+        out_ink.append(smooth(wobble([to_xy(q, 'L') for q in outline['head']], rng)))
+    if 'head_full' in outline:
+        out_ink.append(smooth(wobble([to_xy(q, 'L') for q in outline['head_full']], rng), True))
+    for key in ('neck', 'fingers', 'feet', 'extra'):
+        for line in outline.get(key, []):
             ink_line(line)
-    for line in outline.get('spine', []):
+    for line in outline.get('spine', []) + outline.get('mid', []):
         detail_ink.append(smooth(wobble([to_xy(q, 'L') for q in line], rng, 0.3)))
     ink_line(outline['ear'])
     ink_line(outline['hand'])
 
     css = ('.mm-muscle{fill:var(--mm-fill,transparent)}'
            '.mm-ink{fill:none;stroke:var(--pen,#22347F);stroke-linecap:round;stroke-linejoin:round}'
+           '.mm-ink,.mm-tone{pointer-events:none}'
            '.mm-line{stroke-width:1.5}.mm-heavy{stroke-width:1.2}.mm-out{stroke-width:2}'
            '.mm-detail{stroke-width:1;opacity:.85}.mm-hatch{stroke-width:.7;opacity:.7}')
     return ''.join([
@@ -529,6 +788,7 @@ def build(view, regions, details, outline, fibers, seed):
         '<style>%s</style>' % css,
         '<g class="mm-regions">%s</g>' % ''.join(fills),
         '<defs>%s</defs>' % ''.join(defs),
+        '<g class="mm-tone">%s</g>' % ''.join(tones),
         '<g class="mm-ink mm-hatch">%s</g>' % hatch_svg,
         '<g class="mm-ink mm-detail"><path d="%s"/></g>' % ''.join(detail_ink),
         '<g class="mm-ink mm-line"><path d="%s"/></g>' % ''.join(ink),
@@ -542,8 +802,13 @@ def svg_back():
     return build('back', back_regions(), back_details(), back_outline(), back_fibers(), 409)
 
 
+def svg_front():
+    return build('front', front_regions(), front_details(), front_outline(), front_fibers(), 434)
+
+
 if __name__ == '__main__':
-    out = ROOT / 'art' / 'muscle-back.svg'
-    s = svg_back()
-    out.write_text(s)
-    print('wrote', out.relative_to(ROOT), len(s), 'bytes')
+    for name, fn in (('muscle-back.svg', svg_back), ('muscle-front.svg', svg_front)):
+        out = ROOT / 'art' / name
+        s = fn()
+        out.write_text(s)
+        print('wrote', out.relative_to(ROOT), len(s), 'bytes')

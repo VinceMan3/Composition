@@ -33,6 +33,8 @@ const ART = [
   './art/cover-wear.webp',
   './art/desk.webp',
   './art/ink-stamp.webp',
+  './art/muscle-back.svg',
+  './art/muscle-front.svg',
   './art/paper.webp',
   './art/ribbon-record.png',
   './art/ring.svg',
