@@ -7,7 +7,7 @@
 // The page tells this worker which files it loaded on the very first visit
 // (app/offline.js), so everything is saved after one launch.
 
-const CACHE = 'composition-v1';
+const CACHE = 'composition-v2';
 
 // Every drawing, saved up front so pages not opened yet still have their
 // art offline. A check in the tests fails if a file in art/ is missing here.
@@ -33,8 +33,12 @@ const ART = [
   './art/cover-wear.webp',
   './art/desk.webp',
   './art/ink-stamp.webp',
-  './art/muscle-back.svg',
-  './art/muscle-front.svg',
+  './art/muscle-back-ink.webp',
+  './art/muscle-back-map.svg',
+  './art/muscle-back-shade.webp',
+  './art/muscle-front-ink.webp',
+  './art/muscle-front-map.svg',
+  './art/muscle-front-shade.webp',
   './art/paper.webp',
   './art/ribbon-record.png',
   './art/ring.svg',

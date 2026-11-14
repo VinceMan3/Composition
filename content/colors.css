@@ -94,7 +94,7 @@
   --tape: #6E6A74;
 
   /* The muscle map */
-  --map-ink: #E2DED6;
+  --map-ink: var(--pen);    /* the purple pen, so the figure stands out on dark paper */
   --map-shade: #000000;
   --map-tone: .6;
   --map-red: #D8463B;

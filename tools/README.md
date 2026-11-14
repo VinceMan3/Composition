@@ -5,7 +5,7 @@ app itself still needs no build step.
 
 | File | What it does |
 | --- | --- |
-| `test/run.py` | The full set of checks (385 at last count), run in a real browser |
+| `test/run.py` | The full set of checks (400 at last count), run in a real browser |
 | `test/common.py` | Shared setup for the checks: fonts, error capture, screenshots |
 | `build-preview.py` | Packs the app into one page for a Claude preview, in `tools/preview/` |
 | `serve.sh` | Starts the two local servers the checks use |
@@ -32,3 +32,12 @@ From the repository root:
 Every line prints PASS or FAIL. Screenshots land in `tools/test/shots/`
 (not kept in git). Browser contexts block the offline worker except in the
 offline check, which is skipped for the preview.
+
+## Muscle map art
+
+`python3 tools/art/musclemap.py` draws the full figures into
+`tools/art/drawings/`. Then `python3 tools/art/mapimages.py` turns them into
+what the app shows: `art/muscle-<view>-shade.webp` and `-ink.webp` (black
+stencils the app colors with `--map-shade` and `--map-ink`) and
+`art/muscle-<view>-map.svg` (tap shapes and sheen). Run both after changing
+the drawing.

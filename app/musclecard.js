@@ -2,54 +2,29 @@
 // close-up from the drawing, the card number, the name, what it does and a
 // "Did you know?". Flip it over for the back: sets this week, the day it was
 // last trained, and the lifts that train it.
-//   muscleCard({ ctx, partId, view, onLift, onClose })
+//   muscleCard({ ctx, partId, fig, info, onLift, onClose })
+// fig is the drawing the close-up comes from (app/mapart.js); info is
+// { train, lifts } worked out once by the map page: sets per part, and the
+// lifts that train each part with the ones you have done marked.
+// After the card is on the page, call layout() so the close-up and the
+// writing fit the card.
 
 import { h } from './ui.js';
-import { PARTS, partById, groupById, liftsFor, training } from './muscles.js';
-import { allLifts, lastTime, niceDate, dateKey, tidy } from './log.js';
-import { partBox } from './mapart.js';
+import { PARTS, partById, groupById } from './muscles.js';
+import { niceDate, dateKey, tidy } from './log.js';
+import { closeUp, cropFor } from './mapart.js';
 
-const NS = 'http://www.w3.org/2000/svg';
-const W = 560, H = 860; // the drawing's size, in its own units
+// Each card's writing size, once worked out, by part and card width.
+const fitted = new Map();
 
-// The close-up: the part in the middle with a little of the body around it.
-function closeUp(view, svg, partId, aspect) {
-  const box = svg && partBox(svg, partId);
-  const art = document.createElementNS(NS, 'svg');
-  art.setAttribute('class', 'tc-closeup');
-  art.setAttribute('aria-hidden', 'true');
-  art.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-  if (box) {
-    let ch = Math.max(box.height / 0.62, box.width / 0.62 / aspect, 130);
-    let cw = ch * aspect;
-    if (cw > W) { cw = W; ch = cw / aspect; }
-    if (ch > H) { ch = H; cw = ch * aspect; }
-    const x = Math.min(Math.max(box.x + box.width / 2 - cw / 2, 0), W - cw);
-    const y = Math.min(Math.max(box.y + box.height / 2 - ch / 2, 0), H - ch);
-    art.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${cw.toFixed(1)} ${ch.toFixed(1)}`);
-  } else {
-    art.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  }
-  const use = document.createElementNS(NS, 'use');
-  use.setAttribute('href', `#mmfig-${view}`);
-  art.append(use);
-  return art;
-}
-
-export function muscleCard({ ctx, partId, view, svg, onLift, onClose }) {
-  const { words, store, sound } = ctx;
+export function muscleCard({ ctx, partId, fig, info, onLift, onClose }) {
+  const { words, sound } = ctx;
   const w = words.map;
-  const data = store.get();
   const part = partById.get(partId);
   const group = groupById.get(part.group);
   const number = String(PARTS.indexOf(part) + 1).padStart(2, '0');
-  const t = training(data).get(partId);
-  const lifts = allLifts(data);
-  const { main, help } = liftsFor(partId, lifts);
-  const logged = new Set(lifts.filter(l => lastTime(data, l.id)).map(l => l.id));
-  // Lifts you have done come first, main lifts before helpers.
-  const loggedFirst = list => [...list].sort((a, b) => Number(logged.has(b.id)) - Number(logged.has(a.id)));
-  const rows = [...loggedFirst(main).map(l => [l, 'main']), ...loggedFirst(help).map(l => [l, 'helps'])];
+  const t = info.train.get(partId);
+  const rows = info.lifts(partId); // [{ lift, role: 'main' | 'helps', mine }]
 
   let flipped = false;
   const flipButtons = [];
@@ -71,12 +46,11 @@ export function muscleCard({ ctx, partId, view, svg, onLift, onClose }) {
   };
 
   // ----- the front -----
+  const cu = closeUp(fig, partId, null);
+  const artBox = h('div', { class: 'tc-art' }, cu.el, h('p', { class: 'tc-team' }, group.name));
   const front = h('div', { class: 'tc-face tc-front' },
     h('div', { class: 'tc-frame' },
-      h('div', { class: 'tc-art' },
-        closeUp(view, svg, partId, 0.72),
-        h('p', { class: 'tc-team' }, group.name),
-      ),
+      artBox,
       h('div', { class: 'tc-text' },
         h('div', { class: 'tc-plate' },
           h('span', { class: 'tc-no' }, `${w.cardNumber} ${number}`),
@@ -109,13 +83,13 @@ export function muscleCard({ ctx, partId, view, svg, onLift, onClose }) {
       ),
       h('p', { class: 'tc-lifts-label' }, w.liftsLabel),
       h('div', { class: 'tc-lifts' }, rows.length
-        ? rows.map(([lift, role]) => h('button', {
+        ? rows.map(({ lift, role, mine }) => h('button', {
           class: 'tc-lift',
           type: 'button',
           onClick(e) { e.stopPropagation(); onLift(lift.id, flipped); },
         },
           h('span', { class: 'tc-lift-name' }, lift.name),
-          logged.has(lift.id) && h('span', { class: 'tc-lift-mine', 'aria-label': w.logged, title: w.logged }, '✓'),
+          mine && h('span', { class: 'tc-lift-mine', 'aria-label': w.logged, title: w.logged }, '✓'),
           h('span', { class: `tc-lift-role is-${role}` }, role === 'main' ? w.main : w.helps),
         ))
         : h('p', { class: 'tc-none' }, w.noLifts)),
@@ -131,5 +105,22 @@ export function muscleCard({ ctx, partId, view, svg, onLift, onClose }) {
     h('button', { class: 'tc-close', type: 'button', 'aria-label': w.close, onClick(e) { e.stopPropagation(); onClose(); } }, '×'),
   );
   flip(false, true);
-  return { el, flip, isFlipped: () => flipped };
+
+  // Fit the close-up to the window's shape, and shrink the writing a little on
+  // the few cards with more to say, so nothing is ever cut off.
+  const info2 = front.querySelector('.tc-info');
+  function layout() {
+    const r = artBox.getBoundingClientRect();
+    if (r.width && r.height) cu.place(cropFor(fig, partId, r.width / r.height));
+    const key = `${partId}:${Math.round(r.width)}`;
+    if (fitted.has(key)) { info2.style.fontSize = `${fitted.get(key)}px`; return; }
+    let size = 15;
+    info2.style.fontSize = `${size}px`;
+    while (info2.scrollHeight > info2.clientHeight + 1 && size > 11) {
+      size -= 0.5;
+      info2.style.fontSize = `${size}px`;
+    }
+    if (r.width) fitted.set(key, size);
+  }
+  return { el, flip, layout, isFlipped: () => flipped };
 }
