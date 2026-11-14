@@ -14,8 +14,10 @@ export const WORDS = {
     set: ['set', 'sets'],
   },
 
-  // The five tabs along the bottom
+  // The five tabs along the bottom. The cover has no tab: tap the
+  // "Composition" name at the top to open it.
   tabs: {
+    map: 'Map',
     cover: 'Cover',
     today: 'Today',
     notebook: 'Notebook',
@@ -110,6 +112,37 @@ export const WORDS = {
     needName: 'Give it a name first.',
   },
 
+  // The muscle map tab, and the trading card that slides up for a muscle
+  map: {
+    kicker: 'The muscle map',
+    front: 'Front',
+    back: 'Back',
+    turn: 'Turn around',
+    list: 'See as a list',
+    listShort: 'List',
+    figure: 'Figure',
+    listTitle: 'Every muscle',
+    loadFailed: 'The drawing did not load. Try again in a moment.',
+    hint: 'Tap a muscle to pull its card.',
+    listHint: 'Tap a muscle to pull its card.',
+    parts: ['part', 'parts'],
+    cardLabel: 'Muscle card',
+    cardNumber: 'No.',
+    didYouKnow: 'Did you know?',
+    flip: 'Flip the card',
+    flipHint: 'Tap to flip',
+    close: 'Put the card away',
+    setsWeek: 'Sets this week',
+    lastTrained: 'Last trained',
+    never: 'Not yet',
+    today: 'Today',
+    liftsLabel: 'Lifts that train it',
+    main: 'Main',
+    helps: 'Helps',
+    logged: 'In your notebook',
+    noLifts: 'No lifts in the library train this one yet.',
+  },
+
   // Choosing the muscles a lift of your own works, so it counts on the muscle map
   muscles: {
     label: 'Muscles it works',
@@ -188,7 +221,7 @@ export const WORDS = {
     best: 'best',
     never: 'Not in the notebook yet. Add it to a page and its story starts here.',
     back: 'Back to the library',
-    backTo: { stats: 'Back to Stats', page: 'Back to the page', library: 'Back to the library' },
+    backTo: { stats: 'Back to Stats', page: 'Back to the page', library: 'Back to the library', map: 'Back to the map' },
   },
 
   stickers: {

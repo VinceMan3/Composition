@@ -44,6 +44,7 @@ def overflow(page):
       for (const el of document.querySelectorAll('.page *, .tabs *, .strip *')) {
         const r = el.getBoundingClientRect();
         if (!r.width) continue;
+        if (el.closest('.tc-closeup')) continue; // a card's close-up is cropped from the whole drawing, on purpose
         if (r.right > app.right + 1 || r.left < app.left - 1) bad.push(el.className || el.tagName);
       }
       const pg = document.querySelector('.page');

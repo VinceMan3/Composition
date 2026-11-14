@@ -39,6 +39,15 @@
   --tape: #EFE2A6;          /* the tape holding the verse card */
   --tomato: #C8452F;        /* red pen: the best day on a chart */
   --on-color: #F6EDCD;      /* text on maroon, green and other solid buttons */
+
+  /* The muscle map */
+  --map-ink: #2A2A2E;       /* graphite lines of the figure */
+  --map-shade: #1C1C1F;     /* graphite shadows */
+  --map-tone: 1;            /* how strong the shading is (0 to 1) */
+  --map-red: #C9302C;       /* a picked muscle */
+  --tc-stock: #FBF7EA;      /* trading card: the white card stock border */
+  --tc-back: #D9C7A0;       /* trading card: the grey-brown cardboard back */
+  --tc-back-ink: #3A2E22;   /* trading card: printing on the back */
 }
 
 /*
@@ -83,5 +92,14 @@
   /* Around the notebook */
   --desk: #0C0C0E;
   --tape: #6E6A74;
+
+  /* The muscle map */
+  --map-ink: #E2DED6;
+  --map-shade: #000000;
+  --map-tone: .6;
+  --map-red: #D8463B;
+  --tc-stock: #4A4D54;
+  --tc-back: #2A2C31;
+  --tc-back-ink: #DCD6CC;
   color-scheme: dark;
 }

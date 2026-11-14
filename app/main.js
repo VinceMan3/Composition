@@ -11,6 +11,7 @@ import { startOffline } from './offline.js';
 import { toast, shortDate } from './ui.js';
 import { startRouter } from './router.js';
 import * as cover from './pages/cover.js';
+import * as map from './pages/map.js';
 import * as today from './pages/today.js';
 import * as add from './pages/add.js';
 import * as filed from './pages/filed.js';
@@ -23,7 +24,7 @@ import * as page from './pages/page.js';
 import * as library from './pages/library.js';
 import * as lift from './pages/lift.js';
 
-const PAGES = { cover, today, add, filed, notebook, stats, calc, more, stickers, page, library, lift };
+const PAGES = { cover, map, today, add, filed, notebook, stats, calc, more, stickers, page, library, lift };
 
 const app = document.getElementById('app');
 const stack = document.getElementById('stack');

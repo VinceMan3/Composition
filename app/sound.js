@@ -9,6 +9,8 @@
 //   play('bell')    the boxing bell when rest is over
 //   play('bells')   three bells: the last round is done
 //   play('knock')   two knocks on wood: ten seconds left in the round
+//   play('deal')    a trading card slid out of the pack
+//   play('cardflip') a trading card flipped over on the table
 
 let ctx = null;
 let out = null;
@@ -141,6 +143,22 @@ const SOUNDS = {
 
   bells(t) {
     for (const at of [0, 0.42, 0.84]) SOUNDS.bell(t + at);
+  },
+
+  deal(t) {
+    // Card stock sliding out, then landing.
+    hissBurst(t, 0.13, { type: 'bandpass', from: 2600, to: 1400, q: 0.9 }, [[0.02, 0.2], [0.1, 0.12]]);
+    hissBurst(t + 0.13, 0.04, { type: 'lowpass', from: 900 }, [[0.003, 0.28]]);
+    tone(t + 0.13, 0.05, 210, 140, 0.12, 'triangle');
+    buzz(6);
+  },
+
+  cardflip(t) {
+    // A quick flick of the edge, the card turning, a light slap down.
+    hissBurst(t, 0.02, { type: 'highpass', from: 3000 }, [[0.002, 0.3]]);
+    hissBurst(t + 0.02, 0.16, { type: 'bandpass', from: 1500, to: 3200, q: 0.8 }, [[0.05, 0.16], [0.12, 0.08]]);
+    hissBurst(t + 0.2, 0.04, { type: 'lowpass', from: 1100 }, [[0.003, 0.32]]);
+    buzz(5);
   },
 
   knock(t) {

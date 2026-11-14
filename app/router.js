@@ -9,6 +9,7 @@ import { makeSheet } from './flip.js';
 // A bigger number is further in, so going to it flips forward.
 export const ROUTES = {
   cover: { tab: 'cover', at: 0 },
+  map: { tab: 'map', at: 5 },
   today: { tab: 'today', at: 10 },
   add: { tab: 'today', at: 11 },
   filed: { tab: 'today', at: 12 },

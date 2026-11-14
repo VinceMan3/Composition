@@ -17,7 +17,7 @@ export function render(el, ctx) {
   const lift = log.findLift(data, ctx.state.openLift);
   const big = log.isBigThree(lift.id);
   // Back goes wherever the lift was opened from.
-  const from = ['stats', 'page', 'library'].includes(ctx.state.liftFrom) ? ctx.state.liftFrom : 'library';
+  const from = ['stats', 'page', 'library', 'map'].includes(ctx.state.liftFrom) ? ctx.state.liftFrom : 'library';
   const unit = unitOf(data);
 
   // Oldest first, one entry per page the lift is on.
