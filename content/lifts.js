@@ -93,6 +93,7 @@ export const LIFTS = [
   { id: 'standing-calf-raise', name: 'Standing Calf Raise', group: 'Legs', gear: 'Machine', works: 'calves', helps: '' },
   { id: 'seated-calf-raise', name: 'Seated Calf Raise', group: 'Legs', gear: 'Machine', works: 'calves', helps: '' },
   { id: 'donkey-calf-raise', name: 'Donkey Calf Raise', group: 'Legs', gear: 'Machine', works: 'calves', helps: '' },
+  { id: 'tibialis-raise', name: 'Tibialis Raise', group: 'Legs', gear: 'Bodyweight', works: 'shins', helps: '', kind: 'bodyweight' },
   { id: 'sit-up', name: 'Sit-Up', group: 'Core', gear: 'Bodyweight', works: 'abs', helps: 'hip flexors', kind: 'bodyweight' },
   { id: 'roman-chair-sit-up', name: 'Roman Chair Sit-Up', group: 'Core', gear: 'Bodyweight', works: 'abs, hip flexors', helps: '', kind: 'bodyweight' },
   { id: 'crunch', name: 'Crunch', group: 'Core', gear: 'Bodyweight', works: 'abs', helps: '', kind: 'bodyweight' },

@@ -150,9 +150,9 @@ with sync_playwright() as p:
     page.click('.check >> nth=0')
     # a lift of your own
     page.click('text=+ Add a lift'); settle(page, 'add')
-    check('lift list shows all lifts', page.locator('.pick').count() == 96, str(page.locator('.pick').count()))
+    check('lift list shows all lifts', page.locator('.pick').count() == 97, str(page.locator('.pick').count()))
     page.click('.chip:text-is("Legs")'); n_legs = page.locator('.pick').count()
-    check('filter narrows the list', 0 < n_legs < 96, str(n_legs))
+    check('filter narrows the list', 0 < n_legs < 97, str(n_legs))
     check('lift already on the page is marked', page.evaluate("(document.querySelector('.chip').click(), [...document.querySelectorAll('.pick')].filter(b => b.disabled).length)") == 1)
     check('write-in button is always there', page.locator('text=+ Write in a new lift').count() == 1)
     page.fill('.search', 'Papa press')
@@ -807,8 +807,7 @@ with sync_playwright() as p:
         long: M.PARTS.filter(p => [p.does, p.fact].some(t => (t.match(/[.!?](\s|$)/g) || []).length > 2)).map(p => p.id),
         unknown: M.unknownNames(LIFTS),
         pickUnknown: M.PICK.filter(n => !M.knowsName(n)),
-        // No lift in the library trains the shins yet; a tibialis raise would.
-        untrained: M.PARTS.filter(p => p.id !== 'tibialis-anterior').filter(p => { const r = M.liftsFor(p.id, LIFTS); return !r.main.length && !r.help.length; }).map(p => p.id),
+        untrained: M.PARTS.filter(p => { const r = M.liftsFor(p.id, LIFTS); return !r.main.length && !r.help.length; }).map(p => p.id),
         bench: M.partsFor(by('bench-press')), incline: M.partsFor(by('incline-bench-press')),
         curl: M.partsFor(by('barbell-curl')), squat: M.partsFor(by('squat')),
         hammer: M.liftsFor('brachialis', LIFTS).main.map(l => l.id),
