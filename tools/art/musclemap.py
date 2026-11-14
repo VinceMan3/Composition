@@ -6,7 +6,7 @@ Run from the repository root:
 
     python3 tools/art/musclemap.py
 
-It writes art/muscle-back.svg (and art/muscle-front.svg once the front is
+It writes tools/art/drawings/muscle-back.svg (and muscle-front.svg once the front is
 drawn). The drawing is built from point lists below, not traced pixels, so it
 stays sharp and small.
 
@@ -1403,7 +1403,7 @@ def svg_front():
 
 if __name__ == '__main__':
     for name, fn in (('muscle-back.svg', svg_back), ('muscle-front.svg', svg_front)):
-        out = ROOT / 'art' / name
+        out = ROOT / 'tools' / 'art' / 'drawings' / name
         s = fn()
         out.write_text(s)
         print('wrote', out.relative_to(ROOT), len(s), 'bytes')

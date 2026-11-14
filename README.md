@@ -35,8 +35,10 @@ no build step. Put the folder on any web host and it runs.
   and which lifts train a part. `app/musclepick.js` is the "Muscles it works"
   chooser for lifts you write in yourself.
 - `app/pages/map.js` is the Map tab: the figure, turning around, the list.
-  `app/mapart.js` loads the two drawings into the page once and colors a
-  picked muscle; `app/musclecard.js` builds a muscle's trading card (front:
+  `app/mapart.js` builds each view once from fast layers (made from the
+  drawings by `tools/art/mapimages.py`): the tap shapes, the shading and
+  pencil lines as pictures colored by the look, and the sheen; it colors a
+  picked muscle and makes a card's close-up; `app/musclecard.js` builds a muscle's trading card (front:
   what it does and a "Did you know?"; back: sets this week, last trained and
   the lifts that train it). The look is in `styles/map.css`.
 - `app/units.js` turns pounds into kilograms and back; everything is worked

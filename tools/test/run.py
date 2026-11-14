@@ -689,6 +689,8 @@ with sync_playwright() as p:
     check('the dim garage switches on and is saved', page.evaluate("document.documentElement.dataset.look") == 'garage' and saved(page)['settings']['look'] == 'garage')
     paper = page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--paper').trim()")
     check('the paper turns gunmetal grey', paper.lower() == '#33363b', paper)
+    ink = page.evaluate("[getComputedStyle(document.documentElement).getPropertyValue('--map-ink').trim(), getComputedStyle(document.documentElement).getPropertyValue('--pen').trim()]")
+    check('in the garage the muscle map is drawn in the purple pen', ink[0].lower() == ink[1].lower() == '#c4b2ea', str(ink))
     cover = page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--blue').trim()")
     check('and the baby blue turns maroon', cover.lower() == '#5c1a27', cover)
     page.reload(); page.wait_for_selector('.page')
@@ -712,7 +714,7 @@ with sync_playwright() as p:
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.goto(BASE); page.wait_for_selector('.page')
         page.evaluate("navigator.serviceWorker.ready"); page.wait_for_timeout(5000)
-        saved_n = page.evaluate("caches.open('composition-v1').then(c => c.keys()).then(k => k.length)")
+        saved_n = page.evaluate("caches.open('composition-v2').then(c => c.keys()).then(k => k.length)")
         check('the offline copy saves the app after one visit', saved_n > 40, str(saved_n))
         ctx.set_offline(True)
         page.reload(); page.wait_for_selector('.page', timeout=8000)
@@ -743,7 +745,7 @@ with sync_playwright() as p:
     part_group = {pt: g for g, pts in MAP_PARTS.items() for pt in pts}
     seen = {}
     for view in ('front', 'back'):
-        path = os.path.join(REPO, 'art', f'muscle-{view}.svg')
+        path = os.path.join(REPO, 'tools', 'art', 'drawings', f'muscle-{view}.svg')
         svg = open(path).read()
         try:
             _xml.parseString(svg); ok = True
@@ -840,7 +842,7 @@ with sync_playwright() as p:
         check('muscle content: 19 groups and 46 parts, each in a known group', len(mc['groups']) == 19 and len(mc['parts']) == 46 and len({p[0] for p in mc['parts']}) == 46 and all(p[1] in mc['groups'] for p in mc['parts']) and {p[1] for p in mc['parts']} == set(mc['groups']))
         drawn = {}
         for view in ('front', 'back'):
-            for g, pt in _re.findall(r'<path class="mm-muscle" data-group="([^"]+)" data-part="([^"]+)"', open(os.path.join(REPO, 'art', f'muscle-{view}.svg')).read()):
+            for g, pt in _re.findall(r'<path class="mm-muscle" data-group="([^"]+)" data-part="([^"]+)"', open(os.path.join(REPO, 'art', f'muscle-{view}-map.svg')).read()):
                 drawn.setdefault(pt, [g, set()])[1].add(view)
         off = [p for p in mc['parts'] if p[0] not in drawn or drawn[p[0]][0] != p[1] or drawn[p[0]][1] != ({'front', 'back'} if p[2] == 'both' else {p[2]})]
         check('muscle content: every part matches the drawings, group and view', not off and set(drawn) == {p[0] for p in mc['parts']}, str(off[:4]))
@@ -875,7 +877,12 @@ with sync_playwright() as p:
     page.evaluate(MAPSEED); page.reload(); page.wait_for_selector('.page')
     tab(page, 'map'); page.wait_for_selector('.map-stage.is-ready')
     check('the map opens on the front', page.text_content('.map-heading') == 'Front' and page.locator('.mm-front.is-shown').count() == 1 and page.locator('.mm-back.is-shown').count() == 0)
-    check('the drawing is in the page, so muscles can be tapped', page.locator('.map-fig .mm-front .mm-muscle').count() > 40 and page.locator('#mmfig-front').count() == 1)
+    check('the drawing is in the page, so muscles can be tapped', page.locator('.map-fig .mm-front .mm-muscle').count() > 40)
+    layers = page.evaluate("""() => [...document.querySelectorAll('.mm-front .mm-layer')].map(e => {
+      const m = getComputedStyle(e).webkitMaskImage || getComputedStyle(e).maskImage; return m; })""")
+    check('the shading and pencil layers point at their pictures', len(layers) == 2 and all('art/muscle-front-' in m and m.startswith('url("http') for m in layers), str(layers))
+    pics = page.evaluate("""() => Promise.all(['shade', 'ink'].map(k => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth); i.onerror = () => r(0); i.src = 'art/muscle-front-' + k + '.webp'; })))""")
+    check('and the pictures load', all(pics), str(pics))
     check('no card until a muscle is tapped', page.locator('.map-dock.is-open').count() == 0 and page.is_visible('.map-hint'))
     page.locator('.mm-front .mm-muscle[data-part="chest-middle"]').first.click(); page.wait_for_timeout(450)
     red = page.evaluate("[...document.querySelectorAll('.mm-front .mm-muscle')].filter(e => e.style.getPropertyValue('--mm-fill')).map(e => e.dataset.part)")
@@ -883,17 +890,27 @@ with sync_playwright() as p:
     check('and gets its sheen', page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path')].filter(e => e.style.opacity === '1').every(e => e.dataset.part === 'chest-middle')") and page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path[data-part=chest-middle]')].every(e => e.style.opacity === '1')"))
     front_text = page.inner_text('.tc-front')
     check('its trading card slides up: number, name, team, what it does, did you know', page.locator('.map-dock.is-open .tc').count() == 1 and 'No. 02' in front_text and 'Middle chest' in front_text and 'CHEST' in front_text.upper() and 'bear hug' in front_text and 'DID YOU KNOW?' in front_text.upper() and 'International Chest Day' in front_text, front_text[:200])
-    check('the card has a close-up of the muscle from the drawing', page.evaluate("document.querySelector('.tc-closeup use').getAttribute('href')") == '#mmfig-front' and page.evaluate("document.querySelector('.tc-closeup').getAttribute('viewBox').split(' ').length") == 4)
+    check('the card has a close-up of the muscle from the drawing', page.locator('.tc-art .mm-closeup .mm-layer').count() == 2 and page.locator('.tc-art .mm-cu-red .mm-muscle[data-part="chest-middle"]').count() == 2)
+    cu = page.evaluate("""() => { const a = document.querySelector('.tc-art .mm-closeup').getBoundingClientRect(); const r = [...document.querySelectorAll('.tc-art .mm-cu-red .mm-muscle')].map(e => e.getBoundingClientRect());
+      const x = Math.max(...r.map(b => b.right)) - Math.min(...r.map(b => b.left)); return [a.width, a.height, r.some(b => b.left < a.right && b.right > a.left && b.top < a.bottom && b.bottom > a.top)]; }""")
+    check('and the muscle sits inside the close-up', cu[2], str(cu))
+    tabs = page.evaluate("[...document.querySelectorAll('.map-tab')].map(t => [t.textContent, t.getAttribute('aria-pressed')])")
+    check('tabs for the other parts of the group sit above the card', tabs == [['Upper chest', 'false'], ['Middle chest', 'true'], ['Lower chest', 'false']], str(tabs))
     page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
     back_text = page.inner_text('.tc-back')
     rows = page.evaluate("[...document.querySelectorAll('.tc-lift')].map(r => [r.querySelector('.tc-lift-name').textContent, !!r.querySelector('.tc-lift-mine'), r.querySelector('.tc-lift-role').textContent])")
     check('flipped: the back shows sets this week and last trained', page.locator('.tc-inner.is-flipped').count() == 1 and page.text_content('.tc-stat-n >> nth=0') == '3' and page.text_content('.tc-stat-n >> nth=1') == 'Today', back_text[:160])
     check('and the lifts that train it, ones you have done first', rows[0] == ['Bench Press', True, 'Main'] and not any(r[1] for r in rows[1:]) and [r[2] for r in rows] == sorted([r[2] for r in rows], key=lambda x: x != 'Main') and len(rows) > 8, str(rows[:3]))
     check('the front is hidden from screen readers while flipped', page.get_attribute('.tc-front', 'aria-hidden') == 'true' and page.get_attribute('.tc-back', 'aria-hidden') == 'false')
-    page.locator('.mm-front .mm-muscle[data-part="chest-upper"]').first.click(); page.wait_for_timeout(450)
+    page.click('.map-tab:text-is("Upper chest")'); page.wait_for_timeout(450)
+    check('a tab switches to that part: card and red', page.locator('.tc[data-part="chest-upper"]').count() == 1 and page.evaluate("[...document.querySelectorAll('.mm-front .mm-muscle')].filter(e => e.style.getPropertyValue('--mm-fill')).every(e => e.dataset.part === 'chest-upper')") and page.get_attribute('.map-tab:text-is("Upper chest")', 'aria-pressed') == 'true')
     up = page.evaluate("[...document.querySelectorAll('.tc-lift')].map(r => [r.querySelector('.tc-lift-name').textContent, r.querySelector('.tc-lift-role').textContent])")
     n = page.evaluate("document.querySelector('.tc-stat-n').textContent")
-    check('upper chest: a helper set counts half (bench 3, overhead press 2 x 1/2)', page.locator('.tc-inner.is-flipped').count() == 0 and n == '4', n)
+    check('upper chest: a helper set counts half (bench 3, overhead press 2 x 1/2)', n == '4', n)
+    check('switching parts with a tab keeps the card flipped', page.locator('.tc-inner.is-flipped').count() == 1)
+    lifts_box = page.evaluate("document.querySelector('.tc-lifts').getBoundingClientRect().height")
+    check('the lift list has room on the back of the card', lifts_box > 50, str(lifts_box))
+    page.click('.tc-back .tc-flip'); page.wait_for_timeout(450)
     check('helper lifts come after the main ones', ['Overhead Press', 'Helps'] in up and up.index(['Overhead Press', 'Helps']) > max(i for i, r in enumerate(up) if r[1] == 'Main'), str(up[-4:]))
     page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
     page.click('.tc-lift >> nth=0'); settle(page, 'lift')
@@ -901,7 +918,7 @@ with sync_playwright() as p:
     page.click('text=Back to the map'); settle(page, 'map'); page.wait_for_selector('.map-stage.is-ready'); page.wait_for_timeout(300)
     check('back on the map, the same card is waiting, still flipped', page.locator('.map-dock.is-open .tc[data-part="chest-upper"] .tc-inner.is-flipped').count() == 1)
     page.click('.tc-close'); page.wait_for_timeout(350)
-    check('the close button puts the card away and clears the red', page.locator('.map-dock.is-open').count() == 0 and page.evaluate("![...document.querySelectorAll('.mm-muscle')].some(e => e.style.getPropertyValue('--mm-fill'))"))
+    check('the close button puts the card away and clears the red', page.locator('.map-dock.is-open').count() == 0 and page.evaluate("![...document.querySelectorAll('.map-fig .mm-muscle')].some(e => e.style.getPropertyValue('--mm-fill'))"))
     page.locator('.mm-front .mm-muscle[data-part="lats"]').first.click(); page.wait_for_timeout(400)
     page.click('.map-turn'); page.wait_for_timeout(500)
     check('turn around: the back, and a muscle on both sides keeps its card', page.text_content('.map-heading') == 'Back' and page.locator('.mm-back.is-shown').count() == 1 and page.locator('.tc[data-part="lats"]').count() == 1 and page.evaluate("[...document.querySelectorAll('.mm-back .mm-muscle[data-part=lats]')].every(e => e.style.getPropertyValue('--mm-fill'))"))
@@ -911,16 +928,40 @@ with sync_playwright() as p:
     box = page.locator('.map-stage').bounding_box()
     page.mouse.move(box['x'] + 40, box['y'] + 60); page.mouse.down(); page.mouse.move(box['x'] + 200, box['y'] + 70, steps=6); page.mouse.up(); page.wait_for_timeout(500)
     check('a swipe sideways turns around too', page.text_content('.map-heading') == 'Back')
+    bx = page.locator('.mm-back .mm-muscle[data-part="teres-minor"]').first.bounding_box()
+    tx, ty = bx['x'] + bx['width'] / 2, bx['y'] + bx['height'] / 2
+    page.mouse.click(tx, ty); page.wait_for_timeout(100); page.mouse.click(tx, ty); page.wait_for_timeout(500)
+    scale = page.evaluate("new DOMMatrix(getComputedStyle(document.querySelector('.map-fig')).transform).a")
+    check('double tap: the first tap picks the muscle, the second zooms in on it', page.locator('.tc[data-part="teres-minor"]').count() == 1 and scale > 2 and page.is_visible('.map-zoomout'), str(scale))
+    on = page.evaluate("""() => { const s = document.querySelector('.map-stage').getBoundingClientRect(); const c = document.querySelector('.map-dock .tc').getBoundingClientRect();
+      const r = document.querySelector('.mm-back .mm-muscle[data-part="teres-minor"]').getBoundingClientRect(); const x = (r.left + r.right) / 2, y = (r.top + r.bottom) / 2;
+      return x > s.left && x < s.right && y > s.top && y < c.top; }""")
+    check('zoomed in, the muscle stays in sight above its card', on)
+    page.click('.map-zoomout'); page.wait_for_timeout(450)
+    scale = page.evaluate("new DOMMatrix(getComputedStyle(document.querySelector('.map-fig')).transform).a")
+    check('the zoom-out button goes back to the whole figure', abs(scale - 1) < 0.01 and not page.is_visible('.map-zoomout'), str(scale))
+    page.click('.tc-close'); page.wait_for_timeout(350)
     page.locator('.mm-back .mm-muscle[data-part="rear-delts"]').first.click(); page.wait_for_timeout(400)
     page.mouse.click(box['x'] + 30, box['y'] + 30); page.wait_for_timeout(350)
     check('tapping off the body puts the card away', page.locator('.map-dock.is-open').count() == 0)
     page.click('.map-list-btn'); page.wait_for_timeout(200)
     check('the list shows all 19 groups and 46 parts', page.is_visible('.map-listview') and page.locator('.map-group').count() == 19 and page.locator('.map-part').count() == 46 and page.text_content('.map-heading') == 'Every muscle')
     page.click('.map-part:text-is("Tibialis anterior")'); page.wait_for_timeout(400)
+    page.click('.map-part:text-is("Adductor longus")'); page.wait_for_timeout(400)
+    page.click('.map-tab:text-is("Adductor magnus")'); page.wait_for_timeout(400)
+    page.click('.map-list-btn'); page.wait_for_timeout(400)
+    check('a tab for a part on the other side turns the figure to it', page.text_content('.map-heading') == 'Back' and page.locator('.tc[data-part="adductor-magnus"]').count() == 1)
+    page.click('.map-list-btn'); page.wait_for_timeout(300)
+    page.click('.map-part:text-is("Tibialis anterior")'); page.wait_for_timeout(400)
     check('a muscle in the list pulls the same card', page.locator('.map-dock.is-open .tc[data-part="tibialis-anterior"]').count() == 1 and page.get_attribute('.map-part[data-part="tibialis-anterior"]', 'aria-pressed') == 'true')
     page.click('.map-list-btn'); page.wait_for_timeout(500)
     check('back to the figure, it turns to the side that muscle is on', page.text_content('.map-heading') == 'Front' and page.locator('.map-fig.is-away').count() == 0)
-    check('the figure is hidden from screen readers; the list is the way in', page.get_attribute('.mm-front', 'aria-hidden') == 'true')
+    check('the figure is hidden from screen readers; the list is the way in', page.get_attribute('.mm-figure.mm-front', 'aria-hidden') == 'true')
+    sync = page.evaluate("""() => { document.querySelector('.tc-close') && document.querySelector('.tc-close').click();
+      const el = document.querySelector('.mm-front .mm-muscle[data-part="abs"]');
+      const t0 = performance.now(); el.dispatchEvent(new MouseEvent('click', { bubbles: true })); const ms = performance.now() - t0;
+      return [!!el.style.getPropertyValue('--mm-fill'), ms]; }""")
+    check('a tapped muscle turns red straight away, before its card is built', sync[0] and sync[1] < 40, str(sync))
     check('muscle map tab: no console errors', not errors, '; '.join(errors[:4]))
     ctx.close()
 
@@ -933,7 +974,7 @@ with sync_playwright() as p:
         parts = page.evaluate(f"[...new Set([...document.querySelectorAll('.mm-{view} .mm-muscle')].map(e => e.dataset.part))]")
         for pt in parts:
             page.evaluate(f"document.querySelector('.mm-{view} .mm-muscle[data-part=\"{pt}\"]').dispatchEvent(new MouseEvent('click', {{ bubbles: true }}))")
-            page.wait_for_timeout(30)
+            page.wait_for_timeout(40)
             r = page.evaluate(f"""() => {{
               const card = document.querySelector('.map-dock .tc').getBoundingClientRect();
               const stage = document.querySelector('.map-stage').getBoundingClientRect();
@@ -943,6 +984,19 @@ with sync_playwright() as p:
             }}""")
             if not all(r): hidden.append(f'{view}:{pt}:{r}')
     check('every muscle, front and back, stays in sight above its card', not hidden, str(hidden[:6]))
+    for width in (390, 360):
+        page.set_viewport_size({'width': width, 'height': 800 if width == 390 else 640}); page.wait_for_timeout(200)
+        cut = page.evaluate("""async () => {
+          const out = [];
+          for (const b of document.querySelectorAll('.map-list-btn')) b.click();
+          for (const btn of document.querySelectorAll('.map-part')) {
+            btn.click(); await new Promise(r => setTimeout(r, 20));
+            const i = document.querySelector('.map-dock .tc-info'); const l = document.querySelector('.map-dock .tc-lifts');
+            if (i.scrollHeight > i.clientHeight + 1 || l.getBoundingClientRect().height < 40) out.push(btn.dataset.part + ':' + i.scrollHeight + '>' + i.clientHeight + ',' + Math.round(l.getBoundingClientRect().height));
+          }
+          for (const b of document.querySelectorAll('.map-list-btn')) b.click();
+          return out; }""")
+        check(f'all 46 cards at {width} px: the writing fits and the lift list has room', not cut, str(cut[:5]))
     check('the card is not covering: no console errors', not errors, '; '.join(errors[:4]))
     ctx.close()
 

@@ -1,6 +1,6 @@
 # Credits
 
-## Muscle map (art/muscle-front.svg, art/muscle-back.svg)
+## Muscle map (tools/art/drawings/muscle-front.svg and muscle-back.svg, and the app's art/muscle-* layers made from them)
 
 Drawn for Composition as original vector art by `tools/art/musclemap.py`. No
 picture is copied into the app. Every muscle's borders, start points and end
