@@ -19,7 +19,8 @@ no build step. Put the folder on any web host and it runs.
 
 - `app/main.js` starts everything and hands each page what it needs.
 - `app/router.js` turns pages. The address ends in a page name such as
-  `#cover` or `#today`; the list of pages is `ROUTES` at the top of the file.
+  `#cover` or `#today`; the cover has no tab, and the "Composition" name at
+  the top opens it; the list of pages is `ROUTES` at the top of the file.
 - `app/flip.js` builds the bending sheet for the page flip; the timing is in
   `styles/motion.css`.
 - `app/pages/` has one file per page. Each exports `render(el, ctx)` and
@@ -33,6 +34,11 @@ no build step. Put the folder on any web host and it runs.
 - `app/muscles.js` is the muscle map's lookups: which parts a lift trains
   and which lifts train a part. `app/musclepick.js` is the "Muscles it works"
   chooser for lifts you write in yourself.
+- `app/pages/map.js` is the Map tab: the figure, turning around, the list.
+  `app/mapart.js` loads the two drawings into the page once and colors a
+  picked muscle; `app/musclecard.js` builds a muscle's trading card (front:
+  what it does and a "Did you know?"; back: sets this week, last trained and
+  the lifts that train it). The look is in `styles/map.css`.
 - `app/units.js` turns pounds into kilograms and back; everything is worked
   out in pounds.
 - `app/store.js` saves to the device and makes backups.

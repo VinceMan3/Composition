@@ -2,6 +2,7 @@
 // lifts train a part. The words and the name list live in content/muscles.js.
 
 import { GROUPS, PARTS, PICK } from '../content/muscles.js';
+import { allLifts, dateKey, doneSets } from './log.js';
 
 export { GROUPS, PARTS, PICK };
 
@@ -59,4 +60,37 @@ export function unknownNames(lifts) {
     }
   }
   return [...out];
+}
+
+// Sets each part got, counted from checked-off sets of lifts (not cardio) on
+// filed pages and today's page in progress. A main muscle gets a full set and
+// a helper half a set. A name that covers a whole group, like "chest", gives
+// every part in it the full set.
+//   training(data) -> Map of part id -> { week: sets this week, last: '2026-11-12' or '' }
+// The week runs Monday to Sunday, like This week in the Notebook.
+export function training(data, today = new Date()) {
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+  const from = dateKey(monday);
+  const until = dateKey(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6));
+  const lifts = new Map(allLifts(data).map(l => [l.id, l]));
+  const out = new Map(PARTS.map(p => [p.id, { week: 0, last: '' }]));
+  const pages = [...(data.pages || [])];
+  if (data.draft) pages.push({ ...data.draft, date: data.draft.date || dateKey(today) });
+  for (const page of pages) {
+    const inWeek = page.date >= from && page.date <= until;
+    for (const entry of page.lifts || []) {
+      const lift = lifts.get(entry.liftId);
+      const sets = doneSets(entry).length;
+      if (!lift || !sets) continue;
+      const { works, helps } = partsFor(lift);
+      for (const [ids, share] of [[works, 1], [helps, 0.5]]) {
+        for (const id of ids) {
+          const t = out.get(id);
+          if (inWeek) t.week += sets * share;
+          if (page.date > t.last) t.last = page.date;
+        }
+      }
+    }
+  }
+  return out;
 }

@@ -12,7 +12,8 @@ def location_is(page, name):
     return page.evaluate('location.hash') == '#' + name
 
 def tab(page, name):
-    page.click(f'.tab[data-tab={name}]'); settle(page, name)
+    # The cover has no tab: the "Composition" name at the top opens it.
+    page.click('#wordmark' if name == 'cover' else f'.tab[data-tab={name}]'); settle(page, name)
 
 def open_app(browser, w=390, h=844, **kw):
     ctx = browser.new_context(service_workers='block', viewport={'width': w, 'height': h}, **kw)
@@ -65,9 +66,15 @@ with sync_playwright() as p:
         go(page, 'stickers'); fits('stickers')
         go(page, 'stats'); fits('stats-full')
         go(page, 'calc'); fits('calc')
-        for name in ['notebook', 'stats', 'more', 'cover']:
-            tab(page, name); fits(name + ('-after' if name == 'cover' else ''))
+        for name in ['notebook', 'stats', 'more', 'map']:
+            tab(page, name); fits(name)
             check(f'{label}: {name} tab marked current', page.get_attribute(f'.tab[data-tab={name}]', 'aria-current') == 'page')
+        page.wait_for_selector('.map-stage.is-ready')
+        page.locator('.mm-front .mm-muscle[data-part="chest-middle"]').first.click(); page.wait_for_timeout(450); fits('map-card')
+        page.click('.tc-front .tc-flip'); page.wait_for_timeout(500); fits('map-card-back')
+        page.click('.map-list-btn'); page.wait_for_timeout(200); fits('map-list')
+        tab(page, 'cover'); fits('cover-after')
+        check(f'{label}: on the cover no tab is marked', page.locator('.tab[aria-current]').count() == 0)
         imgs = page.evaluate("[...document.images].map(i => [i.src.split('/').pop(), i.complete && i.naturalWidth > 0])")
         check(f'{label}: cover art loads', imgs and all(ok for _, ok in imgs), str(imgs))
         check(f'{label}: no console errors', not errors, '; '.join(errors[:4]))
@@ -79,13 +86,13 @@ with sync_playwright() as p:
     mid = page.evaluate("({up: !!document.querySelector('.sheet-up'), strips: document.querySelectorAll('.sheet-strip').length, shade: !!document.querySelector('.shade.is-clearing'), below: document.querySelector('.stack > .page').dataset.page})")
     check('forward: the old page curls up in strips over the new one', mid == {'up': True, 'strips': 5, 'shade': True, 'below': 'today'}, str(mid))
     settle(page, 'today')
-    page.click('.tab[data-tab=cover]'); page.wait_for_selector('.sheet')
+    page.click('#wordmark'); page.wait_for_selector('.sheet')
     mid = page.evaluate("({down: !!document.querySelector('.sheet-down'), shade: !!document.querySelector('.shade.is-falling'), pages: document.querySelectorAll('.stack > .page').length})")
     check('backward: the new page falls onto the old one', mid == {'down': True, 'shade': True, 'pages': 2}, str(mid))
     settle(page, 'cover')
     flip = page.evaluate("parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--flip'))")
     check('flip is quicker than step 1', flip < 400, str(flip))
-    for name in ['today', 'stats', 'notebook', 'more', 'cover', 'stats']:
+    for name in ['today', 'stats', 'notebook', 'more', 'map', 'stats']:
         page.click(f'.tab[data-tab={name}]', no_wait_after=True)
     settle(page, 'stats')
     check('rapid taps: ends on last tab, nothing left over', page.evaluate("[document.querySelectorAll('.stack > *').length, location.hash]") == [1, '#stats'])
@@ -811,6 +818,17 @@ with sync_playwright() as p:
         bench: M.partsFor(by('bench-press')), incline: M.partsFor(by('incline-bench-press')),
         curl: M.partsFor(by('barbell-curl')), squat: M.partsFor(by('squat')),
         hammer: M.liftsFor('brachialis', LIFTS).main.map(l => l.id),
+        week: (() => {
+          const set = (w, r, done = true) => ({ w: String(w), r: String(r), rpe: '', done });
+          const data = { customLifts: [], pages: [
+            { date: '2026-11-04', lifts: [{ liftId: 'squat', sets: [set(300, 5)] }] },
+            { date: '2026-11-10', lifts: [{ liftId: 'bench-press', sets: [set(185, 5), set(185, 5), set(185, 5, false)] }, { liftId: 'boxing', sets: [] }] },
+            { date: '2026-11-12', lifts: [{ liftId: 'standing-calf-raise', sets: [set(200, 12), set(200, 12), set(200, 12), set(200, 12)] }] },
+          ], draft: { date: '2026-11-13', lifts: [{ liftId: 'bench-press', sets: [set(185, 5)] }] } };
+          const t = M.training(data, new Date(2026, 10, 13));
+          const pick = id => t.get(id);
+          return { chest: pick('chest-middle'), delts: pick('front-delts'), calf: pick('soleus'), quad: pick('vastus-lateralis'), abs: pick('abs') };
+        })(),
         dashes: /[\u2014\u2013]/.test(fs.readFileSync(process.argv[1] + '/content/muscles.js', 'utf8')),
       };
       console.log(JSON.stringify(out));
@@ -836,7 +854,97 @@ with sync_playwright() as p:
         check('folding: incline bench works the upper chest only', mc['incline']['works'] == ['chest-upper'], str(mc['incline']))
         check('folding: "biceps" is the two heads, brachialis on its own', mc['curl'] == {'works': ['biceps-long', 'biceps-short'], 'helps': ['brachialis', 'brachioradialis', 'wrist-flexors', 'wrist-extensors']}, str(mc['curl']))
         check('folding: "quads" is the big three, not the hip flexors', set(mc['squat']['works']) == {'rectus-femoris', 'vastus-lateralis', 'vastus-medialis', 'glute-max', 'glute-med'}, str(mc['squat']))
+        wk = mc['week']
+        check('sets this week: checked sets count, a full set for main muscles and half for helpers, today\'s page too', wk['chest'] == {'week': 3, 'last': '2026-11-13'} and wk['delts'] == {'week': 1.5, 'last': '2026-11-13'} and wk['calf'] == {'week': 4, 'last': '2026-11-12'}, str(wk))
+        check('sets this week: last week counts toward last trained only', wk['quad'] == {'week': 0, 'last': '2026-11-04'} and wk['abs'] == {'week': 0, 'last': '2026-11-04'}, str(wk))
         check('folding: hammer curls train the brachialis as a main muscle', 'hammer-curl' in mc['hammer'], str(mc['hammer']))
+
+    # ---------- the muscle map tab ----------
+    MAPSEED = """() => {
+      const set = (w, r) => ({ w: String(w), r: String(r), rpe: '', done: true });
+      const d = new Date(), pad = n => String(n).padStart(2, '0');
+      const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      localStorage.setItem('composition.app.v1', JSON.stringify({ version: 1, settings: { sound: true, units: 'lb', restSeconds: 120 }, draft: null, customLifts: [],
+        pages: [{ id: 'p1', date: today, title: 'Chest day', startedAt: 1, filedAt: 2, unit: 'lb',
+          lifts: [{ liftId: 'bench-press', sets: [set(185, 5), set(185, 5), set(185, 5)] }, { liftId: 'overhead-press', sets: [set(95, 8), set(95, 8)] }] }] }));
+    }"""
+    ctx, page, errors = open_app(browser)
+    check('the app still opens on the cover', page.evaluate("document.getElementById('app').dataset.page") == 'cover')
+    labels = page.evaluate("[...document.querySelectorAll('.tab')].map(t => t.textContent.trim())")
+    check('the tabs are Map, Today, Notebook, Stats and More', labels == ['Map', 'Today', 'Notebook', 'Stats', 'More'], str(labels))
+    page.evaluate(MAPSEED); page.reload(); page.wait_for_selector('.page')
+    tab(page, 'map'); page.wait_for_selector('.map-stage.is-ready')
+    check('the map opens on the front', page.text_content('.map-heading') == 'Front' and page.locator('.mm-front.is-shown').count() == 1 and page.locator('.mm-back.is-shown').count() == 0)
+    check('the drawing is in the page, so muscles can be tapped', page.locator('.map-fig .mm-front .mm-muscle').count() > 40 and page.locator('#mmfig-front').count() == 1)
+    check('no card until a muscle is tapped', page.locator('.map-dock.is-open').count() == 0 and page.is_visible('.map-hint'))
+    page.locator('.mm-front .mm-muscle[data-part="chest-middle"]').first.click(); page.wait_for_timeout(450)
+    red = page.evaluate("[...document.querySelectorAll('.mm-front .mm-muscle')].filter(e => e.style.getPropertyValue('--mm-fill')).map(e => e.dataset.part)")
+    check('a tapped muscle turns red, both sides of the body', red == ['chest-middle', 'chest-middle'], str(red))
+    check('and gets its sheen', page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path')].filter(e => e.style.opacity === '1').every(e => e.dataset.part === 'chest-middle')") and page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path[data-part=chest-middle]')].every(e => e.style.opacity === '1')"))
+    front_text = page.inner_text('.tc-front')
+    check('its trading card slides up: number, name, team, what it does, did you know', page.locator('.map-dock.is-open .tc').count() == 1 and 'No. 02' in front_text and 'Middle chest' in front_text and 'CHEST' in front_text.upper() and 'bear hug' in front_text and 'DID YOU KNOW?' in front_text.upper() and 'International Chest Day' in front_text, front_text[:200])
+    check('the card has a close-up of the muscle from the drawing', page.evaluate("document.querySelector('.tc-closeup use').getAttribute('href')") == '#mmfig-front' and page.evaluate("document.querySelector('.tc-closeup').getAttribute('viewBox').split(' ').length") == 4)
+    page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
+    back_text = page.inner_text('.tc-back')
+    rows = page.evaluate("[...document.querySelectorAll('.tc-lift')].map(r => [r.querySelector('.tc-lift-name').textContent, !!r.querySelector('.tc-lift-mine'), r.querySelector('.tc-lift-role').textContent])")
+    check('flipped: the back shows sets this week and last trained', page.locator('.tc-inner.is-flipped').count() == 1 and page.text_content('.tc-stat-n >> nth=0') == '3' and page.text_content('.tc-stat-n >> nth=1') == 'Today', back_text[:160])
+    check('and the lifts that train it, ones you have done first', rows[0] == ['Bench Press', True, 'Main'] and not any(r[1] for r in rows[1:]) and [r[2] for r in rows] == sorted([r[2] for r in rows], key=lambda x: x != 'Main') and len(rows) > 8, str(rows[:3]))
+    check('the front is hidden from screen readers while flipped', page.get_attribute('.tc-front', 'aria-hidden') == 'true' and page.get_attribute('.tc-back', 'aria-hidden') == 'false')
+    page.locator('.mm-front .mm-muscle[data-part="chest-upper"]').first.click(); page.wait_for_timeout(450)
+    up = page.evaluate("[...document.querySelectorAll('.tc-lift')].map(r => [r.querySelector('.tc-lift-name').textContent, r.querySelector('.tc-lift-role').textContent])")
+    n = page.evaluate("document.querySelector('.tc-stat-n').textContent")
+    check('upper chest: a helper set counts half (bench 3, overhead press 2 x 1/2)', page.locator('.tc-inner.is-flipped').count() == 0 and n == '4', n)
+    check('helper lifts come after the main ones', ['Overhead Press', 'Helps'] in up and up.index(['Overhead Press', 'Helps']) > max(i for i, r in enumerate(up) if r[1] == 'Main'), str(up[-4:]))
+    page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
+    page.click('.tc-lift >> nth=0'); settle(page, 'lift')
+    check('a lift on the back opens its page, with a way back to the map', 'Bench Press' in page.text_content('.heading') and page.locator('text=Back to the map').count() == 1)
+    page.click('text=Back to the map'); settle(page, 'map'); page.wait_for_selector('.map-stage.is-ready'); page.wait_for_timeout(300)
+    check('back on the map, the same card is waiting, still flipped', page.locator('.map-dock.is-open .tc[data-part="chest-upper"] .tc-inner.is-flipped').count() == 1)
+    page.click('.tc-close'); page.wait_for_timeout(350)
+    check('the close button puts the card away and clears the red', page.locator('.map-dock.is-open').count() == 0 and page.evaluate("![...document.querySelectorAll('.mm-muscle')].some(e => e.style.getPropertyValue('--mm-fill'))"))
+    page.locator('.mm-front .mm-muscle[data-part="lats"]').first.click(); page.wait_for_timeout(400)
+    page.click('.map-turn'); page.wait_for_timeout(500)
+    check('turn around: the back, and a muscle on both sides keeps its card', page.text_content('.map-heading') == 'Back' and page.locator('.mm-back.is-shown').count() == 1 and page.locator('.tc[data-part="lats"]').count() == 1 and page.evaluate("[...document.querySelectorAll('.mm-back .mm-muscle[data-part=lats]')].every(e => e.style.getPropertyValue('--mm-fill'))"))
+    page.locator('.mm-back .mm-muscle[data-part="glute-max"]').first.click(); page.wait_for_timeout(400)
+    page.click('.map-turn'); page.wait_for_timeout(500)
+    check('a muscle only on the back is put away when you turn to the front', page.text_content('.map-heading') == 'Front' and page.locator('.map-dock.is-open').count() == 0)
+    box = page.locator('.map-stage').bounding_box()
+    page.mouse.move(box['x'] + 40, box['y'] + 60); page.mouse.down(); page.mouse.move(box['x'] + 200, box['y'] + 70, steps=6); page.mouse.up(); page.wait_for_timeout(500)
+    check('a swipe sideways turns around too', page.text_content('.map-heading') == 'Back')
+    page.locator('.mm-back .mm-muscle[data-part="rear-delts"]').first.click(); page.wait_for_timeout(400)
+    page.mouse.click(box['x'] + 30, box['y'] + 30); page.wait_for_timeout(350)
+    check('tapping off the body puts the card away', page.locator('.map-dock.is-open').count() == 0)
+    page.click('.map-list-btn'); page.wait_for_timeout(200)
+    check('the list shows all 19 groups and 46 parts', page.is_visible('.map-listview') and page.locator('.map-group').count() == 19 and page.locator('.map-part').count() == 46 and page.text_content('.map-heading') == 'Every muscle')
+    page.click('.map-part:text-is("Tibialis anterior")'); page.wait_for_timeout(400)
+    check('a muscle in the list pulls the same card', page.locator('.map-dock.is-open .tc[data-part="tibialis-anterior"]').count() == 1 and page.get_attribute('.map-part[data-part="tibialis-anterior"]', 'aria-pressed') == 'true')
+    page.click('.map-list-btn'); page.wait_for_timeout(500)
+    check('back to the figure, it turns to the side that muscle is on', page.text_content('.map-heading') == 'Front' and page.locator('.map-fig.is-away').count() == 0)
+    check('the figure is hidden from screen readers; the list is the way in', page.get_attribute('.mm-front', 'aria-hidden') == 'true')
+    check('muscle map tab: no console errors', not errors, '; '.join(errors[:4]))
+    ctx.close()
+
+    # Every muscle on both sides: its card never covers it.
+    ctx, page, errors = open_app(browser, 390, 844, reduced_motion='reduce')
+    tab(page, 'map'); page.wait_for_selector('.map-stage.is-ready')
+    hidden = []
+    for view in ('front', 'back'):
+        if view == 'back': page.click('.map-turn'); page.wait_for_timeout(100)
+        parts = page.evaluate(f"[...new Set([...document.querySelectorAll('.mm-{view} .mm-muscle')].map(e => e.dataset.part))]")
+        for pt in parts:
+            page.evaluate(f"document.querySelector('.mm-{view} .mm-muscle[data-part=\"{pt}\"]').dispatchEvent(new MouseEvent('click', {{ bubbles: true }}))")
+            page.wait_for_timeout(30)
+            r = page.evaluate(f"""() => {{
+              const card = document.querySelector('.map-dock .tc').getBoundingClientRect();
+              const stage = document.querySelector('.map-stage').getBoundingClientRect();
+              const bs = [...document.querySelectorAll('.mm-{view} .mm-muscle[data-part="{pt}"]')].map(e => e.getBoundingClientRect());
+              const top = Math.min(...bs.map(b => b.top)), bottom = Math.max(...bs.map(b => b.bottom));
+              return [(top + bottom) / 2 < card.top - 14, top > stage.top - 2];
+            }}""")
+            if not all(r): hidden.append(f'{view}:{pt}:{r}')
+    check('every muscle, front and back, stays in sight above its card', not hidden, str(hidden[:6]))
+    check('the card is not covering: no console errors', not errors, '; '.join(errors[:4]))
+    ctx.close()
 
     # ---------- reduced motion and keyboard ----------
     ctx, page, errors = open_app(browser, reduced_motion='reduce')
