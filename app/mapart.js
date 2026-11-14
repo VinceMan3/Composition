@@ -1,5 +1,7 @@
 // The muscle map drawings, front and back, built for speed. Each view is a
 // stack of layers (made by tools/art/mapimages.py):
+//   0. the lit side of the body, a picture used as a stencil in --map-light
+//      (only the dark garage paper shows it; on paper it is see-through)
 //   1. the tap shapes (a small SVG): a picked muscle is filled red here
 //   2. the soft shading, a picture used as a stencil in --map-shade
 //   3. the pencil lines, a picture used as a stencil in --map-ink
@@ -25,7 +27,7 @@ function layer(cls, view, kind) {
 
 // Wait for the pictures so the figure appears whole, not in pieces.
 function preload(view) {
-  return Promise.all(['shade', 'ink'].map(kind => new Promise(resolve => {
+  return Promise.all(['light', 'shade', 'ink'].map(kind => new Promise(resolve => {
     const img = new Image();
     img.onload = img.onerror = () => resolve();
     img.src = `art/muscle-${view}-${kind}.webp`;
@@ -67,7 +69,7 @@ export function loadFigure(view) {
       const el = document.createElement('div');
       el.className = `mm-figure mm-${view}`;
       el.setAttribute('aria-hidden', 'true');
-      el.append(taps, layer('mm-shade', view, 'shade'), layer('mm-ink', view, 'ink'), sheen);
+      el.append(layer('mm-light', view, 'light'), taps, layer('mm-shade', view, 'shade'), layer('mm-ink', view, 'ink'), sheen);
 
       let picked = [];
       const fig = {
@@ -92,7 +94,17 @@ export function loadFigure(view) {
         partBox(partId) {
           const shapes = [...taps.querySelectorAll(`.mm-muscle[data-part="${partId}"]`)];
           if (!shapes.length) return null;
-          return shapes.map(s => s.getBBox()).sort((a, b) => a.x - b.x)[0];
+          const boxes = shapes.map(s => s.getBBox());
+          const x0 = Math.min(...boxes.map(b => b.x)), x1 = Math.max(...boxes.map(b => b.x + b.width));
+          const y0 = Math.min(...boxes.map(b => b.y)), y1 = Math.max(...boxes.map(b => b.y + b.height));
+          // Parts that meet in the middle (chest, abs, traps) show both sides.
+          if (x1 - x0 < W * 0.42) return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+          // Otherwise the one on the viewer's left.
+          const left = boxes.filter(b => b.x + b.width / 2 < W / 2);
+          const pick = left.length ? left : boxes;
+          const lx0 = Math.min(...pick.map(b => b.x)), lx1 = Math.max(...pick.map(b => b.x + b.width));
+          const ly0 = Math.min(...pick.map(b => b.y)), ly1 = Math.max(...pick.map(b => b.y + b.height));
+          return { x: lx0, y: ly0, width: lx1 - lx0, height: ly1 - ly0 };
         },
         shapes(partId) {
           return [...taps.querySelectorAll(`.mm-muscle[data-part="${partId}"]`)];
@@ -144,7 +156,7 @@ export function closeUp(fig, partId, crop) {
   inner.className = 'mm-cu-in';
   inner.dataset.view = fig.view;
   const [red, sheen] = fig.partCopy(partId);
-  inner.append(red, layer('mm-shade', fig.view, 'shade'), layer('mm-ink', fig.view, 'ink'), sheen);
+  inner.append(layer('mm-light', fig.view, 'light'), red, layer('mm-shade', fig.view, 'shade'), layer('mm-ink', fig.view, 'ink'), sheen);
   box.append(inner);
   const place = c => {
     inner.style.width = `${(W / c.w) * 100}%`;
@@ -157,10 +169,11 @@ export function closeUp(fig, partId, crop) {
 }
 
 // Work out a crop around a part for a window with this width-to-height shape.
-export function cropFor(fig, partId, aspect) {
+// fill is how much of the window the part takes up.
+export function cropFor(fig, partId, aspect, fill = 0.62) {
   const b = fig.partBox(partId);
   if (!b) return { x: 0, y: 0, w: W, h: H };
-  let h = Math.max(b.height / 0.62, b.width / 0.62 / aspect, 130);
+  let h = Math.max(b.height / fill, b.width / fill / aspect, 130);
   let w = h * aspect;
   if (w > W) { w = W; h = w / aspect; }
   if (h > H) { h = H; w = h * aspect; }

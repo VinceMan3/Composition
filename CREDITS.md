@@ -1,21 +1,26 @@
 # Credits
 
-## Muscle map (tools/art/drawings/muscle-front.svg and muscle-back.svg, and the app's art/muscle-* layers made from them)
+## Muscle map (art/muscle-front-* and art/muscle-back-*)
 
-Drawn for Composition as original vector art by `tools/art/musclemap.py`. No
-picture is copied into the app. Every muscle's borders, start points and end
-points were checked against these public domain references:
+Made from the Z-Anatomy 3D models (muscular and skeletal systems), by Lluís
+Vinent Juanico, Gauthier Kervyn and the Z-Anatomy project:
+https://github.com/LluisV/Z-Anatomy, licensed CC BY-SA 4.0
+(https://creativecommons.org/licenses/by-sa/4.0/).
 
-- Gray's Anatomy of the Human Body, 20th edition (Henry Gray, 1918). Public
-  domain. Regional plates used for the finer parts: Fig. 414 (front of the
-  forearm), Fig. 434 (gluteal region and back of the thigh) and the hand.
-- "Muscles anterior labeled" and "Muscle posterior labeled", collages of
-  Gray's plates by Mikael Häggström on Wikimedia Commons, released into the
-  public domain. A French labeled version of the front collage (built on the
-  same Gray's plates) was also looked at; nothing from it is in the app.
+Changes: the muscles were reshaped to a Classic Physique build, the arms
+posed 30 degrees out, the skull and face replaced with a plain head, and the
+figure rendered front and back and drawn over in graphite by the scripts in
+`tools/art/3d/`. Those pictures (the shading, the pencil lines and the tap
+shapes) are an adaptation of the models, so they are shared under the same
+license, CC BY-SA 4.0. The rest of the app is not.
 
-The build (proportions of a Classic Physique lifter) was judged from photos
-that are not included in the app and were not traced.
+The build (proportions of a Classic Physique lifter) was judged from Vince's
+reference guide and sketches, which are not included in the app.
+
+The first muscle map, drawn by `tools/art/musclemap.py` from public domain
+Gray's Anatomy plates (20th edition, 1918, and the labeled collages by
+Mikael Häggström on Wikimedia Commons), is kept in `tools/art/drawings/` but
+no longer shown in the app.
 
 ## Back double biceps sketch
 

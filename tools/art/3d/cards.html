@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: 'Bowlby One'; src: url('file:///home/claude/composition/tools/node_modules/@fontsource/bowlby-one/files/bowlby-one-latin-400-normal.woff2'); }
+@font-face { font-family: 'Archivo Narrow'; font-weight: 400 800; src: url('file:///home/claude/composition/tools/node_modules/@fontsource/archivo-narrow/files/archivo-narrow-latin-700-normal.woff2'); }
+@font-face { font-family: 'Special Elite'; src: url('file:///home/claude/composition/tools/node_modules/@fontsource/special-elite/files/special-elite-latin-400-normal.woff2'); }
+:root { --paper: #EDE6D1; --ink: #2B2420; --navy: #1E2A44; --blue: #9DC3E6; --maroon: #7A1F2B; --mustard: #E9B42C; --red: #C9302C; --stock: #FBF7EA; --cardboard: #D9C7A0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--paper); font-family: 'Archivo Narrow', sans-serif; color: var(--ink); width: 1260px; padding: 28px 24px 36px; }
+h1 { font-family: 'Bowlby One'; font-weight: 400; font-size: 30px; margin-bottom: 4px; }
+.sub { font-family: 'Special Elite'; font-size: 15px; color: #5a5048; margin-bottom: 22px; }
+.row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; align-items: start; }
+.col h2 { font-family: 'Bowlby One'; font-weight: 400; font-size: 21px; margin-bottom: 3px; }
+.col .what { font-size: 15px; font-weight: 700; color: #4a4038; margin-bottom: 14px; min-height: 40px; }
+.pair { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.cap { font-family: 'Special Elite'; font-size: 13px; color: #5a5048; text-align: center; }
+.art { background: url('art.png') center / cover, var(--paper); }
+
+/* ---------- A: vintage baseball, bolder ---------- */
+.a { width: 380px; aspect-ratio: 1.36; padding: 9px; border-radius: 12px; background: var(--stock); box-shadow: 0 10px 22px rgba(20,12,4,.32), 0 1px 1px rgba(0,0,0,.3); position: relative; }
+.a .photo { position: absolute; inset: 9px; border-radius: 6px; border: 3px solid var(--navy); overflow: hidden; background: url('art_land.png') center 40% / cover; }
+.a .stripe { position: absolute; left: -12px; right: 24%; bottom: 14px; height: 58px; background: var(--maroon); transform: skewX(-12deg); border: 3px solid var(--navy); box-shadow: 4px 4px 0 var(--navy); }
+.a .name { position: absolute; left: 22px; bottom: 26px; font-family: 'Bowlby One'; font-size: 30px; color: #FBF2D8; letter-spacing: .01em; text-shadow: 2px 2px 0 var(--navy); line-height: 1; }
+.a .team { position: absolute; left: 22px; bottom: 76px; font-family: 'Bowlby One'; font-size: 14px; background: var(--mustard); color: var(--navy); padding: 3px 10px 2px; border: 2px solid var(--navy); letter-spacing: .08em; }
+.a .badge { position: absolute; right: 18px; top: 18px; width: 64px; height: 64px; border-radius: 50%; background: var(--blue); border: 3px solid var(--navy); display: grid; place-items: center; text-align: center; font-family: 'Bowlby One'; color: var(--navy); line-height: .95; box-shadow: 3px 3px 0 var(--navy); }
+.a .badge b { font-size: 24px; font-weight: 400; } .a .badge i { font-style: normal; font-size: 9px; letter-spacing: .1em; display: block; }
+.a.back { background: var(--stock); }
+.a .bk { position: absolute; inset: 9px; border-radius: 6px; border: 3px solid #3A2E22; background: var(--cardboard); color: #3A2E22; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.a .bk .hd { display: flex; align-items: baseline; gap: 8px; border-bottom: 3px solid #3A2E22; padding-bottom: 4px; }
+.a .bk .hd b { font-family: 'Bowlby One'; font-weight: 400; font-size: 20px; } .a .bk .hd span { font-family: 'Special Elite'; font-size: 12px; margin-left: auto; }
+.a .bk p { font-size: 14.5px; font-weight: 700; line-height: 1.22; }
+.a .bk .dyk { font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--maroon); margin-top: 2px; }
+.a .bk .stats { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr 1.6fr; border: 2px solid #3A2E22; text-align: center; }
+.a .bk .stats div { padding: 3px 2px; border-left: 2px solid #3A2E22; } .a .bk .stats div:first-child { border: 0; }
+.a .bk .stats b { font-family: 'Bowlby One'; font-weight: 400; font-size: 18px; display: block; line-height: 1.05; } .a .bk .stats i { font-style: normal; font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+
+/* ---------- B: playing card ---------- */
+.b { width: 250px; aspect-ratio: .7; border-radius: 14px; background: var(--stock); box-shadow: 0 10px 22px rgba(20,12,4,.32), 0 1px 1px rgba(0,0,0,.3); position: relative; padding: 12px; }
+.b .rule { position: absolute; inset: 10px; border: 2px solid var(--red); border-radius: 9px; }
+.b .rule::after { content: ''; position: absolute; inset: 3px; border: 1px solid var(--red); border-radius: 7px; }
+.b .idx { position: absolute; top: 16px; left: 17px; text-align: center; color: var(--red); line-height: .9; }
+.b .idx b { font-family: 'Bowlby One'; font-weight: 400; font-size: 22px; display: block; } .b .idx span { font-size: 22px; }
+.b .idx.bot { top: auto; left: auto; bottom: 16px; right: 17px; transform: rotate(180deg); }
+.b .oval { position: absolute; left: 50%; top: 40px; width: 150px; height: 190px; transform: translateX(-50%); border-radius: 75px 75px 12px 12px; border: 3px solid var(--navy); overflow: hidden; background: url('art_port.png') center / cover; box-shadow: inset 0 0 0 3px var(--stock); }
+.b .ribbon { position: absolute; left: 16px; right: 16px; top: 214px; background: var(--navy); color: #FBF2D8; text-align: center; font-family: 'Bowlby One'; font-size: 19px; padding: 6px 0 5px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); }
+.b .suit { position: absolute; left: 0; right: 0; top: 256px; text-align: center; font-family: 'Special Elite'; font-size: 13px; color: var(--red); letter-spacing: .14em; }
+.b .fact { position: absolute; left: 40px; right: 40px; top: 278px; font-size: 12px; font-weight: 700; line-height: 1.2; text-align: center; }
+.suits { display: flex; gap: 10px; font-size: 13px; font-weight: 800; flex-wrap: wrap; justify-content: center; }
+.suits span { background: var(--stock); border: 2px solid var(--navy); border-radius: 999px; padding: 2px 9px; }
+.suits .r { color: var(--red); }
+
+/* ---------- C: game card ---------- */
+.c { width: 260px; aspect-ratio: .7; border-radius: 14px; padding: 9px; position: relative; box-shadow: 0 10px 22px rgba(20,12,4,.32); }
+.c.gold { background: linear-gradient(135deg, #8a6a1c, #f3d27a 25%, #b8892a 45%, #fbe7a6 60%, #9c7420 80%, #f0cf74); }
+.c .in { position: absolute; inset: 9px; border-radius: 8px; background: #23262d; border: 2px solid #111; padding: 8px; display: flex; flex-direction: column; gap: 6px; color: #F3EEE3; }
+.c .top { display: flex; align-items: center; gap: 6px; }
+.c .top b { font-family: 'Bowlby One'; font-weight: 400; font-size: 18px; flex: 1; line-height: 1; }
+.c .pow { font-family: 'Bowlby One'; font-size: 20px; color: #FFD25A; line-height: 1; text-align: right; } .c .pow i { font-style: normal; font-family: 'Archivo Narrow'; font-weight: 800; font-size: 10px; display: block; letter-spacing: .08em; color: #F3EEE3; }
+.c .win { height: 150px; border-radius: 5px; border: 2px solid #111; position: relative; overflow: hidden; background: repeating-conic-gradient(from 0deg at 50% 60%, #f6e4b0 0 6deg, #efd28a 6deg 12deg); }
+.c .win::after { content: ''; position: absolute; inset: 0; background: url('art_sq.png') center / 92% auto no-repeat; mix-blend-mode: multiply; }
+.c .type { align-self: flex-start; font-size: 10.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; background: var(--red); color: #fff; padding: 2px 8px; border-radius: 999px; margin-top: -2px; }
+.c .ab { background: #F3EEE3; color: var(--ink); border-radius: 5px; padding: 5px 7px; font-size: 12.5px; font-weight: 700; line-height: 1.18; }
+.c .ab b { font-family: 'Bowlby One'; font-weight: 400; font-size: 12px; color: var(--red); display: block; letter-spacing: .03em; }
+.c .fl { font-size: 11.5px; font-style: italic; font-weight: 700; line-height: 1.18; color: #d9d2c4; }
+.c .ft { margin-top: auto; display: flex; justify-content: space-between; font-family: 'Special Elite'; font-size: 11px; color: #b9b2a4; }
+.tiers { display: flex; gap: 10px; }
+.tier { width: 52px; height: 72px; border-radius: 7px; position: relative; box-shadow: 0 3px 8px rgba(0,0,0,.25); }
+.tier::after { content: ''; position: absolute; inset: 5px; border-radius: 4px; background: #23262d; }
+.tier.br { background: linear-gradient(135deg, #6b3d1f, #d08a52 35%, #7d4824 60%, #e0a06a); }
+.tier.si { background: linear-gradient(135deg, #7b8088, #eef1f4 35%, #8d939b 60%, #f6f8fa); }
+.tier.go { background: linear-gradient(135deg, #8a6a1c, #f3d27a 30%, #b8892a 55%, #fbe7a6); }
+.tier.ho { background: linear-gradient(120deg, #ff8fa3, #ffd36e 20%, #8ef0b5 40%, #7cc8ff 60%, #c79bff 80%, #ff8fa3); }
+.tl { font-size: 11px; font-weight: 800; text-align: center; margin-top: 4px; letter-spacing: .04em; }
+</style></head>
+<body>
+<h1>Muscle cards: three directions</h1>
+<p class="sub">Same muscle, same words. The art is the 3D soft graphite test, so this is roughly how a finished card would look.</p>
+<div class="row">
+
+  <div class="col">
+    <h2>A. Vintage baseball card</h2>
+    <p class="what">The card we have, made bolder: the art fills the front with a big slanted name stripe and a team badge. The words move to the cardboard back.</p>
+    <div class="pair">
+      <div class="a"><div class="photo"></div><div class="badge"><div><i>NO.</i><b>02</b></div></div><div class="team">CHEST</div><div class="stripe"></div><div class="name">Middle chest</div></div>
+      <div class="cap">front</div>
+      <div class="a back"><div class="bk">
+        <div class="hd"><b>Middle chest</b><span>No. 02 · Chest</span></div>
+        <p>Squeezes your arm across your body, the main mover when you press a bar off your chest or give someone a bear hug.</p>
+        <p class="dyk">Did you know?</p>
+        <p>Monday is International Chest Day, which is why every bench in the gym is taken.</p>
+        <div class="stats"><div><b>6</b><i>Sets this week</i></div><div><b>Tue</b><i>Last trained</i></div><div><b>Bench Press</b><i>Top lift</i></div></div>
+      </div></div>
+      <div class="cap">back (the lifts list sits under the stats)</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>B. Playing card</h2>
+    <p class="what">A deck of 46: corner marks with the card number and a suit for each kind of training. Upright like a real card, so it stands taller over the figure.</p>
+    <div class="pair">
+      <div class="b"><div class="rule"></div>
+        <div class="idx"><b>02</b><span>♥</span></div>
+        <div class="oval"></div>
+        <div class="ribbon">Middle chest</div>
+        <div class="suit">♥ PUSH · CHEST</div>
+        <div class="fact">Monday is International Chest Day, which is why every bench in the gym is taken.</div>
+        <div class="idx bot"><b>02</b><span>♥</span></div>
+      </div>
+      <div class="cap">front (what it does and the lifts go on the back)</div>
+      <div class="suits"><span class="r">♥ Push</span><span>♠ Pull</span><span class="r">♦ Legs</span><span>♣ Core</span></div>
+      <div class="cap">the four suits</div>
+    </div>
+  </div>
+
+  <div class="col">
+    <h2>C. Game card</h2>
+    <p class="what">A collectible game card: your sets this week are its power, and the foil frame levels up as you train that muscle during the week.</p>
+    <div class="pair">
+      <div class="c gold"><div class="in">
+        <div class="top"><b>Middle chest</b><div class="pow">6<i>SETS</i></div></div>
+        <div class="win"></div>
+        <div class="type">Chest · Push</div>
+        <div class="ab"><b>WHAT IT DOES</b>Squeezes your arm across your body, the main mover when you press a bar off your chest.</div>
+        <div class="fl">“Monday is International Chest Day, which is why every bench in the gym is taken.”</div>
+        <div class="ft"><span>No. 02/46</span><span>Gold</span></div>
+      </div></div>
+      <div class="cap">front, at gold (7 to 9 sets this week)</div>
+      <div class="tiers">
+        <div><div class="tier br"></div><div class="tl">Bronze<br>1 to 3</div></div>
+        <div><div class="tier si"></div><div class="tl">Silver<br>4 to 6</div></div>
+        <div><div class="tier go"></div><div class="tl">Gold<br>7 to 9</div></div>
+        <div><div class="tier ho"></div><div class="tl">Holo<br>10+</div></div>
+      </div>
+      <div class="cap">the foil goes up with your sets, the same steps as the heat map</div>
+    </div>
+  </div>
+
+</div>
+</body></html>

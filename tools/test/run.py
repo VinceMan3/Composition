@@ -745,19 +745,18 @@ with sync_playwright() as p:
     part_group = {pt: g for g, pts in MAP_PARTS.items() for pt in pts}
     seen = {}
     for view in ('front', 'back'):
-        path = os.path.join(REPO, 'tools', 'art', 'drawings', f'muscle-{view}.svg')
+        path = os.path.join(REPO, 'art', f'muscle-{view}-map.svg')   # the tap shapes the app uses
         svg = open(path).read()
         try:
             _xml.parseString(svg); ok = True
         except Exception as e:
             ok = False
-        check(f'muscle map {view}: the drawing is well formed', ok)
+        check(f'muscle map {view}: the tap shapes file is well formed', ok)
         shapes = _re.findall(r'<path class="mm-muscle" data-group="([^"]+)" data-part="([^"]+)"', svg)
         wrong = [(g, pt) for g, pt in shapes if part_group.get(pt) != g]
         check(f'muscle map {view}: every shape names a known part in the right group', shapes and not wrong, str(wrong[:4]))
         for g, pt in shapes: seen.setdefault(pt, set()).add(view)
-        check(f'muscle map {view}: only the muscle shapes take taps',
-              '.mm-ink,.mm-tone,.mm-gloss{pointer-events:none}' in svg)
+        check(f'muscle map {view}: only the muscle shapes take taps', '.mm-gloss{pointer-events:none}' in svg)
         # every part can actually be tapped: some point inside it reaches it
         ctx = browser.new_context(viewport={'width': 390, 'height': 700}, device_scale_factor=2)
         page = ctx.new_page()
@@ -880,24 +879,26 @@ with sync_playwright() as p:
     check('the drawing is in the page, so muscles can be tapped', page.locator('.map-fig .mm-front .mm-muscle').count() > 40)
     layers = page.evaluate("""() => [...document.querySelectorAll('.mm-front .mm-layer')].map(e => {
       const m = getComputedStyle(e).webkitMaskImage || getComputedStyle(e).maskImage; return m; })""")
-    check('the shading and pencil layers point at their pictures', len(layers) == 2 and all('art/muscle-front-' in m and m.startswith('url("http') for m in layers), str(layers))
-    pics = page.evaluate("""() => Promise.all(['shade', 'ink'].map(k => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth); i.onerror = () => r(0); i.src = 'art/muscle-front-' + k + '.webp'; })))""")
+    check('the light, shading and pencil layers point at their pictures', len(layers) == 3 and all('art/muscle-front-' in m and m.startswith('url("http') for m in layers), str(layers))
+    pics = page.evaluate("""() => Promise.all(['light', 'shade', 'ink'].map(k => new Promise(r => { const i = new Image(); i.onload = () => r(i.naturalWidth); i.onerror = () => r(0); i.src = 'art/muscle-front-' + k + '.webp'; })))""")
     check('and the pictures load', all(pics), str(pics))
     check('no card until a muscle is tapped', page.locator('.map-dock.is-open').count() == 0 and page.is_visible('.map-hint'))
     page.locator('.mm-front .mm-muscle[data-part="chest-middle"]').first.click(); page.wait_for_timeout(450)
     red = page.evaluate("[...document.querySelectorAll('.mm-front .mm-muscle')].filter(e => e.style.getPropertyValue('--mm-fill')).map(e => e.dataset.part)")
-    check('a tapped muscle turns red, both sides of the body', red == ['chest-middle', 'chest-middle'], str(red))
+    span = page.evaluate("(() => { const b = [...document.querySelectorAll('.map-fig .mm-front .mm-muscle[data-part=chest-middle]')].map(e => e.getBBox()); return [Math.min(...b.map(r => r.x)), Math.max(...b.map(r => r.x + r.width))]; })()")
+    check('a tapped muscle turns red, both sides of the body', red and set(red) == {'chest-middle'} and span[0] < 250 and span[1] > 310, str(red) + str(span))
     check('and gets its sheen', page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path')].filter(e => e.style.opacity === '1').every(e => e.dataset.part === 'chest-middle')") and page.evaluate("[...document.querySelectorAll('.mm-front .mm-gloss path[data-part=chest-middle]')].every(e => e.style.opacity === '1')"))
     front_text = page.inner_text('.tc-front')
-    check('its trading card slides up: number, name, team, what it does, did you know', page.locator('.map-dock.is-open .tc').count() == 1 and 'No. 02' in front_text and 'Middle chest' in front_text and 'CHEST' in front_text.upper() and 'bear hug' in front_text and 'DID YOU KNOW?' in front_text.upper() and 'International Chest Day' in front_text, front_text[:200])
-    check('the card has a close-up of the muscle from the drawing', page.locator('.tc-art .mm-closeup .mm-layer').count() == 2 and page.locator('.tc-art .mm-cu-red .mm-muscle[data-part="chest-middle"]').count() == 2)
-    cu = page.evaluate("""() => { const a = document.querySelector('.tc-art .mm-closeup').getBoundingClientRect(); const r = [...document.querySelectorAll('.tc-art .mm-cu-red .mm-muscle')].map(e => e.getBoundingClientRect());
+    check('its card slides up: the front has the number, name and team', page.locator('.map-dock.is-open .tc').count() == 1 and '02' in front_text and 'Middle chest' in front_text and 'CHEST' in front_text.upper(), front_text[:200])
+    check('the front is all art: a close-up of the muscle from the drawing', page.locator('.tc-photo .mm-closeup .mm-layer').count() == 3 and page.locator('.tc-photo .mm-cu-red .mm-muscle[data-part="chest-middle"]').count() >= 1)
+    cu = page.evaluate("""() => { const a = document.querySelector('.tc-photo .mm-closeup').getBoundingClientRect(); const r = [...document.querySelectorAll('.tc-photo .mm-cu-red .mm-muscle')].map(e => e.getBoundingClientRect());
       const x = Math.max(...r.map(b => b.right)) - Math.min(...r.map(b => b.left)); return [a.width, a.height, r.some(b => b.left < a.right && b.right > a.left && b.top < a.bottom && b.bottom > a.top)]; }""")
     check('and the muscle sits inside the close-up', cu[2], str(cu))
     tabs = page.evaluate("[...document.querySelectorAll('.map-tab')].map(t => [t.textContent, t.getAttribute('aria-pressed')])")
     check('tabs for the other parts of the group sit above the card', tabs == [['Upper chest', 'false'], ['Middle chest', 'true'], ['Lower chest', 'false']], str(tabs))
     page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
     back_text = page.inner_text('.tc-back')
+    check('the back: what it does and did you know', 'bear hug' in back_text and 'DID YOU KNOW?' in back_text.upper() and 'International Chest Day' in back_text, back_text[:200])
     rows = page.evaluate("[...document.querySelectorAll('.tc-lift')].map(r => [r.querySelector('.tc-lift-name').textContent, !!r.querySelector('.tc-lift-mine'), r.querySelector('.tc-lift-role').textContent])")
     check('flipped: the back shows sets this week and last trained', page.locator('.tc-inner.is-flipped').count() == 1 and page.text_content('.tc-stat-n >> nth=0') == '3' and page.text_content('.tc-stat-n >> nth=1') == 'Today', back_text[:160])
     check('and the lifts that train it, ones you have done first', rows[0] == ['Bench Press', True, 'Main'] and not any(r[1] for r in rows[1:]) and [r[2] for r in rows] == sorted([r[2] for r in rows], key=lambda x: x != 'Main') and len(rows) > 8, str(rows[:3]))
@@ -908,11 +909,16 @@ with sync_playwright() as p:
     n = page.evaluate("document.querySelector('.tc-stat-n').textContent")
     check('upper chest: a helper set counts half (bench 3, overhead press 2 x 1/2)', n == '4', n)
     check('switching parts with a tab keeps the card flipped', page.locator('.tc-inner.is-flipped').count() == 1)
+    check('the lifts wait behind a button, with their count', page.is_hidden('.tc-liftpane') and page.inner_text('.tc-to-lifts:not(.is-back)').startswith('Lifts that train it ·'))
+    page.click('.tc-to-lifts:not(.is-back)'); page.wait_for_timeout(200)
     lifts_box = page.evaluate("document.querySelector('.tc-lifts').getBoundingClientRect().height")
-    check('the lift list has room on the back of the card', lifts_box > 50, str(lifts_box))
+    check('the lift list slides in with room on the back of the card', lifts_box > 50 and page.is_hidden('.tc-about'), str(lifts_box))
+    page.click('.tc-to-lifts.is-back'); page.wait_for_timeout(200)
+    check('and the back button brings the words back', page.is_visible('.tc-about') and page.is_hidden('.tc-liftpane'))
     page.click('.tc-back .tc-flip'); page.wait_for_timeout(450)
     check('helper lifts come after the main ones', ['Overhead Press', 'Helps'] in up and up.index(['Overhead Press', 'Helps']) > max(i for i, r in enumerate(up) if r[1] == 'Main'), str(up[-4:]))
     page.click('.tc-front .tc-flip'); page.wait_for_timeout(500)
+    page.click('.tc-to-lifts:not(.is-back)'); page.wait_for_timeout(200)
     page.click('.tc-lift >> nth=0'); settle(page, 'lift')
     check('a lift on the back opens its page, with a way back to the map', 'Bench Press' in page.text_content('.heading') and page.locator('text=Back to the map').count() == 1)
     page.click('text=Back to the map'); settle(page, 'map'); page.wait_for_selector('.map-stage.is-ready'); page.wait_for_timeout(300)
@@ -991,12 +997,15 @@ with sync_playwright() as p:
           for (const b of document.querySelectorAll('.map-list-btn')) b.click();
           for (const btn of document.querySelectorAll('.map-part')) {
             btn.click(); await new Promise(r => setTimeout(r, 20));
-            const i = document.querySelector('.map-dock .tc-info'); const l = document.querySelector('.map-dock .tc-lifts');
-            if (i.scrollHeight > i.clientHeight + 1 || l.getBoundingClientRect().height < 40) out.push(btn.dataset.part + ':' + i.scrollHeight + '>' + i.clientHeight + ',' + Math.round(l.getBoundingClientRect().height));
+            const i = document.querySelector('.map-dock .tc-about'); const n = document.querySelector('.map-dock .tc-name'); const st = document.querySelector('.map-dock .tc-stripe');
+            document.querySelector('.map-dock .tc-to-lifts').click();
+            const l = document.querySelector('.map-dock .tc-lifts').getBoundingClientRect().height;
+            document.querySelector('.map-dock .tc-to-lifts.is-back').click();
+            if (i.scrollHeight > i.clientHeight + 1 || n.scrollWidth > st.clientWidth || l < 40) out.push(btn.dataset.part + ':' + i.scrollHeight + '>' + i.clientHeight + ',' + n.scrollWidth + '>' + st.clientWidth + ',' + Math.round(l));
           }
           for (const b of document.querySelectorAll('.map-list-btn')) b.click();
           return out; }""")
-        check(f'all 46 cards at {width} px: the writing fits and the lift list has room', not cut, str(cut[:5]))
+        check(f'all 46 cards at {width} px: the name fits its stripe, the back\'s writing fits, and the lift list has room', not cut, str(cut[:5]))
     check('the card is not covering: no console errors', not errors, '; '.join(errors[:4]))
     ctx.close()
 
