@@ -5,7 +5,7 @@ app itself still needs no build step.
 
 | File | What it does |
 | --- | --- |
-| `test/run.py` | The full set of checks (400 at last count), run in a real browser |
+| `test/run.py` | The full set of checks (403 at last count), run in a real browser |
 | `test/common.py` | Shared setup for the checks: fonts, error capture, screenshots |
 | `build-preview.py` | Packs the app into one page for a Claude preview, in `tools/preview/` |
 | `serve.sh` | Starts the two local servers the checks use |
@@ -35,9 +35,14 @@ offline check, which is skipped for the preview.
 
 ## Muscle map art
 
-`python3 tools/art/musclemap.py` draws the full figures into
-`tools/art/drawings/`. Then `python3 tools/art/mapimages.py` turns them into
-what the app shows: `art/muscle-<view>-shade.webp` and `-ink.webp` (black
-stencils the app colors with `--map-shade` and `--map-ink`) and
-`art/muscle-<view>-map.svg` (tap shapes and sheen). Run both after changing
-the drawing.
+The app shows the muscle map as layers in `art/`: `muscle-<view>-shade.webp`
+and `-ink.webp` (black stencils the app colors with `--map-shade` and
+`--map-ink`) and `muscle-<view>-map.svg` (tap shapes and sheen).
+
+They are made from 3D models by the scripts in `tools/art/3d/` (see the
+README there): render the reshaped, posed figure in Blender, turn the renders
+into graphite (`npr.py`), then `build.py` maps every model muscle to one of
+the 46 parts, traces the tap shapes and writes the layers.
+
+The first, hand-coded drawing (`tools/art/musclemap.py`, kept in
+`tools/art/drawings/`, with `tools/art/mapimages.py`) is no longer used.

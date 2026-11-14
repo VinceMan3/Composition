@@ -214,6 +214,7 @@ export function render(el, ctx) {
       restoreBtn,
     ),
 
+    h('p', { class: 'version credits' }, w.credits),
     h('p', { class: 'version' }, w.version),
   );
 

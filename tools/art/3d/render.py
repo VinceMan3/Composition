@@ -1,26 +1,37 @@
-import bpy, sys, math, mathutils, colorsys, json, random
+import bpy, sys, math, mathutils, colorsys, json, random, os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import reshape
 ZA = '/home/claude/3d/zanat/Resources/Models/FBX/'
-OUT = '/home/claude/3d/work/'
-RES = (1300, 2000)
+OUT = os.environ.get('OUT', '/home/claude/3d/work/')
+RES = (int(os.environ.get('RES_W', 1300)), int(os.environ.get('RES_H', 2000)))
 SKIP = ('fascia', 'bursa', 'sheath', 'retinaculum', 'aponeurosis', 'septum', 'cross section', 'ligament', 'capsule', 'membrane', 'disc', 'cartilage', 'meniscus')
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=ZA + 'MuscularSystem100.fbx')
 musc = {o.name for o in bpy.data.objects if o.type == 'MESH'}
 bpy.ops.import_scene.fbx(filepath=ZA + 'SkeletalSystem100.fbx')
 bpy.context.view_layer.update()
+PARENTS = {o.name: reshape.chain(o) for o in bpy.data.objects if o.type == 'MESH'}
 # Keep every piece where it really is before the group holders are removed.
 for o in [o for o in bpy.data.objects if o.type == 'MESH']:
     mw = o.matrix_world.copy(); o.parent = None; o.matrix_world = mw
 DROP = {'Take a picture', 'Diaphragm', 'Platysma.l', 'Platysma.r'}
 def keep(o):
     if o.type != 'MESH' or o.name in DROP or o.name.startswith('Sinus'): return False
-    if any(s in o.name.lower() for s in SKIP): return False
+    if any(s in o.name.lower() for s in SKIP) and not o.name.startswith('Tensor fasciae latae'): return False
     # real left, right and middle pieces only; the others are labels and markers
     return '.' not in o.name or o.name.rsplit('.', 1)[1] in ('l', 'r')
 for o in list(bpy.data.objects):
     if not keep(o):
         bpy.data.objects.remove(o, do_unlink=True)
 objs = [o for o in bpy.data.objects if o.type == 'MESH']
+# Left and right pieces can share one mesh; give each its own before reshaping.
+for o in objs:
+    if o.data.users > 1:
+        o.data = o.data.copy()
+BUILD = os.environ.get('BUILD', 'classic')
+if BUILD == 'classic':
+    reshape.grow(objs)
+    reshape.pose_arms(objs, PARENTS, 30)
 # The head is a plain construction egg, no face: drop the skull and face
 # muscles and put a smooth egg where the skull was.
 def box(o):
@@ -51,6 +62,9 @@ sc = bpy.context.scene
 cam_data = bpy.data.cameras.new('cam'); cam_data.type = 'ORTHO'; cam_data.ortho_scale = 1.98
 cam = bpy.data.objects.new('cam', cam_data); sc.collection.objects.link(cam); sc.camera = cam
 cam.location = (0, -5, 0.85); cam.rotation_euler = (math.radians(90), 0, 0)
+VIEW = os.environ.get('VIEW', 'front')
+if VIEW == 'back':
+    cam.location = (0, 5, 0.85); cam.rotation_euler = (math.radians(90), 0, math.radians(180))
 sc.render.resolution_x, sc.render.resolution_y = RES
 sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'
 sc.render.image_settings.file_format = 'PNG'
@@ -61,21 +75,31 @@ if which == 'shade':
     for o in objs:
         o.data.materials.clear(); o.data.materials.append(mat)
     # a soft key light from the upper left, a weak fill from the right
-    sun = bpy.data.lights.new('sun', 'SUN'); sun.energy = 3.2; sun.angle = math.radians(22)
+    sun = bpy.data.lights.new('sun', 'SUN'); sun.energy = 3.6; sun.angle = math.radians(16)
     so = bpy.data.objects.new('sun', sun); sc.collection.objects.link(so)
-    so.rotation_euler = (math.radians(58), math.radians(-30), math.radians(-28))
-    fill = bpy.data.lights.new('fill', 'SUN'); fill.energy = 0.55; fill.angle = math.radians(40)
+    so.rotation_euler = (math.radians(55), math.radians(-38), math.radians(-40))
+    fill = bpy.data.lights.new('fill', 'SUN'); fill.energy = 0.35; fill.angle = math.radians(40)
     fo = bpy.data.objects.new('fill', fill); sc.collection.objects.link(fo)
     fo.rotation_euler = (math.radians(75), math.radians(30), math.radians(35))
+    if VIEW == 'back':
+        # turn the lights with the camera, so the light still comes from the viewer's upper left
+        so.rotation_euler.z += math.pi; fo.rotation_euler.z += math.pi
     world = bpy.data.worlds.new('w'); sc.world = world; world.use_nodes = True
     world.node_tree.nodes['Background'].inputs['Color'].default_value = (1, 1, 1, 1)
-    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.5
+    world.node_tree.nodes['Background'].inputs['Strength'].default_value = 0.38
     sc.cycles.samples = 24; sc.cycles.use_denoising = True
     sc.render.film_transparent = True
     sc.view_settings.view_transform = 'Standard'
     sc.render.filepath = OUT + 'shade.png'
 else:
-    # flat ids: every object its own color, no blending at edges
+    # flat ids: every object its own color, no blending at edges.
+    # 'deep' hides the sheets that lie over parts we still want to tap.
+    if which == 'deep':
+        SEE_THROUGH = ('External abdominal oblique muscle', 'Internal abdominal oblique muscle', 'Transversus abdominis',
+                       'part of trapezius muscle', 'Iliotibial tract')
+        for o in objs:
+            if any(k in o.name for k in SEE_THROUGH):
+                o.hide_render = True
     sc.cycles.samples = 1; sc.cycles.use_denoising = False
     sc.cycles.pixel_filter_type = 'BOX'; sc.cycles.filter_width = 0.01
     sc.view_settings.view_transform = 'Raw'; sc.render.dither_intensity = 0
@@ -91,6 +115,6 @@ else:
         o.data.materials.clear(); o.data.materials.append(m)
         ids[i] = [o.name, o.name in musc]
     json.dump(ids, open(OUT + 'ids.json', 'w'))
-    sc.render.filepath = OUT + 'ids.png'
+    sc.render.filepath = OUT + ('ids_deep.png' if which == 'deep' else 'ids.png')
 bpy.ops.render.render(write_still=True)
 print('done', which)

@@ -1,35 +1,50 @@
-# Muscle map from a 3D model (test, Nov 14)
+# The muscle map, made from a 3D model
 
-Plan B for the muscle map art: render the Z-Anatomy muscle and skeleton
-models (CC BY-SA 4.0, https://github.com/LluisV/Z-Anatomy) in Blender, then
-turn the renders into a graphite drawing.
+The Map tab's figure comes from the Z-Anatomy 3D models (CC BY-SA 4.0,
+https://github.com/LluisV/Z-Anatomy), reshaped and drawn in graphite here.
+See CREDITS.md for the license note.
 
-Setup:
+## Setup
 - `pip install --break-system-packages bpy` (Blender 5.3 as a Python module).
-  Run Blender scripts with `python3 -I` (without it, an import clash crashes).
-  Keep scripts out of folders with files named like standard modules
-  (a file called `inspect.py` broke the FBX importer).
-- Clone the model files only:
-  `git clone --depth 1 --filter=blob:none --no-checkout https://github.com/LluisV/Z-Anatomy zanat`
-  then `git checkout HEAD -- "Resources/Models/FBX/MuscularSystem100.fbx" "Resources/Models/FBX/SkeletalSystem100.fbx" LICENSE`
-  (do not run `git ls-tree -l` there: it downloads every file).
+  Run the Blender scripts with `python3 -I` (without it an import clash
+  crashes). Keep scripts out of folders holding files named like standard
+  Python modules (a file called `inspect.py` broke the FBX importer).
+- The models only:
+  `git clone --depth 1 --filter=blob:none --no-checkout https://github.com/LluisV/Z-Anatomy zanat`, then
+  `git checkout HEAD -- "Resources/Models/FBX/MuscularSystem100.fbx" "Resources/Models/FBX/SkeletalSystem100.fbx" LICENSE`
+  (never `git ls-tree -l` there: it downloads every file). Point `ZA` at the
+  top of `render.py` to that folder.
 
-Steps (paths at the top of each script):
-1. `python3 -I render.py -- ids` renders each piece in its own flat color
-   (ids.png, ids.json); `python3 -I render.py -- shade` renders the lit clay
-   (shade.png). Pieces whose names end in `.j`, `.i`, `.ol`, `.e1l` and so on
-   are labels and markers and are dropped; group holders carry rotation and
-   scale, so each piece keeps its world position before they are removed.
-   The skull and face are replaced with a smooth egg.
-2. `python3 npr.py` (or `STYLE=soft python3 npr.py`) makes the graphite
-   layers: tone, parallel hatching along each piece, edges dark in shadow
-   and lost in the light, a slight hand wobble, paper grain.
-3. `compare.py` puts the current drawing and both styles side by side with
-   the chest picked; `cards.html` is the three card directions.
+## Steps (about 25 minutes on 2 CPUs)
+For VIEW in front, back:
+1. `RES_W=2240 RES_H=3440 VIEW=front OUT=final/front/ python3 -I render.py -- ids`
+   then `-- deep` and `-- shade`.
+   - ids: every model piece in its own flat color (ids.png, ids.json).
+   - deep: the same with the sheets over the abs (both obliques, transversus),
+     the trapezius and the IT band hidden, so the abs, rhomboids, outer quad
+     and TFL get tap shapes too.
+   - shade: lit clay, key light from the viewer's upper left (the lights turn
+     with the camera for the back).
+   `render.py` drops labels and markers (names ending `.j`, `.i`, `.ol`,
+   `.e1l` ...), sheets of connective tissue (but keeps the tensor fasciae
+   latae), keeps each piece's world position when the group holders go,
+   gives left and right pieces their own mesh, then `reshape.py` fills out a
+   Classic Physique build (muscle bellies pushed out along smoothed normals,
+   wider lats, a smaller waist) and turns the arms 30 degrees out. The skull
+   and face become a smooth egg.
+2. `VIEW=front STYLE=soft OUT=final/front/ python3 npr.py`: graphite layers
+   (tone with core shadows and creases, hatching along each muscle, edges
+   dark in shadow and lost in the light, a hand wobble, paper tooth, head
+   construction lines on the front).
+3. `python3 build.py final/ <repo>`: maps every model muscle to one of the 46
+   parts (the model's top and bottom trapezius names come out swapped),
+   clips forearm parts at the wrist and lower-leg parts at the ankle, drops
+   slivers mostly seen from the other side, traces the tap shapes, and writes
+   `art/muscle-<view>-light.webp`, `-shade.webp`, `-ink.webp` and `-map.svg`.
+   It prints which side each part shows on; `content/muscles.js` must match
+   (a check enforces it).
 
-Still to do if Vince picks this: Classic Physique build (reshape in
-Blender), arms 30 degrees out (pose the arms), construction lines on the
-head, the back view, a second ID pass with the oblique's sheet hidden so the
-abs get their own region, regions mapped to the 46 parts, then the same
-layers the app uses now (tools/art/mapimages.py), and frames for a smooth
-spin.
+`compare.py` and `cards.html` made the Nov 14 comparison sheets.
+
+## Still to come
+Frames for a smooth spin when turning around.

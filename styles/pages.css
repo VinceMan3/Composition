@@ -410,6 +410,7 @@
   box-shadow: inset 0 2px 4px rgba(60, 38, 12, .2);
 }
 .version { font-family: var(--f-type); font-size: 12px; font-weight: 400; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-soft); }
+.version.credits { text-transform: none; letter-spacing: .02em; line-height: 1.45; }
 
 /* ---------- cardio on today's page ---------- */
 .cardio .lift-name { color: var(--navy); }

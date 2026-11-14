@@ -139,6 +139,7 @@ export const WORDS = {
     never: 'Not yet',
     today: 'Today',
     liftsLabel: 'Lifts that train it',
+    backToCard: 'Back to the card',
     main: 'Main',
     helps: 'Helps',
     logged: 'In your notebook',
@@ -388,6 +389,7 @@ export const WORDS = {
     restoreConfirm: 'Tap again to replace everything',
     restorePlaceholder: 'Paste a backup here',
     notSaving: 'This browser is blocking saved data, so changes last only until you close the page.',
+    credits: 'Muscle map made from Z-Anatomy 3D models (CC BY-SA 4.0), reshaped and drawn in graphite for Composition. The muscle map pictures share that license.',
     version: 'Step 6 · the dim garage, offline',
   },
 
