@@ -48,3 +48,11 @@ For VIEW in front, back:
 
 ## Still to come
 Frames for a smooth spin when turning around.
+
+## The live 3D figure (work in progress, Nov 20)
+
+- `scene.py` builds the figure (shared by `render.py` and `export.py`); `parts.py` maps model pieces to the 46 parts.
+- `rig.py` finds a 54-bone skeleton from the model's own bones (sphere fits for the shoulders and hips, ends of the long bones, vertebra bodies, every finger joint).
+- `skin.py` ties every point to the skeleton: Blender's bone heat on a watertight voxel shell (worked ten times bigger, or the heat solver fails), copied to each point from the nearest place on the shell, blurred through space so layered pieces move together, kept to its own side, the arm's pull fading fast away from the upper arm, and the hand split among the fingers. It also makes each muscle's squeeze (belly swells, draws toward its middle, fades out where parts meet) and the vacuum.
+- `export.py` writes `figure.bin` (points, triangles, parts, pieces, fibers, creases, bone weights, squeezes) and `figure.json` (part names, pieces, head, bones). Run: `OUT=/path/ python3 -I export.py` (about 5 minutes).
+- `live/`: the test page. `figure3d.js` draws the model in graphite (three.js, dual quaternion skinning in the shader), `skeleton.js` turns bones, `poser.js` turns plain joint angles into a pose and moves between poses with a squeeze, `poses.js` holds the poses and the Flex it moves. Serve the folder with `figure.bin`, `figure.json`, `three.module.js`, `three.core.js` and `paper.webp` next to it.

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Muscle map 3D: look test</title>
+<style>
+  :root { --paper: #F6EDCD; --ink: #2B2420; --map-ink: #2A2A2E; --map-shade: #1C1C1F; --map-tone: 1; --map-light: transparent; --map-red: #C9302C; }
+  :root[data-look="garage"] { --paper: #33363B; --ink: #ECE8E1; --map-ink: #C4B2EA; --map-shade: #000000; --map-tone: .6; --map-light: rgba(222, 218, 234, .86); --map-red: #D8463B; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--paper); color: var(--ink); font: 600 14px/1.3 system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  body::before { content: ''; position: fixed; inset: 0; background: url(paper.webp) 0 0 / 300px 300px; mix-blend-mode: multiply; opacity: .55; pointer-events: none; }
+  :root[data-look="garage"] body::before { opacity: .25; mix-blend-mode: overlay; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100dvh; touch-action: none; display: block; }
+  .bar { position: fixed; left: 0; right: 0; top: 0; display: flex; gap: 6px; padding: 10px; flex-wrap: wrap; z-index: 2; pointer-events: none; }
+  .bar button { pointer-events: auto; border: 2px solid currentColor; background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font: inherit; }
+  .bar button[aria-pressed="true"] { background: var(--map-red); color: #fff; border-color: var(--map-red); }
+  #name { position: fixed; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 18px; font-weight: 800; z-index: 2; pointer-events: none; }
+  .dock { position: fixed; left: 0; right: 0; bottom: 52px; display: flex; justify-content: center; gap: 10px; z-index: 3; pointer-events: none; }
+  .dock button { pointer-events: auto; border: 2px solid currentColor; background: var(--paper); color: inherit; border-radius: 999px; padding: 9px 18px; font: inherit; font-size: 15px; }
+  .dock button[hidden] { display: none; }
+  #sheet { position: fixed; left: 0; right: 0; bottom: 0; max-height: 70dvh; overflow: auto; background: var(--paper); border-top: 2px solid currentColor; border-radius: 18px 18px 0 0; padding: 8px 14px 24px; z-index: 5; transform: translateY(105%); transition: transform 240ms cubic-bezier(.2,.8,.2,1); }
+  #sheet.open { transform: none; }
+  #sheet h3 { margin: 14px 4px 6px; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+  #sheet button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid rgba(127,127,127,.3); background: none; color: inherit; font: inherit; font-size: 17px; padding: 12px 6px; }
+  #sheet button[aria-current="true"] { color: var(--map-red); }
+  #scrim { position: fixed; inset: 0; z-index: 4; display: none; }
+  #scrim.open { display: block; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="loading">Loading the figure…</div>
+<canvas id="c"></canvas>
+<div class="bar">
+  <button id="paper" aria-pressed="true">Paper</button>
+  <button id="garage" aria-pressed="false">Garage</button>
+  <button data-yaw="0">Front</button>
+  <button data-yaw="90">Side</button>
+  <button data-yaw="180">Back</button>
+</div>
+<div class="dock"><button id="flexit" hidden>Flex it</button><button id="posebtn">Pose</button></div>
+<div id="scrim"></div>
+<div id="sheet" role="dialog" aria-label="Poses"></div>
+<div id="name">Drag to spin · pinch to zoom · tap a muscle</div>
+<script type="module">
+import { createFigure } from './figure3d.js';
+import { makePoser } from './poser.js';
+import { POSES, GROUPS, FLEX_MOVES } from './poses.js';
+const params = new URLSearchParams(location.search);
+const NAMES = { 'chest-upper': 'Upper chest', 'chest-middle': 'Middle chest', 'chest-lower': 'Lower chest', 'front-delts': 'Front delts', 'side-delts': 'Side delts', 'rear-delts': 'Rear delts', 'biceps-long': 'Biceps, long head', 'biceps-short': 'Biceps, short head', 'brachialis': 'Brachialis', 'triceps-long': 'Triceps, long head', 'triceps-lateral': 'Triceps, lateral head', 'triceps-medial': 'Triceps, medial head', 'brachioradialis': 'Brachioradialis', 'wrist-flexors': 'Wrist flexors', 'wrist-extensors': 'Wrist extensors', 'traps-upper': 'Upper traps', 'traps-middle': 'Middle traps', 'traps-lower': 'Lower traps', 'rhomboids': 'Rhomboids', 'infraspinatus': 'Infraspinatus', 'teres-minor': 'Teres minor', 'teres-major': 'Teres major', 'lats': 'Lats', 'lower-back': 'Spinal erectors', 'abs': 'Abs', 'external-oblique': 'External oblique', 'serratus': 'Serratus', 'glute-max': 'Glute max', 'glute-med': 'Glute med', 'rectus-femoris': 'Rectus femoris', 'vastus-lateralis': 'Vastus lateralis', 'vastus-medialis': 'Vastus medialis', 'sartorius': 'Sartorius', 'tfl': 'TFL', 'hip-flexors': 'Hip flexors', 'biceps-femoris': 'Biceps femoris', 'semitendinosus': 'Semitendinosus', 'semimembranosus': 'Semimembranosus', 'adductor-longus': 'Adductor longus', 'adductor-magnus': 'Adductor magnus', 'gracilis': 'Gracilis', 'pectineus': 'Pectineus', 'gastroc-medial': 'Inner calf', 'gastroc-lateral': 'Outer calf', 'soleus': 'Soleus', 'tibialis-anterior': 'Tibialis anterior' };
+
+const canvas = document.getElementById('c');
+const colors = () => { const cs = getComputedStyle(document.documentElement); const g = n => cs.getPropertyValue(n).trim(); return { ink: g('--map-ink'), shade: g('--map-shade'), tone: g('--map-tone'), light: g('--map-light'), red: g('--map-red') }; };
+if (params.get('look') === 'garage') document.documentElement.dataset.look = 'garage';
+let info, fig;
+try {
+  info = await (await fetch('figure.json')).json();
+  fig = await createFigure(canvas, { modelUrl: 'figure.bin', info, colors: colors() });
+} catch (e) {
+  document.getElementById('loading').textContent = 'The figure could not load here: ' + e.message;
+  throw e;
+}
+window.fig = fig;
+document.getElementById('loading').remove();
+
+const v = { yaw: +(params.get('yaw') || 0) * Math.PI / 180, pitch: +(params.get('pitch') || 0) * Math.PI / 180, zoom: +(params.get('zoom') || 1), panX: 0, panY: 0 };
+const LIMIT = 30 * Math.PI / 180;
+const apply = () => fig.setView(v);
+apply();
+if (params.get('pick')) { fig.select(params.get('pick')); }
+
+const look = name => {
+  if (name === 'garage') document.documentElement.dataset.look = 'garage'; else delete document.documentElement.dataset.look;
+  document.getElementById('paper').setAttribute('aria-pressed', String(name !== 'garage'));
+  document.getElementById('garage').setAttribute('aria-pressed', String(name === 'garage'));
+  fig.setColors(colors());
+};
+document.getElementById('paper').onclick = () => look('paper');
+document.getElementById('garage').onclick = () => look('garage');
+if (params.get('look') === 'garage') look('garage');
+for (const b of document.querySelectorAll('[data-yaw]')) b.onclick = () => { v.yaw = +b.dataset.yaw * Math.PI / 180; v.pitch = 0; v.zoom = 1; v.panX = v.panY = 0; apply(); };
+
+// a flick keeps the figure turning, slowing down like a lazy susan
+const SPIN = 0.02;   // turn per pixel dragged: a full turn in about one screen width
+let flingId = 0;
+function stopFling() { cancelAnimationFrame(flingId); flingId = 0; }
+function fling(vel) {
+  stopFling();
+  let t0 = performance.now();
+  const step = now => {
+    const dt = Math.min(40, now - t0); t0 = now;
+    v.yaw += vel * dt;
+    vel *= Math.pow(0.0035, dt / 1000);   // most of the speed gone in about a second
+    apply();
+    flingId = Math.abs(vel) > 0.00004 ? requestAnimationFrame(step) : 0;
+  };
+  flingId = requestAnimationFrame(step);
+}
+
+// touch: one finger spins and tilts, two fingers pinch and move, a tap picks
+const pts = new Map();
+let g = null, moved = false;
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pts.size === 1) { stopFling(); g = { kind: 'one', x: e.clientX, y: e.clientY, yaw: v.yaw, pitch: v.pitch, t: e.timeStamp, last: e.clientX, vel: 0 }; moved = false; }
+  else if (pts.size === 2) {
+    const [a, b] = [...pts.values()];
+    g = { kind: 'two', d: Math.hypot(a.x - b.x, a.y - b.y), mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, zoom: v.zoom, panX: v.panX, panY: v.panY };
+    moved = true;
+  }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pts.has(e.pointerId) || !g) return;
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (g.kind === 'one' && pts.size === 1) {
+    const dx = e.clientX - g.x, dy = e.clientY - g.y;
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    moved = true;
+    v.yaw = g.yaw - dx * SPIN;
+    // how fast the finger is going, for a flick that keeps turning
+    const dt = Math.max(1, e.timeStamp - g.t);
+    g.vel = g.vel * 0.6 + (-(e.clientX - g.last) * SPIN / dt) * 0.4;
+    g.t = e.timeStamp; g.last = e.clientX;
+    v.pitch = Math.max(-LIMIT, Math.min(LIMIT, g.pitch + dy * 0.006));
+    apply();
+  } else if (g.kind === 'two' && pts.size >= 2) {
+    const [a, b] = [...pts.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    v.zoom = Math.max(1, Math.min(5, g.zoom * d / g.d));
+    const per = 1.95 / (canvas.clientHeight * v.zoom);   // meters per pixel, roughly
+    v.panX = g.panX - ((a.x + b.x) / 2 - g.mx) * per;
+    v.panY = g.panY + ((a.y + b.y) / 2 - g.my) * per;
+    apply();
+  }
+});
+const up = e => {
+  if (!pts.has(e.pointerId)) return;
+  pts.delete(e.pointerId);
+  if (pts.size) return;
+  if (g && g.kind === 'one' && !moved) {
+    fig.render();
+    const part = fig.pick(e.clientX, e.clientY);
+    fig.select(part);
+    picked = part;
+    flexBtn.hidden = !part;
+    document.getElementById('name').textContent = part ? NAMES[part] : 'Drag to spin · pinch to zoom · tap a muscle';
+  }
+  // let go while still moving: keep turning
+  else if (g && g.kind === 'one' && e.timeStamp - g.t < 100 && Math.abs(g.vel) > 0.0006) fling(g.vel);
+  g = null;
+};
+canvas.addEventListener('pointerup', up);
+canvas.addEventListener('pointercancel', e => { pts.delete(e.pointerId); g = null; });
+addEventListener('resize', () => fig.resize());
+window.fling = fling;
+const poser = makePoser(fig, { groups: GROUPS, parts: info.parts });
+const GROUP_OF = {};
+for (const [g, list] of Object.entries(GROUPS)) for (const p of list) GROUP_OF[p] = g;
+
+// ----- moving into a pose: the view comes round to where the judges sit -----
+let current = '';
+function faceTo(spec, dur) {
+  const target = (spec.face || 0) * Math.PI / 180;
+  let d = (target - v.yaw) % (2 * Math.PI);
+  if (d > Math.PI) d -= 2 * Math.PI;
+  if (d < -Math.PI) d += 2 * Math.PI;
+  const from = { yaw: v.yaw, pitch: v.pitch, zoom: v.zoom, panX: v.panX, panY: v.panY };
+  return e => {
+    v.yaw = from.yaw + d * e; v.pitch = from.pitch * (1 - e);
+    v.zoom = from.zoom + (1 - from.zoom) * e; v.panX = from.panX * (1 - e); v.panY = from.panY * (1 - e);
+    apply();
+  };
+}
+function strike(spec) {
+  stopFling();
+  current = spec.id || '';
+  poser.go(spec, { dur: 950, onFrame: faceTo(spec, 950) });
+  renderSheet();
+}
+function relax() {
+  current = '';
+  poser.relax();
+  renderSheet();
+}
+// ----- the pose list -----
+const sheet = document.getElementById('sheet'), scrim = document.getElementById('scrim');
+function renderSheet() {
+  const row = (id, name) => `<button data-pose="${id}" aria-current="${current === id}">${name}</button>`;
+  let h = row('', 'Stand relaxed');
+  for (const set of ['Classic', 'Golden Era']) {
+    h += `<h3>${set}</h3>` + POSES.filter(p => p.set === set).map(p => row(p.id, p.name)).join('');
+  }
+  sheet.innerHTML = h;
+}
+renderSheet();
+const openSheet = open => { sheet.classList.toggle('open', open); scrim.classList.toggle('open', open); };
+document.getElementById('posebtn').onclick = () => openSheet(true);
+scrim.onclick = () => openSheet(false);
+sheet.onclick = e => {
+  const b = e.target.closest('[data-pose]');
+  if (!b) return;
+  openSheet(false);
+  const spec = POSES.find(p => p.id === b.dataset.pose);
+  spec ? strike(spec) : relax();
+};
+// ----- Flex it: a small move that works the tapped muscle -----
+let picked = '';
+const flexBtn = document.getElementById('flexit');
+flexBtn.onclick = () => {
+  const g = GROUP_OF[picked];
+  const move = FLEX_MOVES[g];
+  if (!move) return;
+  stopFling();
+  const spec = { ...move, flex: { [g]: 1 } };
+  current = '';
+  poser.go(spec, { dur: 650, onFrame: faceTo(spec, 650), after: () => setTimeout(() => { if (!current) poser.relax(); }, 900) });
+  renderSheet();
+};
+window.poser = poser; window.POSES = POSES; window.colorsNow = colors;
+if (params.get('pose')) {
+  const spec = POSES.find(p => p.id === params.get('pose'));
+  if (spec) poser.snap(spec);
+}
+window.ready = true;
+</script>
+</body>
+</html>
